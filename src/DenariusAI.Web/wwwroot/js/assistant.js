@@ -18,7 +18,7 @@
     if (meta) { const small = document.createElement('small'); small.textContent = meta; body.appendChild(small); }
     row.append(avatar, body); messages.appendChild(row); messages.scrollTop = messages.scrollHeight; return row;
   };
-  document.querySelectorAll('.assistant-suggestions button').forEach(button => button.addEventListener('click', () => { input.value = button.textContent; resize(); input.focus(); }));
+  document.querySelectorAll('.assistant-suggestions button').forEach(button => button.addEventListener('click', () => { input.value = button.dataset.question || button.textContent.trim(); resize(); input.focus(); }));
   input.addEventListener('input', resize);
   input.addEventListener('keydown', event => { if (event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); form.requestSubmit(); } });
   form.addEventListener('submit', async event => {
