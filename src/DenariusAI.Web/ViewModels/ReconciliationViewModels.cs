@@ -17,4 +17,5 @@ public sealed record ReconciliationIndexViewModel(
     IReadOnlyList<SelectListItem> SortOptions,
     int UnreconciledCount,
     int ReconciledCount,
+    IReadOnlyDictionary<string, string> ReconciledByNames,
     PaginationViewModel Pagination);

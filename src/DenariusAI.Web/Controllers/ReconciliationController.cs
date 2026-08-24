@@ -37,8 +37,12 @@ public sealed class ReconciliationController(IReconciliationService service, IAc
         };
         var pagination = PaginationViewModel.Create(items.Count, page, pageSize);
         items = items.Skip((pagination.Page - 1) * pagination.PageSize).Take(pagination.PageSize).ToList();
+        var reconcilerIds = items.Select(item => item.ReconciledBy).Where(id => !string.IsNullOrWhiteSpace(id) && id != "demo-seed").Distinct().ToList();
+        var reconciledByNames = await dbContext.Users.AsNoTracking().Where(user => reconcilerIds.Contains(user.Id))
+            .ToDictionaryAsync(user => user.Id, user => string.IsNullOrWhiteSpace(user.DisplayName) ? user.UserName ?? "Utilizador" : user.DisplayName, cancellationToken);
+        if (items.Any(item => item.ReconciledBy == "demo-seed")) reconciledByNames["demo-seed"] = "Dados de demonstração";
         return View(new ReconciliationIndexViewModel(items, accountId, from, to, status, search, sort,
-            await AccountItemsAsync(accountId, cancellationToken), StatusItems(status), SortItems(sort), unreconciledCount, reconciledCount, pagination));
+            await AccountItemsAsync(accountId, cancellationToken), StatusItems(status), SortItems(sort), unreconciledCount, reconciledCount, reconciledByNames, pagination));
     }
 
     [HttpPost, ValidateAntiForgeryToken]
