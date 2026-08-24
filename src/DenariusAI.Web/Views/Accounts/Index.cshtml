@@ -2,7 +2,7 @@
 @using DenariusAI.Web.Controllers
 @{ ViewData["Title"] = "Contas"; }
 <div class="page-header"><div><p class="eyebrow">Configuração</p><h1>Contas financeiras</h1><p class="page-subtitle">Crie e organize as contas utilizadas para registar e acompanhar o património.</p></div><a class="button" asp-action="Create">Nova conta</a></div>
-<section class="panel">
+<section class="panel entity-panel accounts-panel">
     <form id="account-filters" method="get" class="filterbar accounts">
         <select name="accountType" asp-items="Model.AccountTypes"></select>
         <select name="categoryId" asp-items="Model.Categories"></select>
@@ -11,7 +11,7 @@
         <label class="page-size">Por página <select name="pageSize">@foreach (var size in PaginationViewModel.AllowedPageSizes) { <option value="@size" selected="@(size == Model.Pagination.PageSize)">@size</option> }</select></label>
         <button class="button secondary" type="submit">Aplicar</button>
     </form>
-    <div class="table-wrap"><table><thead><tr><th>Conta</th><th>Tipo</th><th>Categoria</th><th>Saldo inicial</th><th>Saldo atual</th><th>Estado</th><th class="actions">Ações</th></tr></thead><tbody>
+    <div class="table-wrap"><table class="entity-table"><thead><tr><th>Conta</th><th>Tipo</th><th>Categoria</th><th>Saldo inicial</th><th>Saldo atual</th><th>Estado</th><th class="actions">Ações</th></tr></thead><tbody>
     @foreach (var item in Model.Items)
     {
         <tr><td><strong>@item.Account.Name</strong>@if (!string.IsNullOrWhiteSpace(item.Account.Description)) { <small>@item.Account.Description</small> }</td><td>@AccountsController.AccountTypeName(item.Account.AccountType)</td><td>@if (item.CategoryName != "—") { var kind = item.Account.AccountType == DenariusAI.Domain.Enums.AccountType.Income ? DenariusAI.Domain.Enums.FinancialGroupKind.Income : item.Account.AccountType == DenariusAI.Domain.Enums.AccountType.Expense ? DenariusAI.Domain.Enums.FinancialGroupKind.Expense : DenariusAI.Domain.Enums.FinancialGroupKind.Asset; <partial name="_CategoryKindIcon" model="kind" /> } @item.CategoryName</td><td class="amount">@item.Account.InitialBalance.ToString("N2") @item.Account.Currency</td><td class="amount"><strong>@item.Account.Balance.ToString("N2") @item.Account.Currency</strong></td><td><span class="status @(item.Account.IsActive ? "active" : "inactive")">@(item.Account.IsActive ? "Ativa" : "Inativa")</span></td><td class="actions"><a class="text-link" asp-action="Details" asp-route-id="@item.Account.Id">Consultar</a><a class="text-link" asp-action="Statement" asp-route-id="@item.Account.Id">Extrato</a><a class="text-link" asp-action="Edit" asp-route-id="@item.Account.Id">Editar</a><form asp-action="SetActive" method="post"><input type="hidden" name="id" value="@item.Account.Id" /><input type="hidden" name="isActive" value="@((!item.Account.IsActive).ToString().ToLowerInvariant())" /><input type="hidden" name="accountType" value="@Model.AccountType" /><input type="hidden" name="categoryId" value="@Model.CategoryId" /><input type="hidden" name="search" value="@Model.Search" /><input type="hidden" name="showInactive" value="@Model.ShowInactive.ToString().ToLowerInvariant()" /><input type="hidden" name="page" value="@Model.Pagination.Page" /><input type="hidden" name="pageSize" value="@Model.Pagination.PageSize" /><button class="text-link" type="submit">@(item.Account.IsActive ? "Desativar" : "Ativar")</button></form></td></tr>

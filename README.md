@@ -13,7 +13,11 @@
 
 Developed by [Rui Ribeiro](https://github.com/ruialexrib)
 
-![DenariusAI application demo](docs/assets/denarius-ai-demo.gif)
+### Application tour
+
+Ten views of the DenariusAI experience, from the dashboard and daily movements to analytics, savings, administration and help.
+
+![DenariusAI application tour](docs/assets/denarius-ai-demo.gif)
 
 </div>
 

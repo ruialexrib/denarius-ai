@@ -17,6 +17,8 @@ body .analytics-kpis{grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;marg
 .analytics-kpis .kpi-featured{background:linear-gradient(135deg,#102039,#183654);color:#fff}
 .analytics-kpis .kpi-featured:before{background:#2fd09a;box-shadow:0 0 0 5px rgba(47,208,154,.12)}
 .analytics-kpis .kpi-featured span,.analytics-kpis .kpi-featured small{color:#b9c8d9}.analytics-kpis .kpi-featured strong{color:#fff}
+.analytics-kpis .income-kpi{background:linear-gradient(135deg,#effaf6,#fff);box-shadow:inset 0 0 0 1px #cfeadf,0 10px 30px rgba(24,34,55,.055)}.analytics-kpis .income-kpi:before{background:#159a70;box-shadow:0 0 0 4px rgba(21,154,112,.09)}
+.analytics-kpis .expense-kpi{background:linear-gradient(135deg,#fff3f1,#fff);box-shadow:inset 0 0 0 1px #f1d7d2,0 10px 30px rgba(24,34,55,.055)}.analytics-kpis .expense-kpi:before{background:#d45d52;box-shadow:0 0 0 4px rgba(212,93,82,.08)}
 .analytics-kpis strong{margin:14px 0 4px;font-size:1.65rem;letter-spacing:-.035em}
 .analytics-insights{display:grid;grid-template-columns:minmax(0,.75fr) minmax(0,1.6fr);gap:16px;margin-bottom:20px}
 .analytics-insights .panel{min-height:172px;padding:22px;border:0;border-radius:16px;box-shadow:0 10px 30px rgba(24,34,55,.06)}

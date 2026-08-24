@@ -4,7 +4,7 @@
 <div class="page-header"><div><p class="eyebrow">Centro de ajuda</p><h1>@Model.Title</h1><p class="page-subtitle">@Model.Subtitle</p></div><div class="form-actions"><a class="button secondary" asp-action="Help">Voltar à ajuda</a><a class="button" asp-controller="@Model.Controller" asp-action="@Model.Action">@Model.ActionLabel</a></div></div>
 <section class="help-detail-grid">
 @foreach (var topic in Model.Sections) {
-<article class="panel help-detail-card"><h2>@topic.Title</h2><p class="help-section-description">@topic.Description</p><ol>@foreach (var item in topic.Items) { <li>@item</li> }</ol></article>
+<article class="panel help-detail-card"><div class="help-detail-heading"><span>?</span><h2>@topic.Title</h2></div><p class="help-section-description">@topic.Description</p><ol>@foreach (var item in topic.Items) { <li><span>@item</span></li> }</ol></article>
 }
 </section>
-<section class="panel help-tip"><div><strong>Boa prática</strong><p>Confirme os dados apresentados antes de gravar ou alterar registos. Os resultados financeiros e as sugestões da IA dependem da informação introduzida.</p></div></section>
+<section class="panel help-tip"><span aria-hidden="true">✓</span><div><strong>Boa prática</strong><p>Confirme os dados apresentados antes de gravar ou alterar registos. Os resultados financeiros e as sugestões da IA dependem da informação introduzida.</p></div></section>
