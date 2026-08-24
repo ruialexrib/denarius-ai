@@ -23,7 +23,16 @@
     if (!(form instanceof HTMLFormElement) || form.dataset.noProgress === 'true' || event.defaultPrevented) return;
     if (!form.checkValidity()) return;
     const submitter = event.submitter;
-    if (submitter instanceof HTMLButtonElement || submitter instanceof HTMLInputElement) submitter.disabled = true;
+    if (submitter instanceof HTMLButtonElement || submitter instanceof HTMLInputElement) {
+      if (submitter.name) {
+        const submittedValue = document.createElement('input');
+        submittedValue.type = 'hidden';
+        submittedValue.name = submitter.name;
+        submittedValue.value = submitter.value;
+        form.append(submittedValue);
+      }
+      submitter.disabled = true;
+    }
     showProgress(form.dataset.progressMessage || submitter?.dataset.progressMessage || 'A executar a operação…');
   });
   window.addEventListener('pageshow', () => {

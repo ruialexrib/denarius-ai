@@ -21,7 +21,7 @@ public sealed record SaveAccountDto(string Name, string? Description, AccountTyp
 public sealed record JournalEntryLineInput(Guid AccountId, decimal Debit, decimal Credit, string? Description = null, Guid? CategoryId = null);
 public sealed record CreateJournalEntryRequest(DateOnly Date, string Description, string? Reference, string? Notes, IReadOnlyCollection<JournalEntryLineInput> Lines, Guid? BudgetId = null);
 public sealed record JournalEntryResultDto(Guid Id, DateOnly Date, string Description, decimal TotalDebit, decimal TotalCredit, JournalEntryStatus Status);
-public sealed record JournalEntrySummaryDto(Guid Id, DateOnly Date, string Description, string? Reference, decimal TotalDebit, decimal TotalCredit, JournalEntryStatus Status, ReconciliationStatus ReconciliationStatus, int? BudgetYear = null, int? BudgetMonth = null, Guid? BudgetId = null)
+public sealed record JournalEntrySummaryDto(Guid Id, DateOnly Date, string Description, string? Reference, decimal TotalDebit, decimal TotalCredit, JournalEntryStatus Status, ReconciliationStatus ReconciliationStatus, int? BudgetYear = null, int? BudgetMonth = null, Guid? BudgetId = null, string MovementType = "Transferência")
 {
     public string? BudgetName => BudgetYear.HasValue && BudgetMonth.HasValue ? $"{BudgetMonth:D2}/{BudgetYear}" : null;
 }

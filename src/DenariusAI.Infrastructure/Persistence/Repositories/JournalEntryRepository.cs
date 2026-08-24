@@ -21,7 +21,11 @@ public sealed class JournalEntryRepository(DenariusDbContext dbContext) : Reposi
                 entry.Reconciliation == null ? ReconciliationStatus.Unreconciled : entry.Reconciliation.Status,
                 entry.Budget == null ? null : entry.Budget.Year,
                 entry.Budget == null ? null : entry.Budget.Month,
-                entry.BudgetId))
+                entry.BudgetId,
+                entry.Lines.Any(line => line.Account.AccountType != AccountType.Income && line.Account.AccountType != AccountType.Expense && line.Debit > 0) &&
+                entry.Lines.Any(line => line.Account.AccountType != AccountType.Income && line.Account.AccountType != AccountType.Expense && line.Credit > 0) ? "Transferência" :
+                entry.Lines.Any(line => line.Account.AccountType != AccountType.Income && line.Account.AccountType != AccountType.Expense && line.Debit > 0) ? "Entrada" :
+                entry.Lines.Any(line => line.Account.AccountType != AccountType.Income && line.Account.AccountType != AccountType.Expense && line.Credit > 0) ? "Saída" : "Transferência"))
             .ToListAsync(cancellationToken);
 
     public Task<JournalEntry?> GetWithDetailsAsync(Guid id, CancellationToken cancellationToken = default) =>
