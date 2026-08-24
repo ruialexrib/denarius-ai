@@ -7,7 +7,7 @@
     <a class="button secondary" asp-action="Index">Cancelar</a>
 </div>
 <section class="panel import-panel">
-    <form asp-action="ImportExcel" method="post" enctype="multipart/form-data" class="settings-form">
+    <form asp-action="ImportExcel" method="post" enctype="multipart/form-data" class="form-stack settings-form">
         <div asp-validation-summary="ModelOnly" class="validation-summary"></div>
         <label>Conta do extrato<select name="bankAccountId" required><option value="">Selecionar conta…</option>@foreach (var option in Model.CounterAccounts) { <option value="@option.Value">@option.Text</option> }</select></label>
         <label>Ficheiro Excel<input type="file" name="file" accept=".xlsx,.xlsm" required /></label>
