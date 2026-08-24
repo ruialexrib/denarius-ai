@@ -13,6 +13,8 @@
 
 Developed by [Rui Ribeiro](https://github.com/ruialexrib)
 
+![DenariusAI application demo](docs/assets/denarius-ai-demo.gif)
+
 </div>
 
 ---
