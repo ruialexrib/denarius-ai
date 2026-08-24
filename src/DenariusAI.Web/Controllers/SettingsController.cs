@@ -28,10 +28,19 @@ public sealed class SettingsController(IApplicationSettingsService settingsServi
         catch (Exception exception) when (exception is HttpRequestException or InvalidOperationException or TaskCanceledException) { logger.LogWarning(exception, "AI connection test failed."); TempData["ErrorMessage"] = "Não foi possível confirmar a ligação à Mistral."; }
         return RedirectToAction(nameof(Index));
     }
+    [HttpGet]
+    public IActionResult LoadDemonstrationData() => View(new LoadDemonstrationDataViewModel());
+
     [HttpPost, ValidateAntiForgeryToken]
-    public async Task<IActionResult> LoadDemonstrationData(CancellationToken cancellationToken)
+    public async Task<IActionResult> LoadDemonstrationData(LoadDemonstrationDataViewModel model, CancellationToken cancellationToken)
     {
-        var result = await demonstrationDataService.LoadAsync(cancellationToken); TempData[result.Loaded ? "SuccessMessage" : "ErrorMessage"] = result.Loaded ? "Dados de demonstração carregados." : "Os dados de demonstração exigem uma base financeira vazia."; return RedirectToAction(nameof(Index));
+        var user = await userManager.GetUserAsync(User); if (user is null) return Challenge();
+        if (!await userManager.CheckPasswordAsync(user, model.Password)) ModelState.AddModelError(nameof(model.Password), "A palavra-passe está incorreta.");
+        if (!ModelState.IsValid) return View(model);
+        var result = await demonstrationDataService.LoadAsync(cancellationToken);
+        logger.LogWarning("Demonstration data load requested by {UserId}. Loaded: {Loaded}.", UserId(), result.Loaded);
+        TempData[result.Loaded ? "SuccessMessage" : "ErrorMessage"] = result.Loaded ? "Dados de demonstração carregados." : "Os dados de demonstração exigem uma base financeira vazia.";
+        return RedirectToAction(nameof(Index));
     }
     [HttpGet] public IActionResult ResetFinancialData() => View(new ResetFinancialDataViewModel());
     [HttpPost, ValidateAntiForgeryToken]

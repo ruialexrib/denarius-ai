@@ -38,7 +38,7 @@ public sealed class FinancialAssistantServiceTests
         public bool IsConfigured { get; set; } = true;
         public IReadOnlyCollection<LlmMessageDto> Messages { get; private set; } = [];
         public Task<LlmCompletionDto> CompleteAsync(IReadOnlyCollection<LlmMessageDto> messages, CancellationToken cancellationToken = default) { Messages = messages; return Task.FromResult(new LlmCompletionDto("Resposta fundamentada", Model, 10, 5)); }
-        Task<ApplicationSettingsDto> IApplicationSettingsService.GetAsync(CancellationToken cancellationToken) => Task.FromResult(new ApplicationSettingsDto(Model, "https://api.mistral.ai/v1/", 1024, .2, "Prompt configurado", 12, 200, 10, "Sugestão", 10));
+        Task<ApplicationSettingsDto> IApplicationSettingsService.GetAsync(CancellationToken cancellationToken) => Task.FromResult(new ApplicationSettingsDto(Model, "https://api.mistral.ai/v1/", 1024, .2, "Prompt configurado", 12, 200, 10, "Sugestão", 10, "Prompt de extração", "Prompt de classificação"));
         public Task UpdateAsync(ApplicationSettingsDto settings, string userId, CancellationToken cancellationToken = default) => throw new NotSupportedException();
         public Task<IReadOnlyList<AccountDto>> ListAsync(bool activeOnly = false, CancellationToken cancellationToken = default) => Task.FromResult<IReadOnlyList<AccountDto>>([new(Id, "Banco", null, AccountType.BankAccount, 0m, 100m, "EUR", true, null)]);
         Task<AccountDto?> IAccountService.GetAsync(Guid id, CancellationToken cancellationToken) => throw new NotSupportedException();

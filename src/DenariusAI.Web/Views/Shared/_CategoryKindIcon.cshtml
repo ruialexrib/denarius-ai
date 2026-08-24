@@ -1,0 +1,3 @@
+@model DenariusAI.Domain.Enums.FinancialGroupKind
+@{ var isIncome = Model == DenariusAI.Domain.Enums.FinancialGroupKind.Income; var isExpense = Model == DenariusAI.Domain.Enums.FinancialGroupKind.Expense; var label = isIncome ? "Rendimento" : isExpense ? "Despesa" : "Património"; var icon = isIncome ? "bi-arrow-down-left" : isExpense ? "bi-arrow-up-right" : "bi-wallet2"; }
+<span class="category-kind-icon @(isIncome ? "income" : isExpense ? "expense" : "asset")" title="@label" aria-label="@label"><i class="bi @icon" aria-hidden="true"></i></span>

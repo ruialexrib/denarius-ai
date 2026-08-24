@@ -32,12 +32,13 @@ public sealed class DashboardService(
             .Select(item => new DashboardCategoryDto(item.CategoryName, item.Actual, item.Budgeted)).ToList();
 
         var evolution = new List<DashboardMonthDto>();
-        var period = new DateOnly(year, month, 1);
-        for (var offset = 5; offset >= 0; offset--)
+        var budgetEvolution = new List<DashboardBudgetMonthDto>();
+        for (var monthNumber = 1; monthNumber <= 12; monthNumber++)
         {
-            var itemPeriod = period.AddMonths(-offset);
-            var item = await journalEntryService.GetMonthlySummaryAsync(itemPeriod.Year, itemPeriod.Month, cancellationToken);
-            evolution.Add(new(itemPeriod.Year, itemPeriod.Month, item.Income, item.Expenses));
+            var item = await journalEntryService.GetMonthlySummaryAsync(year, monthNumber, cancellationToken);
+            evolution.Add(new(year, monthNumber, item.Income, item.Expenses));
+            var monthExecution = monthNumber == month ? execution : await budgetService.GetExecutionAsync(year, monthNumber, cancellationToken);
+            budgetEvolution.Add(new(year, monthNumber, monthExecution.Sum(value => value.Budgeted), monthExecution.Sum(value => value.Actual)));
         }
 
         return new DashboardDto(year, month,
@@ -49,6 +50,6 @@ public sealed class DashboardService(
             certificates.Sum(item => item.FutureValue),
             summary.Income, summary.Expenses,
             execution.Sum(item => item.Budgeted), execution.Sum(item => item.Actual), unreconciled.Count,
-            categories, evolution);
+            categories, evolution) { BudgetEvolution = budgetEvolution };
     }
 }

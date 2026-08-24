@@ -21,6 +21,30 @@ public sealed class FinancialGroupsController(IFinancialGroupService service) : 
     }
 
     [HttpGet]
+    public async Task<IActionResult> Statement(Guid id, DateOnly? from, DateOnly? to, string? search, int page = 1, int pageSize = 10, CancellationToken cancellationToken = default)
+    {
+        var group = await service.GetAsync(id, cancellationToken);
+        if (group is null) return NotFound();
+        var lines = await service.GetStatementAsync(id, cancellationToken);
+        var currentBalance = lines.LastOrDefault()?.Balance ?? 0m;
+        if (from.HasValue) lines = lines.Where(item => item.Date >= from.Value).ToList();
+        if (to.HasValue) lines = lines.Where(item => item.Date <= to.Value).ToList();
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var term = search.Trim();
+            lines = lines.Where(item => item.Description.Contains(term, StringComparison.CurrentCultureIgnoreCase)
+                || item.AccountName.Contains(term, StringComparison.CurrentCultureIgnoreCase)
+                || item.CategoryName.Contains(term, StringComparison.CurrentCultureIgnoreCase)
+                || (item.Reference?.Contains(term, StringComparison.CurrentCultureIgnoreCase) ?? false)).ToList();
+        }
+        lines = lines.OrderByDescending(item => item.Date).ThenByDescending(item => item.CreatedAt).ThenByDescending(item => item.LineId).ToList();
+        var pagination = PaginationViewModel.Create(lines.Count, page, pageSize);
+        var items = lines.Skip((pagination.Page - 1) * pagination.PageSize).Take(pagination.PageSize).ToList();
+        return View("~/Views/Shared/ClassificationStatement.cshtml", new ClassificationStatementViewModel(
+            "Grupo", group.Id, group.Name, group.Kind, currentBalance, items, from, to, search, pagination));
+    }
+
+    [HttpGet]
     public IActionResult Create() => View("Form", new FinancialGroupFormViewModel { Kind = FinancialGroupKind.Expense });
 
     [HttpPost, ValidateAntiForgeryToken]

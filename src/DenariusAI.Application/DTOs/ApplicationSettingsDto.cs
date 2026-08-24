@@ -10,4 +10,6 @@ public sealed record ApplicationSettingsDto(
     int AssistantMaxTransactions,
     int AssistantHistoryMessages,
     string JournalSuggestionSystemPrompt,
-    int JournalSuggestionHistoryMessages);
+    int JournalSuggestionHistoryMessages,
+    string ReconciliationExtractionPrompt,
+    string ReconciliationClassificationPrompt);

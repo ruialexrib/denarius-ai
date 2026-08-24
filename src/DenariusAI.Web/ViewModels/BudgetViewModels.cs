@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using DenariusAI.Domain.Enums;
 
 namespace DenariusAI.Web.ViewModels;
 
@@ -8,6 +9,7 @@ public sealed class BudgetLineFormViewModel
     public Guid CategoryId { get; set; }
     public string CategoryName { get; set; } = string.Empty;
     public string FinancialGroupName { get; set; } = string.Empty;
+    public FinancialGroupKind Kind { get; set; } = FinancialGroupKind.Expense;
     [Range(0, double.MaxValue, ErrorMessage = "O valor orçamentado não pode ser negativo.")]
     public decimal Amount { get; set; }
     public decimal Actual { get; set; }
@@ -36,4 +38,20 @@ public sealed record BudgetIndexViewModel(
 {
     public decimal TotalVariance => TotalActual - TotalBudgeted;
     public decimal? ExecutionPercentage => TotalBudgeted == 0m ? null : decimal.Round(TotalActual / TotalBudgeted * 100m, 2);
+}
+
+public sealed record BudgetCategoryHistoryItemViewModel(int Year, int Month, decimal Budgeted, decimal Actual)
+{
+    public decimal Variance => Actual - Budgeted;
+    public decimal? ExecutionPercentage => Budgeted == 0m ? null : decimal.Round(Actual / Budgeted * 100m, 1);
+    public string Period => $"{Month:D2}/{Year}";
+}
+
+public sealed record BudgetCategoryDetailsViewModel(
+    Guid CategoryId, string CategoryName, string GroupName, FinancialGroupKind Kind,
+    IReadOnlyList<BudgetCategoryHistoryItemViewModel> History)
+{
+    public decimal TotalBudgeted => History.Sum(item => item.Budgeted);
+    public decimal TotalActual => History.Sum(item => item.Actual);
+    public decimal TotalVariance => TotalActual - TotalBudgeted;
 }

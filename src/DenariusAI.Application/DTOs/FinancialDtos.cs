@@ -16,6 +16,7 @@ public sealed record SaveFinancialGroupDto(string Name, string? Description, Fin
 public sealed record SaveCategoryDto(Guid FinancialGroupId, string Name, string? Description, int SortOrder);
 public sealed record AccountDto(Guid Id, string Name, string? Description, AccountType AccountType, decimal InitialBalance, decimal Balance, string Currency, bool IsActive, Guid? CategoryId);
 public sealed record AccountStatementLineDto(Guid JournalEntryId, Guid LineId, DateOnly Date, DateTimeOffset CreatedAt, string Description, string? Reference, string? LineDescription, string? CategoryName, decimal Debit, decimal Credit, decimal Balance, ReconciliationStatus ReconciliationStatus);
+public sealed record ClassificationStatementLineDto(Guid JournalEntryId, Guid LineId, DateOnly Date, DateTimeOffset CreatedAt, string Description, string? Reference, string AccountName, string CategoryName, decimal Debit, decimal Credit, decimal Balance);
 public sealed record SaveAccountDto(string Name, string? Description, AccountType AccountType, decimal InitialBalance, string Currency, Guid? CategoryId);
 public sealed record JournalEntryLineInput(Guid AccountId, decimal Debit, decimal Credit, string? Description = null, Guid? CategoryId = null);
 public sealed record CreateJournalEntryRequest(DateOnly Date, string Description, string? Reference, string? Notes, IReadOnlyCollection<JournalEntryLineInput> Lines, Guid? BudgetId = null);

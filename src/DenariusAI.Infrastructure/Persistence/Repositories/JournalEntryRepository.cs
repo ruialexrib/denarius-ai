@@ -68,4 +68,43 @@ public sealed class JournalEntryRepository(DenariusDbContext dbContext) : Reposi
             ? lines.SumAsync(line => line.Credit - line.Debit, cancellationToken)
             : lines.SumAsync(line => line.Debit - line.Credit, cancellationToken);
     }
+
+    public async Task<IReadOnlyList<ClassificationStatementLineDto>> GetClassificationStatementAsync(Guid? groupId, Guid? categoryId, FinancialGroupKind kind, CancellationToken cancellationToken = default)
+    {
+        var query = DbContext.JournalEntryLines.AsNoTracking().Where(line => line.JournalEntry.Status == JournalEntryStatus.Active);
+        if (categoryId.HasValue)
+            query = query.Where(line => line.CategoryId == categoryId.Value || (line.CategoryId == null && line.Account.CategoryId == categoryId.Value));
+        else if (groupId.HasValue)
+            query = query.Where(line => (line.Category != null && line.Category.FinancialGroupId == groupId.Value)
+                || (line.CategoryId == null && line.Account.Category != null && line.Account.Category.FinancialGroupId == groupId.Value));
+
+        var lines = await query.OrderBy(line => line.JournalEntry.Date)
+            .ThenBy(line => line.JournalEntry.CreatedAt)
+            .ThenBy(line => line.JournalEntryId)
+            .ThenBy(line => line.Id)
+            .Select(line => new
+            {
+                line.JournalEntryId,
+                LineId = line.Id,
+                line.JournalEntry.Date,
+                line.JournalEntry.CreatedAt,
+                line.JournalEntry.Description,
+                line.JournalEntry.Reference,
+                AccountName = line.Account.Name,
+                CategoryName = line.Category != null ? line.Category.Name : line.Account.Category!.Name,
+                line.Debit,
+                line.Credit
+            })
+            .ToListAsync(cancellationToken);
+
+        var balance = 0m;
+        var statement = new List<ClassificationStatementLineDto>(lines.Count);
+        foreach (var line in lines)
+        {
+            balance += kind == FinancialGroupKind.Income ? line.Credit - line.Debit : line.Debit - line.Credit;
+            statement.Add(new ClassificationStatementLineDto(line.JournalEntryId, line.LineId, line.Date, line.CreatedAt,
+                line.Description, line.Reference, line.AccountName, line.CategoryName, line.Debit, line.Credit, balance));
+        }
+        return statement;
+}
 }

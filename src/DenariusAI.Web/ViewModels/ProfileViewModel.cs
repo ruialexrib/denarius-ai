@@ -27,6 +27,18 @@ public sealed class ResetFinancialDataViewModel
     public string Confirmation { get; set; } = string.Empty;
 }
 
+public sealed class LoadDemonstrationDataViewModel
+{
+    [Required(ErrorMessage = "Introduza a palavra-passe atual.")]
+    [DataType(DataType.Password)]
+    [Display(Name = "Palavra-passe atual")]
+    public string Password { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "Escreva CARREGAR DEMONSTRAÇÃO para confirmar.")]
+    [RegularExpression("^CARREGAR DEMONSTRAÇÃO$", ErrorMessage = "Escreva exatamente CARREGAR DEMONSTRAÇÃO.")]
+    [Display(Name = "Confirmação")]
+    public string Confirmation { get; set; } = string.Empty;
+}
 public sealed class ChangePasswordViewModel
 {
     [Required(ErrorMessage = "Introduza a palavra-passe atual."), DataType(DataType.Password), Display(Name = "Palavra-passe atual")]

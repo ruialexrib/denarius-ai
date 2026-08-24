@@ -7,6 +7,7 @@ public interface IFinancialGroupService
     Task<IReadOnlyList<FinancialGroupDto>> ListAsync(bool activeOnly = false, CancellationToken cancellationToken = default);
     Task<FinancialGroupDto?> GetAsync(Guid id, CancellationToken cancellationToken = default);
     Task<Guid> CreateAsync(SaveFinancialGroupDto input, string userId, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<ClassificationStatementLineDto>> GetStatementAsync(Guid id, CancellationToken cancellationToken = default) => Task.FromResult<IReadOnlyList<ClassificationStatementLineDto>>([]);
     Task UpdateAsync(Guid id, SaveFinancialGroupDto input, string userId, CancellationToken cancellationToken = default);
     Task SetActiveAsync(Guid id, bool isActive, string userId, CancellationToken cancellationToken = default);
 }
@@ -16,6 +17,7 @@ public interface ICategoryService
     Task<IReadOnlyList<CategoryDto>> ListAsync(Guid? groupId = null, bool activeOnly = false, CancellationToken cancellationToken = default);
     Task<CategoryDto?> GetAsync(Guid id, CancellationToken cancellationToken = default);
     Task<Guid> CreateAsync(SaveCategoryDto input, string userId, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<ClassificationStatementLineDto>> GetStatementAsync(Guid id, CancellationToken cancellationToken = default) => Task.FromResult<IReadOnlyList<ClassificationStatementLineDto>>([]);
     Task UpdateAsync(Guid id, SaveCategoryDto input, string userId, CancellationToken cancellationToken = default);
     Task SetActiveAsync(Guid id, bool isActive, string userId, CancellationToken cancellationToken = default);
 }

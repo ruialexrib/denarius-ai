@@ -26,7 +26,7 @@
       const response = await fetch('/JournalEntries/Suggest', { method: 'POST', headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': token }, body: JSON.stringify({ message: text, history: history.slice(-10) }) });
       const result = await response.json(); pending.remove(); if (!response.ok) throw new Error(result.error || 'Não foi possível criar a sugestão.');
       add('assistant', result.message); history.push({ role: 'user', content: text }, { role: 'assistant', content: result.message });
-      if (result.isComplete && result.suggestion) { applySuggestion(result.suggestion); add('assistant success', 'Os campos foram preenchidos. Reveja as contas, categorias e valores antes de guardar.'); }
+      if (result.isComplete && result.suggestion) { applySuggestion(result.suggestion); if (result.classificationExplanation) add('assistant rationale', 'Critérios de classificação: ' + result.classificationExplanation); add('assistant success', 'Os campos foram preenchidos. Reveja as contas, categorias e valores antes de guardar.'); }
     } catch (error) { pending.remove(); add('assistant error', error.message); }
     finally { button.disabled = false; input.disabled = false; input.focus(); }
   });

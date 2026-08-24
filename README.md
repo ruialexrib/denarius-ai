@@ -27,7 +27,7 @@ AI features assist with transaction entry, classification, financial questions a
 
 - Double-entry transactions with accounts, groups and categories
 - Monthly budgets with explicit transaction allocation
-- Bank reconciliation and assisted Excel statement import
+- AI-assisted bank reconciliation from pasted statement transactions
 - Dashboards, period comparisons and financial analytics
 - Portuguese Savings Certificates portfolio and projections
 - Mistral-powered assistant and intelligent reports

@@ -54,7 +54,10 @@ public sealed class PersistenceAndServiceTests
         Assert.True(dashboard.Expenses > 0m);
         Assert.True(dashboard.Budgeted > 0m);
         Assert.NotEmpty(dashboard.Categories);
-        Assert.Equal(6, dashboard.Evolution.Count);
+        Assert.Equal(12, dashboard.Evolution.Count);
+        Assert.Equal(Enumerable.Range(1, 12), dashboard.Evolution.Select(item => item.Month));
+        Assert.Equal(12, dashboard.BudgetEvolution.Count);
+        Assert.Equal(Enumerable.Range(1, 12), dashboard.BudgetEvolution.Select(item => item.Month));
     }
 
     [Fact]

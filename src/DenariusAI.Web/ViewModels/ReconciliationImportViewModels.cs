@@ -23,3 +23,11 @@ public sealed class ReconciliationImportReviewViewModel
     public IReadOnlyList<SelectListItem> Categories { get; set; } = [];
     public IReadOnlyList<SelectListItem> CounterAccounts { get; set; } = [];
 }
+
+public sealed class ReconciliationPasteViewModel
+{
+    public Guid BankAccountId { get; set; }
+    public string MovementsText { get; set; } = string.Empty;
+    public string? AssistantMessage { get; set; }
+    public IReadOnlyList<SelectListItem> BankAccounts { get; set; } = [];
+}

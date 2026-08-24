@@ -1,5 +1,5 @@
 @model ReconciliationImportReviewViewModel
-@{ ViewData["Title"] = "Rever movimentos importados"; }
+@{ ViewData["Title"] = "Rever movimentos analisados"; }
 <link rel="stylesheet" href="~/css/intelligent-workflows.css" asp-append-version="true" />
 
 <div class="page-header">
@@ -10,7 +10,7 @@
     <input asp-for="BankAccountId" type="hidden" /><input asp-for="BankAccountName" type="hidden" />
     <div asp-validation-summary="ModelOnly" class="validation-summary"></div>
     <section class="panel import-review">
-        <div class="table-wrap"><table><thead><tr><th>Importar</th><th>Data</th><th>Movimento</th><th>Valor</th><th>Categoria</th><th>Contrapartida</th><th>Sugestão</th></tr></thead><tbody>
+        <div class="table-wrap"><table class="import-review-table"><thead><tr><th>Importar</th><th>Data</th><th>Movimento</th><th>Valor</th><th>Categoria</th><th>Contrapartida</th><th>Sugestão</th></tr></thead><tbody>
         @for (var i = 0; i < Model.Rows.Count; i++) {
             <tr>
                 <td><input asp-for="Rows[i].Selected" /><input asp-for="Rows[i].RowNumber" type="hidden" /><input asp-for="Rows[i].Date" type="hidden" /><input asp-for="Rows[i].Description" type="hidden" /><input asp-for="Rows[i].Reference" type="hidden" /><input asp-for="Rows[i].Amount" type="hidden" /><input asp-for="Rows[i].SuggestionReason" type="hidden" /></td>
@@ -22,7 +22,7 @@
                 <td><small class="ai-suggestion">@(Model.Rows[i].SuggestionReason ?? "Sem sugestão automática")</small></td>
             </tr>
         }
-        @if (Model.Rows.Count == 0) { <tr><td colspan="7" class="empty-row">Todos os movimentos do ficheiro já existem.</td></tr> }
+        @if (Model.Rows.Count == 0) { <tr><td colspan="7" class="empty-row">Todos os movimentos colados já se encontram registados.</td></tr> }
         </tbody></table></div>
     </section>
     <div class="form-actions sticky-actions"><a class="button secondary" asp-action="Import">Voltar</a><button class="button" type="submit" disabled="@(Model.Rows.Count == 0)">Criar movimentos selecionados</button></div>

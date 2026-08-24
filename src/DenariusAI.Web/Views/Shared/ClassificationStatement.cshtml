@@ -1,0 +1,18 @@
+@model ClassificationStatementViewModel
+@{ ViewData["Title"] = $"Extrato · {Model.Name}"; var controller = Model.EntityType == "Grupo" ? "FinancialGroups" : "Categories"; }
+<div class="page-header"><div><p class="eyebrow">Configuração · @Model.EntityType</p><h1>Extrato de @Model.Name</h1><p class="page-subtitle">Consulte os movimentos classificados neste @Model.EntityType.ToLowerInvariant() e acompanhe o saldo linha a linha.</p></div><a class="button secondary" asp-controller="@controller" asp-action="Index">Voltar</a></div>
+<section class="panel statement-summary">
+    <div><span>@Model.EntityType</span><strong>@Model.Name</strong></div>
+    <div><span>Movimentos encontrados</span><strong>@Model.Pagination.TotalItems</strong></div>
+    <div><span>Saldo atual</span><strong>@Model.CurrentBalance.ToString("N2")</strong></div>
+</section>
+<section class="panel">
+<form id="classification-statement-filters" method="get" class="filterbar account-statement-filters"><input type="hidden" name="id" value="@Model.Id" /><label>De <input type="date" name="from" value="@(Model.From?.ToString("yyyy-MM-dd"))" /></label><label>Até <input type="date" name="to" value="@(Model.To?.ToString("yyyy-MM-dd"))" /></label><input type="search" name="search" value="@Model.Search" placeholder="Movimento, conta ou categoria..." /><label class="page-size">Por página <select name="pageSize">@foreach (var size in PaginationViewModel.AllowedPageSizes) { <option value="@size" selected="@(size == Model.Pagination.PageSize)">@size</option> }</select></label><button class="button secondary" type="submit">Aplicar</button></form>
+<div class="table-wrap"><table><thead><tr><th>Data</th><th>Movimento</th><th>Conta</th><th>Categoria</th><th>Débito</th><th>Crédito</th><th>Saldo</th><th class="actions">Ações</th></tr></thead><tbody>
+@foreach (var item in Model.Items) {
+<tr><td class="nowrap">@item.Date.ToString("dd/MM/yyyy")</td><td><strong>@item.Description</strong>@if (!string.IsNullOrWhiteSpace(item.Reference)) { <small>Ref. @item.Reference</small> }</td><td>@item.AccountName</td><td><partial name="_CategoryKindIcon" model="Model.Kind" /> @item.CategoryName</td><td class="amount">@(item.Debit == 0 ? "—" : item.Debit.ToString("N2"))</td><td class="amount">@(item.Credit == 0 ? "—" : item.Credit.ToString("N2"))</td><td class="amount"><strong>@item.Balance.ToString("N2")</strong></td><td class="actions"><a class="text-link" asp-controller="JournalEntries" asp-action="Details" asp-route-id="@item.JournalEntryId">Consultar</a></td></tr>
+}
+@if (Model.Items.Count == 0) { <tr><td colspan="8" class="empty-row">Não foram encontrados movimentos.</td></tr> }
+</tbody></table></div>
+<nav class="pagination" aria-label="Paginação"><span>@Model.Pagination.FirstItem–@Model.Pagination.LastItem de @Model.Pagination.TotalItems</span><div><button class="pager-link" type="submit" form="classification-statement-filters" name="page" value="@(Model.Pagination.Page - 1)" disabled="@(!Model.Pagination.HasPreviousPage)">Anterior</button><span>Página @Model.Pagination.Page de @Model.Pagination.TotalPages</span><button class="pager-link" type="submit" form="classification-statement-filters" name="page" value="@(Model.Pagination.Page + 1)" disabled="@(!Model.Pagination.HasNextPage)">Seguinte</button></div></nav>
+</section>

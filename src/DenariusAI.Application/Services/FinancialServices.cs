@@ -23,6 +23,12 @@ public sealed class FinancialGroupService(IUnitOfWork unitOfWork) : IFinancialGr
         return group is null ? null : new(group.Id, group.Name, group.Description, group.Kind, group.IsActive, group.SortOrder);
     }
 
+
+    public async Task<IReadOnlyList<ClassificationStatementLineDto>> GetStatementAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var group = await GetAsync(id, cancellationToken) ?? throw new KeyNotFoundException("Grupo não encontrado.");
+        return await unitOfWork.JournalEntries.GetClassificationStatementAsync(id, null, group.Kind, cancellationToken);
+    }
     public async Task<Guid> CreateAsync(SaveFinancialGroupDto input, string userId, CancellationToken cancellationToken = default)
     {
         Validate(input, userId);
@@ -77,6 +83,14 @@ public sealed class CategoryService(IUnitOfWork unitOfWork) : ICategoryService
     {
         var category = await unitOfWork.Repository<Category>().GetByIdAsync(id, cancellationToken);
         return category is null ? null : new(category.Id, category.FinancialGroupId, category.Name, category.Description, category.IsActive, category.SortOrder);
+    }
+
+    public async Task<IReadOnlyList<ClassificationStatementLineDto>> GetStatementAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var category = await GetAsync(id, cancellationToken) ?? throw new KeyNotFoundException("Categoria não encontrada.");
+        var group = await unitOfWork.Repository<FinancialGroup>().GetByIdAsync(category.FinancialGroupId, cancellationToken)
+            ?? throw new KeyNotFoundException("Grupo não encontrado.");
+        return await unitOfWork.JournalEntries.GetClassificationStatementAsync(null, id, group.Kind, cancellationToken);
     }
 
     public async Task<Guid> CreateAsync(SaveCategoryDto input, string userId, CancellationToken cancellationToken = default)

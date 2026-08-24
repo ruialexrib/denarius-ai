@@ -1,6 +1,7 @@
 using DenariusAI.Application.Abstractions.Services;
 using DenariusAI.Application.DTOs;
 using DenariusAI.Web.ViewModels;
+using DenariusAI.Web.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -46,9 +47,9 @@ public sealed class AnalyticsController(IAnalyticsService analyticsService, IFin
             reconciliations = await dbContext.Reconciliations.AsNoTracking().Select(x => new { x.Status, x.ReconciledAt }).ToListAsync(cancellationToken),
             savingsCertificates = await dbContext.SavingsCertificates.AsNoTracking().Select(x => new { x.InvestmentDate, x.SeriesNumber, x.Description, x.InvestmentValue, x.Rate, x.CurrentValue, x.NextCapitalization }).ToListAsync(cancellationToken)
         };
-        var prompt = "És um analista financeiro pessoal. Produz um relatório completo em Markdown, em português de Portugal, usando todas as tabelas fornecidas. Inclui: resumo executivo, rendimentos e despesas, orçamento, património, Certificados de Aforro, reconciliação, riscos/anomalias, oportunidades e ações recomendadas. Não inventes valores e indica quando faltam dados.";
+        var prompt = "És um analista financeiro pessoal. Produz um relatório completo em Markdown, em português de Portugal, usando todas as tabelas fornecidas. Inclui: resumo executivo, rendimentos e despesas, orçamento, património, Certificados de Aforro, reconciliação, riscos/anomalias, oportunidades e ações recomendadas. Não inventes valores e indica quando faltam dados. Devolve apenas o Markdown do relatório, sem o envolver numa cerca de código ```markdown.";
         var completion = await llmService.CompleteAsync([new("system", prompt), new("user", JsonSerializer.Serialize(data))], cancellationToken);
-        return View("IntelligentReport", new IntelligentReportViewModel(from, to, DateTimeOffset.Now.ToString("dd/MM/yyyy HH:mm"), completion.Model, completion.Content));
+        return View("IntelligentReport", new IntelligentReportViewModel(from, to, DateTimeOffset.Now.ToString("dd/MM/yyyy HH:mm"), completion.Model, MarkdownPreview.Normalize(completion.Content)));
     }
 
     [HttpPost, ValidateAntiForgeryToken]

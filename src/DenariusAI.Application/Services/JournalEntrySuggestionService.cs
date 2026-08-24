@@ -10,6 +10,7 @@ public sealed class JournalEntrySuggestionService(
     ICategoryService categoryService,
     IFinancialGroupService groupService,
     IBudgetService budgetService,
+    IJournalEntryService journalEntryService,
     IApplicationSettingsService settingsService) : IJournalEntrySuggestionService
 {
     private static readonly JsonSerializerOptions JsonOptions = new() { PropertyNameCaseInsensitive = true };
@@ -26,18 +27,35 @@ public sealed class JournalEntrySuggestionService(
         var categories = await categoryService.ListAsync(activeOnly: true, cancellationToken: cancellationToken);
         var groups = await groupService.ListAsync(true, cancellationToken);
         var budgets = await budgetService.ListPeriodsAsync(cancellationToken);
+        var recentSummaries = (await journalEntryService.ListAsync(cancellationToken))
+            .Where(item => item.Status == DenariusAI.Domain.Enums.JournalEntryStatus.Active)
+            .OrderByDescending(item => item.Date).Take(50).ToList();
+        var recentDetails = new List<JournalEntryDetailsDto>(recentSummaries.Count);
+        foreach (var summary in recentSummaries)
+        {
+            var details = await journalEntryService.GetAsync(summary.Id, cancellationToken);
+            if (details is not null) recentDetails.Add(details);
+        }
         var groupNames = groups.ToDictionary(item => item.Id, item => item.Name);
+        var groupKinds = groups.ToDictionary(item => item.Id, item => item.Kind.ToString());
         var catalog = JsonSerializer.Serialize(new
         {
             today = DateOnly.FromDateTime(DateTime.Today), currency = "EUR",
-            accounts = accounts.Select(item => new { item.Id, item.Name, type = item.AccountType.ToString() }),
-            categories = categories.Select(item => new { item.Id, item.Name, group = groupNames.GetValueOrDefault(item.FinancialGroupId) }),
-            budgets = budgets.Select(item => new { item.Id, item.Name })
+            groups = groups.Select(item => new { item.Id, item.Name, type = item.Kind.ToString() }),
+            accounts = accounts.Select(item => new { item.Id, item.Name, type = item.AccountType.ToString(), item.CategoryId, item.Currency }),
+            categories = categories.Select(item => new { item.Id, item.Name, item.FinancialGroupId, group = groupNames.GetValueOrDefault(item.FinancialGroupId), type = groupKinds.GetValueOrDefault(item.FinancialGroupId) }),
+            budgets = budgets.Select(item => new { item.Id, item.Name }),
+            recentJournalEntries = recentDetails.Select(entry => new
+            {
+                entry.Id, entry.Date, entry.Description, entry.Reference, entry.BudgetId, entry.BudgetName,
+                lines = entry.Lines.Select(line => new { line.AccountId, line.AccountName, line.CategoryId, line.CategoryName, line.Debit, line.Credit, line.Description })
+            })
         });
         var messages = new List<LlmMessageDto>
         {
             new("system", settings.JournalSuggestionSystemPrompt),
-            new("system", $"Catálogo permitido:\n{catalog}")
+            new("system", $"Contexto autorizado para classificação. Usa os catálogos como fonte única de IDs e os movimentos recentes apenas como exemplos de padrões anteriores:\n{catalog}"),
+            new("system", "Compara descrição, referência, valor, sentido financeiro, conta usada, categoria, grupo e orçamento com os exemplos recentes. Não copies um exemplo se os dados atuais forem diferentes. Em status complete inclui classificationExplanation com uma justificação curta em português europeu: padrões semelhantes encontrados, critérios usados e motivos para escolher contas, categoria e orçamento. Não reveles raciocínio interno detalhado. O JSON deve incluir classificationExplanation ao nível principal.")
         };
         messages.AddRange(request.History.TakeLast(settings.JournalSuggestionHistoryMessages).Where(item => (item.Role is "user" or "assistant") && !string.IsNullOrWhiteSpace(item.Content)).Select(item => new LlmMessageDto(item.Role, item.Content)));
         messages.Add(new("user", userMessage));
@@ -45,13 +63,14 @@ public sealed class JournalEntrySuggestionService(
         var completion = await llmService.CompleteAsync(messages, cancellationToken);
         var parsed = Parse(completion.Content);
         if (!string.Equals(parsed.Status, "complete", StringComparison.OrdinalIgnoreCase) || parsed.Suggestion is null)
-            return new(false, string.IsNullOrWhiteSpace(parsed.Message) ? "Que informação falta para completar o movimento?" : parsed.Message, null);
+            return new(false, string.IsNullOrWhiteSpace(parsed.Message) ? "Que informação falta para completar o movimento?" : parsed.Message, parsed.ClassificationExplanation, null);
 
         var validation = Validate(parsed.Suggestion, accounts, categories, budgets);
-        if (validation is not null) return new(false, validation, null);
+        if (validation is not null) return new(false, validation, parsed.ClassificationExplanation, null);
         var suggestion = parsed.Suggestion;
         var budgetId = suggestion.BudgetId ?? budgets.FirstOrDefault()?.Id;
         return new(true, string.IsNullOrWhiteSpace(parsed.Message) ? "Sugestão pronta para revisão." : parsed.Message,
+            string.IsNullOrWhiteSpace(parsed.ClassificationExplanation) ? "A classificação foi baseada nos catálogos disponíveis e em movimentos recentes semelhantes; confirme a proposta antes de guardar." : parsed.ClassificationExplanation.Trim(),
             new(suggestion.Date!.Value, suggestion.Description!.Trim(), suggestion.Reference, suggestion.Notes, budgetId,
                 suggestion.Lines!.Select(line => new SuggestedJournalEntryLineDto(line.AccountId!.Value, line.CategoryId, line.Debit, line.Credit, line.Description)).ToList()));
     }
@@ -78,7 +97,7 @@ public sealed class JournalEntrySuggestionService(
         return null;
     }
 
-    private sealed class ParsedResponse { public string? Status { get; set; } public string? Message { get; set; } public ParsedSuggestion? Suggestion { get; set; } }
+    private sealed class ParsedResponse { public string? Status { get; set; } public string? Message { get; set; } public string? ClassificationExplanation { get; set; } public ParsedSuggestion? Suggestion { get; set; } }
     private sealed class ParsedSuggestion { public DateOnly? Date { get; set; } public string? Description { get; set; } public string? Reference { get; set; } public string? Notes { get; set; } public Guid? BudgetId { get; set; } public List<ParsedLine>? Lines { get; set; } }
     private sealed class ParsedLine { public Guid? AccountId { get; set; } public Guid? CategoryId { get; set; } public decimal Debit { get; set; } public decimal Credit { get; set; } public string? Description { get; set; } }
 }

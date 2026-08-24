@@ -15,11 +15,36 @@ public sealed class CategoriesController(ICategoryService service, IFinancialGro
     {
         var groups = await groupService.ListAsync(false, cancellationToken); var categories = await service.ListAsync(groupId, !showInactive, cancellationToken);
         if (!string.IsNullOrWhiteSpace(search)) categories = categories.Where(item => item.Name.Contains(search.Trim(), StringComparison.CurrentCultureIgnoreCase)).ToList();
-        var names = groups.ToDictionary(item => item.Id, item => item.Name);
+        var names = groups.ToDictionary(item => item.Id, item => item.Name); var kinds = groups.ToDictionary(item => item.Id, item => item.Kind);
         var pagination = PaginationViewModel.Create(categories.Count, page, pageSize);
         var items = categories.Skip((pagination.Page - 1) * pagination.PageSize).Take(pagination.PageSize)
-            .Select(item => new CategoryListItemViewModel(item, names.GetValueOrDefault(item.FinancialGroupId, "—"))).ToList();
+            .Select(item => new CategoryListItemViewModel(item, names.GetValueOrDefault(item.FinancialGroupId, "—"), kinds.GetValueOrDefault(item.FinancialGroupId))).ToList();
         return View(new CategoryIndexViewModel(items, ToSelectList(groups, true, groupId), groupId, search, showInactive, pagination));
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> Statement(Guid id, DateOnly? from, DateOnly? to, string? search, int page = 1, int pageSize = 10, CancellationToken cancellationToken = default)
+    {
+        var category = await service.GetAsync(id, cancellationToken);
+        if (category is null) return NotFound();
+        var lines = await service.GetStatementAsync(id, cancellationToken);
+        var group = await groupService.GetAsync(category.FinancialGroupId, cancellationToken);
+        var currentBalance = lines.LastOrDefault()?.Balance ?? 0m;
+        if (from.HasValue) lines = lines.Where(item => item.Date >= from.Value).ToList();
+        if (to.HasValue) lines = lines.Where(item => item.Date <= to.Value).ToList();
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var term = search.Trim();
+            lines = lines.Where(item => item.Description.Contains(term, StringComparison.CurrentCultureIgnoreCase)
+                || item.AccountName.Contains(term, StringComparison.CurrentCultureIgnoreCase)
+                || item.CategoryName.Contains(term, StringComparison.CurrentCultureIgnoreCase)
+                || (item.Reference?.Contains(term, StringComparison.CurrentCultureIgnoreCase) ?? false)).ToList();
+        }
+        lines = lines.OrderByDescending(item => item.Date).ThenByDescending(item => item.CreatedAt).ThenByDescending(item => item.LineId).ToList();
+        var pagination = PaginationViewModel.Create(lines.Count, page, pageSize);
+        var items = lines.Skip((pagination.Page - 1) * pagination.PageSize).Take(pagination.PageSize).ToList();
+        return View("~/Views/Shared/ClassificationStatement.cshtml", new ClassificationStatementViewModel(
+            "Categoria", category.Id, category.Name, group?.Kind ?? DenariusAI.Domain.Enums.FinancialGroupKind.Asset, currentBalance, items, from, to, search, pagination));
     }
 
     [HttpGet]

@@ -23,7 +23,7 @@ public sealed class CategoryFormViewModel
     public IReadOnlyList<SelectListItem> Groups { get; set; } = [];
 }
 
-public sealed record CategoryListItemViewModel(CategoryDto Category, string GroupName);
+public sealed record CategoryListItemViewModel(CategoryDto Category, string GroupName, DenariusAI.Domain.Enums.FinancialGroupKind Kind);
 public sealed record CategoryIndexViewModel(
     IReadOnlyList<CategoryListItemViewModel> Items,
     IReadOnlyList<SelectListItem> Groups,

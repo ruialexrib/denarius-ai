@@ -16,6 +16,7 @@ public interface IJournalEntryRepository : IRepository<JournalEntry>
     Task<JournalEntry?> GetWithDetailsAsync(Guid id, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<ReconciliationItemDto>> ListForReconciliationAsync(Guid? accountId, DateOnly? from, DateOnly? to, Domain.Enums.ReconciliationStatus? status, string? search, CancellationToken cancellationToken = default);
     Task<decimal> GetAmountByGroupKindAsync(DateOnly from, DateOnly to, Domain.Enums.FinancialGroupKind kind, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<ClassificationStatementLineDto>> GetClassificationStatementAsync(Guid? groupId, Guid? categoryId, Domain.Enums.FinancialGroupKind kind, CancellationToken cancellationToken = default);
 }
 
 public interface IBudgetRepository : IRepository<Budget>

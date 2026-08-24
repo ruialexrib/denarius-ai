@@ -76,7 +76,7 @@ public sealed class JournalEntriesController(IJournalEntryService service, IAcco
         {
             var result = await suggestionService.SuggestAsync(new(model.Message, model.History.Select(item => new JournalEntrySuggestionMessageDto(item.Role, item.Content)).ToList()), cancellationToken);
             logger.LogInformation("Journal entry suggestion processed. Complete: {IsComplete}.", result.IsComplete);
-            return Json(new { isComplete = result.IsComplete, message = result.Message, suggestion = result.Suggestion });
+            return Json(new { isComplete = result.IsComplete, message = result.Message, classificationExplanation = result.ClassificationExplanation, suggestion = result.Suggestion });
         }
         catch (InvalidOperationException) { return StatusCode(StatusCodes.Status503ServiceUnavailable, new { error = "A integração Mistral não está configurada." }); }
         catch (Exception exception) when (exception is HttpRequestException or TaskCanceledException)
@@ -144,9 +144,9 @@ public sealed class JournalEntriesController(IJournalEntryService service, IAcco
         model.Accounts = accounts.OrderBy(item => item.Name).Select(item => new SelectListItem($"{item.Name} · {item.Currency}", item.Id.ToString())).Prepend(new SelectListItem("Selecionar conta", string.Empty)).ToList();
         var categories = await categoryService.ListAsync(activeOnly: true, cancellationToken: cancellationToken);
         var groups = await groupService.ListAsync(true, cancellationToken);
-        var groupNames = groups.ToDictionary(item => item.Id, item => item.Name);
+        var groupNames = groups.ToDictionary(item => item.Id, item => item.Name); var groupKinds = groups.ToDictionary(item => item.Id, item => item.Kind);
         model.Categories = categories.OrderBy(item => groupNames.GetValueOrDefault(item.FinancialGroupId)).ThenBy(item => item.SortOrder)
-            .Select(item => new SelectListItem($"{groupNames.GetValueOrDefault(item.FinancialGroupId, "—")} — {item.Name}", item.Id.ToString())).Prepend(new SelectListItem("Sem categoria", string.Empty)).ToList();
+            .Select(item => new SelectListItem($"{(groupKinds.GetValueOrDefault(item.FinancialGroupId) == FinancialGroupKind.Income ? "↓" : groupKinds.GetValueOrDefault(item.FinancialGroupId) == FinancialGroupKind.Expense ? "↑" : "◆")} {groupNames.GetValueOrDefault(item.FinancialGroupId, "—")} — {item.Name}", item.Id.ToString())).Prepend(new SelectListItem("Sem categoria", string.Empty)).ToList();
         var budgets = await budgetService.ListPeriodsAsync(cancellationToken);
         if (!model.BudgetId.HasValue) model.BudgetId = budgets.FirstOrDefault()?.Id;
         model.Budgets = budgets.Select(item => new SelectListItem(item.Name, item.Id.ToString(), item.Id == model.BudgetId))

@@ -1,6 +1,11 @@
 namespace DenariusAI.Application.DTOs;
 
 public sealed record DashboardCategoryDto(string Name, decimal Actual, decimal Budgeted);
+public sealed record DashboardBudgetMonthDto(int Year, int Month, decimal Budgeted, decimal Actual)
+{
+    public string Label => $"{Month:D2}/{Year}";
+}
+
 public sealed record DashboardMonthDto(int Year, int Month, decimal Income, decimal Expenses)
 {
     public string Label => $"{Month:D2}/{Year}";
@@ -31,6 +36,8 @@ public sealed record DashboardDto(
         IReadOnlyList<DashboardCategoryDto> categories, IReadOnlyList<DashboardMonthDto> evolution)
         : this(year, month, liquidBalance, savingsAndInvestments, totalAssets, 0m, 0m, 0, 0m, 0m, 0m, income, expenses,
             budgeted, budgetActual, unreconciledMovements, categories, evolution) { }
+
+    public IReadOnlyList<DashboardBudgetMonthDto> BudgetEvolution { get; init; } = [];
 
     public decimal MonthlyResult => Income - Expenses;
     public decimal BudgetAvailable => Budgeted - BudgetActual;

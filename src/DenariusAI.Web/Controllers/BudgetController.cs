@@ -3,6 +3,9 @@ using System.Security.Claims;
 using DenariusAI.Application.Abstractions.Services;
 using DenariusAI.Application.DTOs;
 using DenariusAI.Web.ViewModels;
+using DenariusAI.Domain.Enums;
+using DenariusAI.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -10,7 +13,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 namespace DenariusAI.Web.Controllers;
 
 [Authorize]
-public sealed class BudgetController(IBudgetService service, ILogger<BudgetController> logger) : Controller
+public sealed class BudgetController(IBudgetService service, DenariusDbContext dbContext, ILogger<BudgetController> logger) : Controller
 {
     [HttpGet]
     public async Task<IActionResult> Index(int? year, int? month, Guid? groupId, string? search, string sort = "group", int page = 1, int pageSize = 10, CancellationToken cancellationToken = default)
@@ -35,11 +38,33 @@ public sealed class BudgetController(IBudgetService service, ILogger<BudgetContr
         var totalActual = execution.Sum(item => item.Actual);
         var pagination = PaginationViewModel.Create(execution.Count, page, pageSize);
         var lines = execution.Skip((pagination.Page - 1) * pagination.PageSize).Take(pagination.PageSize)
-            .Select(item => new BudgetLineFormViewModel { CategoryId = item.CategoryId, CategoryName = item.CategoryName, FinancialGroupName = item.FinancialGroupName, Amount = item.Budgeted, Actual = item.Actual }).ToList();
+            .Select(item => new BudgetLineFormViewModel { CategoryId = item.CategoryId, CategoryName = item.CategoryName, FinancialGroupName = item.FinancialGroupName, Kind = FinancialGroupKind.Expense, Amount = item.Budgeted, Actual = item.Actual }).ToList();
         return View(new BudgetIndexViewModel(selectedYear, selectedMonth, groupId, search, sort, lines, YearItems(selectedYear), MonthItems(selectedMonth),
             groups.Select(group => new SelectListItem(group.Key.FinancialGroupName, group.Key.FinancialGroupId.ToString(), group.Key.FinancialGroupId == groupId)).Prepend(new SelectListItem("Todos os grupos", string.Empty, groupId is null)).ToList(), SortItems(sort), totalBudgeted, totalActual, pagination));
     }
 
+    [HttpGet]
+    public async Task<IActionResult> Category(Guid id, CancellationToken cancellationToken = default)
+    {
+        var category = await dbContext.Categories.AsNoTracking()
+            .Where(item => item.Id == id)
+            .Select(item => new { item.Id, item.Name, GroupName = item.FinancialGroup.Name, Kind = item.FinancialGroup.Kind })
+            .SingleOrDefaultAsync(cancellationToken);
+        if (category is null) return NotFound();
+
+        var history = await dbContext.Budgets.AsNoTracking()
+            .OrderBy(item => item.Year).ThenBy(item => item.Month)
+            .Select(budget => new BudgetCategoryHistoryItemViewModel(
+                budget.Year, budget.Month,
+                budget.Lines.Where(line => line.CategoryId == id).Sum(line => (decimal?)line.Amount) ?? 0m,
+                budget.JournalEntries.Where(entry => entry.Status == JournalEntryStatus.Active)
+                    .SelectMany(entry => entry.Lines)
+                    .Where(line => line.CategoryId == id || (line.CategoryId == null && line.Account.CategoryId == id))
+                    .Sum(line => (decimal?)(category.Kind == FinancialGroupKind.Income ? line.Credit - line.Debit : line.Debit - line.Credit)) ?? 0m))
+            .ToListAsync(cancellationToken);
+
+        return View("Category", new BudgetCategoryDetailsViewModel(category.Id, category.Name, category.GroupName, category.Kind, history));
+    }
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> Save(BudgetSaveViewModel model, CancellationToken cancellationToken)
     {
