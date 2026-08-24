@@ -1,0 +1,76 @@
+name: denarius-ai
+
+services:
+  denarius-ai-db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_PID: Express
+      MSSQL_SA_PASSWORD: ${DENARIUS_AI_DB_PASSWORD:?Define DENARIUS_AI_DB_PASSWORD in .env}
+    volumes:
+      - denarius-ai-sql-data:/var/opt/mssql
+    networks:
+      - denarius-ai-network
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P \"$$MSSQL_SA_PASSWORD\" -C -Q \"SELECT 1\" -b -o /dev/null"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+    restart: unless-stopped
+
+  denarius-ai-web:
+    image: denarius-ai:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_HTTP_PORTS: 8080
+      HttpsRedirection__Enabled: "false"
+      ConnectionStrings__DenariusAIDatabase: Server=denarius-ai-db,1433;Database=DenariusAI;User Id=sa;Password=${DENARIUS_AI_DB_PASSWORD:?Define DENARIUS_AI_DB_PASSWORD in .env};TrustServerCertificate=True;Encrypt=True
+      InitialAdmin__Email: ${DENARIUS_AI_ADMIN_EMAIL:?Define DENARIUS_AI_ADMIN_EMAIL in .env}
+      InitialAdmin__Password: ${DENARIUS_AI_ADMIN_PASSWORD:?Define DENARIUS_AI_ADMIN_PASSWORD in .env}
+      InitialAdmin__DisplayName: ${DENARIUS_AI_ADMIN_DISPLAY_NAME:-Administrador}
+      DataProtection__KeyPath: /app/keys
+      Mistral__ApiKey: ${MISTRAL_API_KEY:-}
+      Mistral__Model: mistral-small-latest
+    ports:
+      - "${DENARIUS_AI_HTTP_PORT:-8080}:8080"
+    volumes:
+      - denarius-ai-data-protection:/app/keys
+    networks:
+      - denarius-ai-network
+    depends_on:
+      denarius-ai-db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "http://localhost:8080/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    restart: unless-stopped
+
+  denarius-ai-mcp:
+    image: denarius-ai-mcp:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: mcp-final
+    profiles: ["mcp"]
+    environment:
+      ConnectionStrings__DenariusAIDatabase: Server=denarius-ai-db,1433;Database=DenariusAI;User Id=sa;Password=${DENARIUS_AI_DB_PASSWORD:?Define DENARIUS_AI_DB_PASSWORD in .env};TrustServerCertificate=True;Encrypt=True
+    networks:
+      - denarius-ai-network
+    depends_on:
+      denarius-ai-db:
+        condition: service_healthy
+
+volumes:
+  denarius-ai-sql-data:
+  denarius-ai-data-protection:
+
+networks:
+  denarius-ai-network:
+    driver: bridge

@@ -1,0 +1,14 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/DenariusAI.Application/DenariusAI.Application.csproj" />
+    <Project Path="src/DenariusAI.Domain/DenariusAI.Domain.csproj" />
+    <Project Path="src/DenariusAI.Infrastructure/DenariusAI.Infrastructure.csproj" />
+    <Project Path="src/DenariusAI.Mcp/DenariusAI.Mcp.csproj" />
+    <Project Path="src/DenariusAI.Web/DenariusAI.Web.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/DenariusAI.IntegrationTests/DenariusAI.IntegrationTests.csproj" />
+    <Project Path="tests/DenariusAI.McpTests/DenariusAI.McpTests.csproj" />
+    <Project Path="tests/DenariusAI.UnitTests/DenariusAI.UnitTests.csproj" />
+  </Folder>
+</Solution>

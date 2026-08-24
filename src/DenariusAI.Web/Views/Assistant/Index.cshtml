@@ -1,0 +1,13 @@
+@model AssistantPageViewModel
+@{ ViewData["Title"] = "Assistente"; }
+<div class="assistant-page">
+<header class="assistant-header"><div><p class="eyebrow">Inteligência Artificial</p><h1>Assistente financeiro</h1><p>Converse com os seus dados financeiros de forma segura e fundamentada.</p></div><span class="assistant-model"><i class="@(Model.IsAvailable ? "online" : null)"></i>@Model.Model</span></header>
+<section class="assistant-shell">
+<div id="assistantMessages" class="assistant-messages" aria-live="polite">
+<div class="assistant-welcome"><span class="assistant-orb">✦</span><h2>Como posso ajudar?</h2><p>Analiso os dados da DenariusAI através de ferramentas financeiras exclusivamente de leitura.</p><div class="assistant-suggestions"><button type="button">Quanto gastei este mês?</button><button type="button">Estou acima do orçamento?</button><button type="button">Qual é a minha taxa de poupança?</button><button type="button">Que movimentos falta reconciliar?</button></div></div>
+</div>
+<div class="assistant-composer">
+@if (!Model.IsAvailable) { <div class="assistant-unavailable">A integração Mistral ainda não está configurada. <a asp-controller="Account" asp-action="Profile" asp-fragment="ai">Abrir Definições</a></div> }
+<form id="assistantForm"><div class="assistant-input-wrap"><textarea id="assistantQuestion" maxlength="1000" rows="1" placeholder="Pergunte algo sobre as suas finanças…" disabled="@(!Model.IsAvailable)"></textarea><button type="submit" aria-label="Enviar pergunta" disabled="@(!Model.IsAvailable)">↑</button></div><div class="assistant-caption"><span>As respostas usam os dados disponíveis e podem necessitar de confirmação.</span><span id="assistantCounter">0 / 1000</span></div>@Html.AntiForgeryToken()</form>
+</div></section></div>
+@section Scripts { <script src="~/js/assistant.js" asp-append-version="true"></script> }

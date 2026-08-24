@@ -1,0 +1,17 @@
+@model ReconciliationImportReviewViewModel
+@{ ViewData["Title"] = "Importar extrato"; }
+<link rel="stylesheet" href="~/css/intelligent-workflows.css" asp-append-version="true" />
+
+<div class="page-header">
+    <div><p class="eyebrow">Reconciliação · Importação</p><h1>Importar extrato Excel</h1><p class="page-subtitle">Compare o extrato com os movimentos existentes e classifique apenas os registos novos.</p></div>
+    <a class="button secondary" asp-action="Index">Cancelar</a>
+</div>
+<section class="panel import-panel">
+    <form asp-action="ImportExcel" method="post" enctype="multipart/form-data" class="settings-form">
+        <div asp-validation-summary="ModelOnly" class="validation-summary"></div>
+        <label>Conta do extrato<select name="bankAccountId" required><option value="">Selecionar conta…</option>@foreach (var option in Model.CounterAccounts) { <option value="@option.Value">@option.Text</option> }</select></label>
+        <label>Ficheiro Excel<input type="file" name="file" accept=".xlsx,.xlsm" required /></label>
+        <p class="muted">Cabeçalhos reconhecidos: Data, Descrição, Referência e Valor; ou Débito e Crédito. A primeira folha será analisada.</p>
+        <div class="form-actions"><button class="button" type="submit">Analisar movimentos</button></div>
+    </form>
+</section>

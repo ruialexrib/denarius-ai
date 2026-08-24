@@ -1,0 +1,7 @@
+.help-card{min-height:210px;color:inherit;text-decoration:none;transition:transform .15s ease,border-color .15s ease,box-shadow .15s ease}
+.help-card:hover{transform:translateY(-2px);border-color:#9bd7c2;box-shadow:0 14px 34px #18223712}
+.help-card h2{margin:0 0 10px}.help-card>strong{margin-top:auto;color:#087f5b;font-size:.78rem}
+.help-detail-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+.help-detail-card h2{margin:0 0 18px;font-size:1.08rem}.help-detail-card ul{margin:0;padding-left:20px;color:#465267;line-height:1.75}.help-detail-card li+li{margin-top:10px}
+.help-tip{margin-top:18px;border-left:4px solid #159a70}.help-tip strong{color:#087f5b}.help-tip p{margin:7px 0 0;color:var(--muted);line-height:1.65}
+@media(max-width:700px){.help-detail-grid{grid-template-columns:1fr}}

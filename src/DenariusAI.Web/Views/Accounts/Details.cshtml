@@ -1,0 +1,8 @@
+@model AccountDetailsViewModel
+@using DenariusAI.Web.Controllers
+@{ ViewData["Title"] = "Consultar conta"; }
+<div class="page-header"><div><p class="eyebrow">Configuração · Contas</p><h1>@Model.Account.Name</h1><p class="page-subtitle">Consulte o saldo, a classificação e os restantes dados desta conta.</p></div><div class="form-actions"><a class="button secondary" asp-action="Index">Voltar</a><a class="button" asp-action="Edit" asp-route-id="@Model.Account.Id">Editar</a></div></div>
+<section class="account-summary">
+    <article class="balance-card"><span>Saldo contabilístico</span><strong>@Model.Account.Balance.ToString("N2") @Model.Account.Currency</strong><small>Saldo inicial: @Model.Account.InitialBalance.ToString("N2") @Model.Account.Currency</small></article>
+    <article class="panel account-details"><dl><div><dt>Tipo</dt><dd>@AccountsController.AccountTypeName(Model.Account.AccountType)</dd></div><div><dt>Categoria</dt><dd>@if (!string.IsNullOrWhiteSpace(Model.GroupName)) { <span>@Model.GroupName · </span> }@Model.CategoryName</dd></div><div><dt>Estado</dt><dd><span class="status @(Model.Account.IsActive ? "active" : "inactive")">@(Model.Account.IsActive ? "Ativa" : "Inativa")</span></dd></div><div><dt>Moeda</dt><dd>@Model.Account.Currency</dd></div>@if (!string.IsNullOrWhiteSpace(Model.Account.Description)) { <div class="wide"><dt>Descrição</dt><dd>@Model.Account.Description</dd></div> }</dl></article>
+</section>

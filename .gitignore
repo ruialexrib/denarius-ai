@@ -1,0 +1,32 @@
+# .NET / IDE
+**/bin/
+**/obj/
+.dotnet-cli/
+.nuget/
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
+
+# Tests and tooling
+TestResults/
+coverage/
+*.trx
+
+# Secrets and local configuration
+.env
+.env.*
+!.env.example
+appsettings.Local.json
+secrets.json
+
+# Docker / OS
+docker-compose.override.yml
+.DS_Store
+Thumbs.db
+
+# Logs and temporary files
+*.log
+*.tmp
+artifacts/

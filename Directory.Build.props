@@ -1,0 +1,15 @@
+<Project>
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <AnalysisLevel>latest</AnalysisLevel>
+    <Product>DenariusAI</Product>
+    <Company>DenariusAI</Company>
+    <Description>Personal and family finance management platform with double-entry accounting, budgeting, reconciliation, analytics and AI-powered financial insights.</Description>
+    <Version>0.15.0</Version>
+    <AssemblyVersion>0.15.0.0</AssemblyVersion>
+    <FileVersion>0.15.0.0</FileVersion>
+  </PropertyGroup>
+</Project>

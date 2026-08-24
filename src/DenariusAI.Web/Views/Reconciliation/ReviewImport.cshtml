@@ -1,0 +1,29 @@
+@model ReconciliationImportReviewViewModel
+@{ ViewData["Title"] = "Rever movimentos importados"; }
+<link rel="stylesheet" href="~/css/intelligent-workflows.css" asp-append-version="true" />
+
+<div class="page-header">
+    <div><p class="eyebrow">Reconciliação · Revisão</p><h1>Novos movimentos encontrados</h1><p class="page-subtitle">Reveja as sugestões para <strong>@Model.BankAccountName</strong>. Nada será gravado até confirmar.</p></div>
+    <a class="button secondary" asp-action="Import">Cancelar</a>
+</div>
+<form asp-action="ConfirmImport" method="post">
+    <input asp-for="BankAccountId" type="hidden" /><input asp-for="BankAccountName" type="hidden" />
+    <div asp-validation-summary="ModelOnly" class="validation-summary"></div>
+    <section class="panel import-review">
+        <div class="table-wrap"><table><thead><tr><th>Importar</th><th>Data</th><th>Movimento</th><th>Valor</th><th>Categoria</th><th>Contrapartida</th><th>Sugestão</th></tr></thead><tbody>
+        @for (var i = 0; i < Model.Rows.Count; i++) {
+            <tr>
+                <td><input asp-for="Rows[i].Selected" /><input asp-for="Rows[i].RowNumber" type="hidden" /><input asp-for="Rows[i].Date" type="hidden" /><input asp-for="Rows[i].Description" type="hidden" /><input asp-for="Rows[i].Reference" type="hidden" /><input asp-for="Rows[i].Amount" type="hidden" /><input asp-for="Rows[i].SuggestionReason" type="hidden" /></td>
+                <td class="nowrap">@Model.Rows[i].Date.ToString("dd/MM/yyyy")</td>
+                <td><strong>@Model.Rows[i].Description</strong>@if (!string.IsNullOrWhiteSpace(Model.Rows[i].Reference)) { <small>Ref. @Model.Rows[i].Reference</small> }</td>
+                <td class="amount @(Model.Rows[i].Amount >= 0 ? "positive" : "negative")">@Model.Rows[i].Amount.ToString("N2")</td>
+                <td><select asp-for="Rows[i].CategoryId"><option value="">Selecionar…</option>@foreach (var option in Model.Categories) { <option value="@option.Value" selected="@(option.Value == Model.Rows[i].CategoryId?.ToString())">@option.Text</option> }</select></td>
+                <td><select asp-for="Rows[i].CounterAccountId"><option value="">Selecionar…</option>@foreach (var option in Model.CounterAccounts) { <option value="@option.Value" selected="@(option.Value == Model.Rows[i].CounterAccountId?.ToString())">@option.Text</option> }</select></td>
+                <td><small class="ai-suggestion">@(Model.Rows[i].SuggestionReason ?? "Sem sugestão automática")</small></td>
+            </tr>
+        }
+        @if (Model.Rows.Count == 0) { <tr><td colspan="7" class="empty-row">Todos os movimentos do ficheiro já existem.</td></tr> }
+        </tbody></table></div>
+    </section>
+    <div class="form-actions sticky-actions"><a class="button secondary" asp-action="Import">Voltar</a><button class="button" type="submit" disabled="@(Model.Rows.Count == 0)">Criar movimentos selecionados</button></div>
+</form>

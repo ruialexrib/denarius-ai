@@ -1,0 +1,12 @@
+**/bin
+**/obj
+.git
+.gitignore
+.env
+.dotnet-cli
+.nuget
+.idea
+.vs
+.vscode
+TestResults
+README.md

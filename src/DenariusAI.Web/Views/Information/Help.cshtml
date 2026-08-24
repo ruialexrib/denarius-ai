@@ -1,0 +1,14 @@
+@{ ViewData["Title"] = "Ajuda"; }
+<link rel="stylesheet" href="~/css/help-details.css" asp-append-version="true" />
+<div class="page-header"><div><p class="eyebrow">Suporte</p><h1>Centro de ajuda</h1><p class="page-subtitle">Escolha uma área para consultar instruções, conceitos e aspetos importantes antes de realizar as operações.</p></div></div>
+<section class="help-grid">
+<a class="help-card" asp-action="HelpDetail" asp-route-id="dashboard"><h2>Dashboard</h2><p>Indicadores, períodos, orçamento, gráficos e Certificados de Aforro.</p><strong>Consultar detalhes →</strong></a>
+<a class="help-card" asp-action="HelpDetail" asp-route-id="movimentos"><h2>Movimentos</h2><p>Partidas dobradas, contas, categorias, orçamentos e estados.</p><strong>Consultar detalhes →</strong></a>
+<a class="help-card" asp-action="HelpDetail" asp-route-id="assistant"><h2>Assistência por IA</h2><p>Preenchimento em linguagem natural e conversação sobre os seus dados.</p><strong>Consultar detalhes →</strong></a>
+<a class="help-card" asp-action="HelpDetail" asp-route-id="reconciliation"><h2>Reconciliação</h2><p>Confirmação manual, importação Excel e classificação assistida.</p><strong>Consultar detalhes →</strong></a>
+<a class="help-card" asp-action="HelpDetail" asp-route-id="budget"><h2>Orçamento</h2><p>Planeamento mensal, execução e associação explícita aos movimentos.</p><strong>Consultar detalhes →</strong></a>
+<a class="help-card" asp-action="HelpDetail" asp-route-id="certificates"><h2>Certificados de Aforro</h2><p>Carteira, rendimentos, capitalizações e valores projetados.</p><strong>Consultar detalhes →</strong></a>
+<a class="help-card" asp-action="HelpDetail" asp-route-id="analytics"><h2>Análise Financeira</h2><p>Comparações, filtros, tendências e relatórios inteligentes.</p><strong>Consultar detalhes →</strong></a>
+<a class="help-card" asp-action="HelpDetail" asp-route-id="tables"><h2>Tabelas</h2><p>Grupos, categorias e contas que estruturam a informação financeira.</p><strong>Consultar detalhes →</strong></a>
+<a class="help-card" asp-action="HelpDetail" asp-route-id="preferences"><h2>Preferências e segurança</h2><p>Perfil, palavra-passe, permissões e administração.</p><strong>Consultar detalhes →</strong></a>
+</section>

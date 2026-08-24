@@ -1,0 +1,57 @@
+.filterbar.accounts {
+    grid-template-columns: minmax(150px, .8fr) minmax(210px, 1.2fr) minmax(180px, 1fr) auto auto auto;
+}
+
+.amount {
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+}
+
+.form-grid {
+    display: grid;
+    gap: 16px;
+}
+
+.form-grid.two {
+    grid-template-columns: 1fr 1fr;
+}
+
+.form-grid > div {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.account-summary {
+    display: grid;
+    grid-template-columns: minmax(260px, .65fr) 1.35fr;
+    gap: 22px;
+}
+
+.balance-card {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 190px;
+    padding: 28px;
+    border-radius: 14px;
+    background: linear-gradient(145deg, #15233b, #203453);
+    color: #fff;
+    box-shadow: 0 14px 35px #15233b22;
+}
+
+.balance-card span, .balance-card small { color: #b8c6d9; }
+.balance-card strong { margin: 10px 0; font-size: 2rem; font-variant-numeric: tabular-nums; }
+.account-details dl { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; margin: 0; }
+.account-details dl div { border-bottom: 1px solid var(--line); padding-bottom: 14px; }
+.account-details dl .wide { grid-column: 1 / -1; }
+.account-details dt { color: var(--muted); font-size: .72rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
+.account-details dd { margin: 7px 0 0; }
+
+@media (max-width: 1050px) {
+    .filterbar.accounts { grid-template-columns: 1fr 1fr; }
+}
+
+@media (max-width: 800px) {
+    .filterbar.accounts, .form-grid.two, .account-summary, .account-details dl { grid-template-columns: 1fr; }
+}

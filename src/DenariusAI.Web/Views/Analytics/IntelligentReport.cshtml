@@ -1,0 +1,5 @@
+@model IntelligentReportViewModel
+@{ ViewData["Title"] = "Relatório financeiro inteligente"; }
+<link rel="stylesheet" href="~/css/intelligent-workflows.css" asp-append-version="true" />
+<div class="page-header"><div><p class="eyebrow">Análise · Inteligência Artificial</p><h1>Relatório financeiro inteligente</h1><p class="page-subtitle">Relatório gerado a partir de todas as tabelas financeiras entre @Model.From.ToString("dd/MM/yyyy") e @Model.To.ToString("dd/MM/yyyy").</p></div><div class="form-actions"><a class="button secondary" asp-action="Index" asp-route-from="@Model.From" asp-route-to="@Model.To">Voltar</a><form asp-action="ExportMarkdown" method="post"><input type="hidden" name="from" value="@Model.From" /><input type="hidden" name="to" value="@Model.To" /><textarea name="markdown" hidden>@Model.Markdown</textarea><button class="button" type="submit">Exportar Markdown</button></form></div></div>
+<section class="panel intelligent-report"><div class="report-meta"><span>Modelo: <strong>@Model.Model</strong></span><span>Gerado em: <strong>@Model.GeneratedAt</strong></span></div><pre>@Model.Markdown</pre></section>

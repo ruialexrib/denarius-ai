@@ -1,0 +1,14 @@
+(() => {
+    const form = document.querySelector('#journal-entry-form'); if (!form) return;
+    const body = document.querySelector('#journal-lines'); const template = document.querySelector('#journal-line-template'); const save = document.querySelector('#save-journal');
+    const number = value => Number.parseFloat(value) || 0; const format = value => value.toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    function renumber() { [...body.querySelectorAll('.journal-line')].forEach((row, index) => row.querySelectorAll('[name]').forEach(input => input.name = input.name.replace(/Lines\[\d+\]/, `Lines[${index}]`))); }
+    function update() {
+        const rows = [...body.querySelectorAll('.journal-line')]; const debit = rows.reduce((sum, row) => sum + number(row.querySelector('.line-debit').value), 0); const credit = rows.reduce((sum, row) => sum + number(row.querySelector('.line-credit').value), 0); const difference = debit - credit;
+        const validValues = rows.every(row => { const d = number(row.querySelector('.line-debit').value); const c = number(row.querySelector('.line-credit').value); return (d > 0) !== (c > 0); }); const accounts = rows.map(row => row.querySelector('.line-account').value).filter(Boolean); const balanced = Math.abs(difference) < 0.005 && debit > 0; const valid = rows.length >= 2 && accounts.length === rows.length && new Set(accounts).size >= 2 && validValues && balanced;
+        document.querySelector('#total-debit').textContent = format(debit); document.querySelector('#total-credit').textContent = format(credit); document.querySelector('#journal-difference').textContent = format(difference); document.querySelector('#balance-state').textContent = balanced ? 'Movimento equilibrado.' : 'O movimento tem de ficar equilibrado.'; document.querySelector('.journal-balance').classList.toggle('balanced', balanced); save.disabled = !valid; body.querySelectorAll('.remove-line').forEach(button => button.disabled = rows.length <= 2);
+    }
+    document.querySelector('#add-line').addEventListener('click', () => { body.insertAdjacentHTML('beforeend', template.innerHTML.replaceAll('__index__', body.children.length)); update(); });
+    body.addEventListener('click', event => { const button = event.target.closest('.remove-line'); if (!button || body.children.length <= 2) return; button.closest('.journal-line').remove(); renumber(); update(); });
+    body.addEventListener('input', event => { if (event.target.matches('.line-debit') && number(event.target.value) > 0) event.target.closest('tr').querySelector('.line-credit').value = '0'; if (event.target.matches('.line-credit') && number(event.target.value) > 0) event.target.closest('tr').querySelector('.line-debit').value = '0'; update(); }); body.addEventListener('change', update); update();
+})();
