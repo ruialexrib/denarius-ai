@@ -24,6 +24,7 @@ public interface IAccountService
 {
     Task<IReadOnlyList<AccountDto>> ListAsync(bool activeOnly = false, CancellationToken cancellationToken = default);
     Task<AccountDto?> GetAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<AccountStatementLineDto>> GetStatementAsync(Guid id, CancellationToken cancellationToken = default) => Task.FromResult<IReadOnlyList<AccountStatementLineDto>>([]);
     Task<Guid> CreateAsync(SaveAccountDto input, string userId, CancellationToken cancellationToken = default);
     Task UpdateAsync(Guid id, SaveAccountDto input, string userId, CancellationToken cancellationToken = default);
     Task SetActiveAsync(Guid id, bool isActive, string userId, CancellationToken cancellationToken = default);

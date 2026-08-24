@@ -7,6 +7,7 @@ public interface IAccountRepository : IRepository<Account>
 {
     Task<IReadOnlyList<AccountDto>> ListWithBalancesAsync(bool activeOnly = false, CancellationToken cancellationToken = default);
     Task<decimal> GetBalanceAsync(Guid accountId, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<AccountStatementLineDto>> GetStatementAsync(Guid accountId, CancellationToken cancellationToken = default);
 }
 
 public interface IJournalEntryRepository : IRepository<JournalEntry>

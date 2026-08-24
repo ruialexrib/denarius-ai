@@ -50,3 +50,11 @@ public sealed record AccountIndexViewModel(
     PaginationViewModel Pagination);
 
 public sealed record AccountDetailsViewModel(AccountDto Account, string CategoryName, string? GroupName);
+
+public sealed record AccountStatementViewModel(
+    AccountDto Account,
+    IReadOnlyList<AccountStatementLineDto> Items,
+    DateOnly? From,
+    DateOnly? To,
+    string? Search,
+    PaginationViewModel Pagination);

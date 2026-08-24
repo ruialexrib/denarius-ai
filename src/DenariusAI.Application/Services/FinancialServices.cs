@@ -143,6 +143,9 @@ public sealed class AccountService(IUnitOfWork unitOfWork) : IAccountService
         return new AccountDto(account.Id, account.Name, account.Description, account.AccountType, account.InitialBalance, balance, account.Currency, account.IsActive, account.CategoryId);
     }
 
+    public Task<IReadOnlyList<AccountStatementLineDto>> GetStatementAsync(Guid id, CancellationToken cancellationToken = default) =>
+        unitOfWork.Accounts.GetStatementAsync(id, cancellationToken);
+
     public async Task<Guid> CreateAsync(SaveAccountDto input, string userId, CancellationToken cancellationToken = default)
     {
         Validate(input, userId);

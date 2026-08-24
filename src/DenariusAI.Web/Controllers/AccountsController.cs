@@ -42,6 +42,30 @@ public sealed class AccountsController(IAccountService service, ICategoryService
     }
 
     [HttpGet]
+    public async Task<IActionResult> Statement(Guid id, DateOnly? from, DateOnly? to, string? search, int page = 1, int pageSize = 10, CancellationToken cancellationToken = default)
+    {
+        var account = await service.GetAsync(id, cancellationToken);
+        if (account is null) return NotFound();
+
+        var lines = await service.GetStatementAsync(id, cancellationToken);
+        if (from.HasValue) lines = lines.Where(item => item.Date >= from.Value).ToList();
+        if (to.HasValue) lines = lines.Where(item => item.Date <= to.Value).ToList();
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var term = search.Trim();
+            lines = lines.Where(item => item.Description.Contains(term, StringComparison.CurrentCultureIgnoreCase)
+                || (item.Reference?.Contains(term, StringComparison.CurrentCultureIgnoreCase) ?? false)
+                || (item.LineDescription?.Contains(term, StringComparison.CurrentCultureIgnoreCase) ?? false)
+                || (item.CategoryName?.Contains(term, StringComparison.CurrentCultureIgnoreCase) ?? false)).ToList();
+        }
+
+        lines = lines.OrderByDescending(item => item.Date).ThenByDescending(item => item.CreatedAt).ThenByDescending(item => item.LineId).ToList();
+        var pagination = PaginationViewModel.Create(lines.Count, page, pageSize);
+        var items = lines.Skip((pagination.Page - 1) * pagination.PageSize).Take(pagination.PageSize).ToList();
+        return View(new AccountStatementViewModel(account, items, from, to, search, pagination));
+    }
+
+    [HttpGet]
     public async Task<IActionResult> Create(CancellationToken cancellationToken)
     {
         var model = new AccountFormViewModel();

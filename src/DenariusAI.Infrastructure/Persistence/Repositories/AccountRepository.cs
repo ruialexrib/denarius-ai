@@ -41,4 +41,47 @@ public sealed class AccountRepository(DenariusDbContext dbContext) : Repository<
             ? account.InitialBalance - movement
             : account.InitialBalance + movement;
     }
+
+    public async Task<IReadOnlyList<AccountStatementLineDto>> GetStatementAsync(Guid accountId, CancellationToken cancellationToken = default)
+    {
+        var account = await Set.AsNoTracking()
+            .Where(item => item.Id == accountId)
+            .Select(item => new { item.InitialBalance, item.AccountType })
+            .SingleOrDefaultAsync(cancellationToken)
+            ?? throw new KeyNotFoundException("Account was not found.");
+
+        var lines = await DbContext.JournalEntryLines.AsNoTracking()
+            .Where(line => line.AccountId == accountId && line.JournalEntry.Status == JournalEntryStatus.Active)
+            .OrderBy(line => line.JournalEntry.Date)
+            .ThenBy(line => line.JournalEntry.CreatedAt)
+            .ThenBy(line => line.JournalEntryId)
+            .ThenBy(line => line.Id)
+            .Select(line => new
+            {
+                line.JournalEntryId,
+                LineId = line.Id,
+                line.JournalEntry.Date,
+                line.JournalEntry.CreatedAt,
+                EntryDescription = line.JournalEntry.Description,
+                line.JournalEntry.Reference,
+                LineDescription = line.Description,
+                CategoryName = line.Category == null ? null : line.Category.Name,
+                line.Debit,
+                line.Credit,
+                ReconciliationStatus = line.JournalEntry.Reconciliation == null ? ReconciliationStatus.Unreconciled : line.JournalEntry.Reconciliation.Status
+            })
+            .ToListAsync(cancellationToken);
+
+        var balance = account.InitialBalance;
+        var statement = new List<AccountStatementLineDto>(lines.Count);
+        foreach (var line in lines)
+        {
+            var movement = line.Debit - line.Credit;
+            balance += account.AccountType == AccountType.Income ? -movement : movement;
+            statement.Add(new AccountStatementLineDto(line.JournalEntryId, line.LineId, line.Date, line.CreatedAt,
+                line.EntryDescription, line.Reference, line.LineDescription, line.CategoryName, line.Debit, line.Credit, balance, line.ReconciliationStatus));
+        }
+
+        return statement;
+    }
 }
