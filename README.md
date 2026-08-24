@@ -17,7 +17,7 @@ Developed by [Rui Ribeiro](https://github.com/ruialexrib)
 
 Ten views of the DenariusAI experience, from the dashboard and daily movements to analytics, savings, administration and help.
 
-![DenariusAI application tour](docs/assets/denarius-ai-demo.gif)
+![DenariusAI application tour](docs/assets/denarius-ai-tour.gif)
 
 </div>
 
