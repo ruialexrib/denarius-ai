@@ -12,6 +12,9 @@
 .dashboard-kpis .kpi-featured:before{background:#2fd09a;box-shadow:0 0 0 5px rgba(47,208,154,.12)}
 .dashboard-kpis .kpi-featured span,.dashboard-kpis .kpi-featured small{color:#b9c8d9}
 .dashboard-kpis .kpi-featured strong{color:#fff}
+.dashboard-kpis .kpi-balance{background:linear-gradient(135deg,#f0faf7,#fff);box-shadow:inset 0 0 0 1px #cfeadf,0 10px 30px rgba(24,34,55,.06)}
+.dashboard-kpis .kpi-balance:before{background:#159a70;box-shadow:0 0 0 4px rgba(21,154,112,.1)}
+.dashboard-kpis .kpi-balance strong{color:#116d55}
 .dashboard-kpis strong{margin:14px 0 4px;font-size:1.65rem;letter-spacing:-.035em}
 .dashboard-overview{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:16px;margin-bottom:12px}
 .dashboard-overview .panel{min-height:218px;padding:22px;border:0;border-radius:16px;box-shadow:0 10px 30px rgba(24,34,55,.06)}

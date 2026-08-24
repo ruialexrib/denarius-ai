@@ -6,7 +6,7 @@
 <div class="page-header"><div><p class="eyebrow">Visão geral</p><h1>Dashboard</h1><p class="page-subtitle">Acompanhe o desempenho financeiro, os saldos e a execução do orçamento do período.</p></div><form method="get" class="dashboard-period"><select name="year" asp-items="Model.Years" aria-label="Ano"></select><select name="month" asp-items="Model.Months" aria-label="Mês"></select><button class="button secondary" type="submit">Aplicar</button></form></div>
 <section class="dashboard-kpis" aria-label="Indicadores principais">
 <article class="kpi-featured"><span>Resultado do mês</span><strong class="@(dashboard.MonthlyResult < 0 ? "negative" : "positive")">@dashboard.MonthlyResult.ToString("N2") €</strong><small>@periodName</small></article>
-<article><span>Saldo disponível</span><strong>@dashboard.LiquidBalance.ToString("N2") €</strong><small>Contas à ordem e dinheiro</small></article>
+<article class="kpi-balance"><span>Saldo disponível</span><strong>@dashboard.LiquidBalance.ToString("N2") €</strong><small>Contas à ordem e dinheiro</small></article>
 <article><span>Rendimentos</span><strong class="positive">@dashboard.Income.ToString("N2") €</strong><small>Entradas no período</small></article>
 <article><span>Despesas</span><strong class="negative">@dashboard.Expenses.ToString("N2") €</strong><small>Saídas no período</small></article>
 </section>
