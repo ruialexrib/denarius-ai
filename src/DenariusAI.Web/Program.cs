@@ -28,7 +28,7 @@ builder.Services.AddAuthorizationBuilder()
         .Build());
 builder.Services.AddSingleton(new DenariusAI.Web.Models.ApplicationInfo(
     Version: typeof(Program).Assembly.GetName().Version?.ToString(3) ?? "0.2.0",
-    Description: "Gestão financeira pessoal e familiar"));
+    Description: "Finanças com clareza"));
 builder.Services.AddHealthChecks().AddDbContextCheck<DenariusDbContext>("sqlserver");
 
 var app = builder.Build();
