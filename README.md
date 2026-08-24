@@ -1,153 +1,76 @@
+<div align="center">
+
 # DenariusAI
 
-**Personal and family finance management platform with double-entry accounting, budgeting, reconciliation, analytics and AI-powered financial insights.**
+### Personal and family finance, clearly managed.
 
-DenariusAI é uma aplicação web para gestão de finanças pessoais e familiares. O repositório denomina-se `denarius-ai`. A solução está a ser construída incrementalmente em ASP.NET Core MVC, com separação por camadas e persistência em SQL Server.
+[![.NET 9](https://img.shields.io/badge/.NET-9.0-512BD4?logo=dotnet&logoColor=white)](https://dotnet.microsoft.com/)
+[![ASP.NET Core](https://img.shields.io/badge/ASP.NET_Core-MVC-512BD4?logo=dotnet&logoColor=white)](https://learn.microsoft.com/aspnet/core/)
+[![SQL Server 2022](https://img.shields.io/badge/SQL_Server-2022-CC2927?logo=microsoftsqlserver&logoColor=white)](https://www.microsoft.com/sql-server/)
+[![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)](https://www.docker.com/)
+[![Mistral AI](https://img.shields.io/badge/AI-Mistral-FF7000)](https://mistral.ai/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-## Estado
+Developed by [Rui Ribeiro](https://github.com/ruialexrib)
 
-**Fase 14 — Assistente:** chat financeiro autenticado e fundamentado em contexto read-only, usando o modelo `mistral-small-latest`.
+</div>
 
-O hardening para produção pertence à fase seguinte.
+---
 
-## Arquitectura
+## About
 
-```mermaid
-flowchart TD
-    Browser --> Web[DenariusAI.Web]
-    Web --> Application[DenariusAI.Application]
-    Web --> Infrastructure[DenariusAI.Infrastructure]
-    Mcp[DenariusAI.Mcp] --> Application
-    Infrastructure --> Application
-    Application --> Domain[DenariusAI.Domain]
-    Infrastructure --> EF[Entity Framework Core]
-    EF --> Sql[(SQL Server)]
-```
+DenariusAI is a personal and family finance management platform built around double-entry accounting. It brings daily transactions, budgets, bank reconciliation, savings and financial analysis into one secure and consistent workspace.
 
-### Projectos
+AI features assist with transaction entry, classification, financial questions and Markdown report generation. Suggestions are always reviewed by the user before financial data is saved.
 
-| Projecto | Responsabilidade | Dependências internas |
-|---|---|---|
-| `DenariusAI.Domain` | Modelo e regras fundamentais | Nenhuma |
-| `DenariusAI.Application` | Casos de utilização e contratos | Domain |
-| `DenariusAI.Infrastructure` | EF Core, Identity e integrações | Application, Domain |
-| `DenariusAI.Web` | MVC, Razor e composição | Application, Infrastructure |
-| `DenariusAI.Mcp` | Servidor MCP e ferramentas financeiras de leitura | Application, Infrastructure |
-| `DenariusAI.UnitTests` | Regras isoladas | Domain, Application |
-| `DenariusAI.IntegrationTests` | Persistência e endpoints | Infrastructure, Web |
-| `DenariusAI.McpTests` | Contratos das ferramentas MCP | MCP |
+## Highlights
 
-Application contém os contratos `IRepository<T>`, `IUnitOfWork` e os serviços financeiros reutilizados futuramente pela interface MVC e pelo MCP. Infrastructure implementa estes contratos com Entity Framework Core; lançamentos completos são gravados dentro de uma transação.
+- Double-entry transactions with accounts, groups and categories
+- Monthly budgets with explicit transaction allocation
+- Bank reconciliation and assisted Excel statement import
+- Dashboards, period comparisons and financial analytics
+- Portuguese Savings Certificates portfolio and projections
+- Mistral-powered assistant and intelligent reports
+- Authentication, user roles and configurable application settings
+- Optional read-only MCP financial tools
 
-## Stack
+## Technology
 
-- .NET 9 e ASP.NET Core MVC
-- Entity Framework Core 9
-- ASP.NET Core Identity
-- SQL Server 2022
-- xUnit
-- Docker e Docker Compose
+| Technology | Role |
+| --- | --- |
+| **.NET 9 / ASP.NET Core MVC** | Web application and business workflows |
+| **Entity Framework Core** | Persistence and database migrations |
+| **SQL Server 2022** | Financial and identity data |
+| **Mistral AI** | Natural-language assistance and reports |
+| **Docker Compose** | Reproducible local deployment |
+| **xUnit** | Unit, integration and MCP tests |
 
-## Requisitos
+## Quick start
 
-- .NET SDK 9.0.312 ou uma feature band posterior do .NET 9
-- Docker com Docker Compose
-
-## Execução local
-
-Configure `ConnectionStrings:DenariusAIDatabase` com User Secrets ou variável de ambiente e execute:
+Requirements: Docker Engine or Docker Desktop with Docker Compose.
 
 ```powershell
-dotnet restore DenariusAI.slnx
-dotnet build DenariusAI.slnx --no-restore
-dotnet run --project src/DenariusAI.Web
-```
-
-O endpoint `/health` confirma também a conectividade do `DenariusDbContext`.
-
-## Docker
-
-Crie a configuração local sem a adicionar ao Git:
-
-```powershell
+git clone https://github.com/ruialexrib/denarius-ai.git
+cd denarius-ai
 Copy-Item .env.example .env
 ```
 
-Substitua a password de exemplo em `.env` e execute:
+Set secure local passwords in `.env` and optionally add `MISTRAL_API_KEY`. Then start the application:
 
 ```powershell
 docker compose up --build -d
 docker compose ps
 ```
 
-A aplicação fica disponível em `http://localhost:8080` por omissão. A base de dados não é publicada no host e os dados persistem no volume `denarius-ai-sql-data`.
-
-O primeiro utilizador é criado de forma idempotente a partir de `DENARIUS_AI_ADMIN_EMAIL`, `DENARIUS_AI_ADMIN_PASSWORD` e `DENARIUS_AI_ADMIN_DISPLAY_NAME`. As credenciais devem ser alteradas no ficheiro `.env` local antes do arranque.
-
-## Migrations
-
-O projecto está preparado para migrations EF Core e aplica migrations pendentes durante o arranque. A primeira migration do domínio será criada quando o modelo financeiro for introduzido; `EnsureCreated` não é utilizado.
+Open [http://localhost:8080](http://localhost:8080).
 
 ```powershell
-dotnet ef migrations add NomeDaMigration --project src/DenariusAI.Infrastructure --startup-project src/DenariusAI.Web --output-dir Persistence/Migrations
-dotnet ef database update --project src/DenariusAI.Infrastructure --startup-project src/DenariusAI.Web
+docker compose logs -f denarius-ai-web
+docker compose down
 ```
 
-## Testes
+Never commit `.env`, credentials or real financial data.
 
-```powershell
-dotnet test DenariusAI.slnx
-```
+## License
 
-## Servidor MCP
-
-O servidor usa o transporte standard `stdio` e disponibiliza ferramentas de leitura para contas, movimentos, execução orçamental, reconciliação, análise e resumo financeiro. As ferramentas dependem exclusivamente dos serviços de Application; a composição da persistência é feita no arranque do host MCP.
-
-Com a base de dados Docker em execução, compile a imagem e inicie o servidor através de:
-
-```powershell
-docker compose --profile mcp build denarius-ai-mcp
-docker compose run --rm -T denarius-ai-mcp
-```
-
-Num cliente MCP, configure `docker` como comando e os argumentos `compose`, `run`, `--rm`, `-T`, `denarius-ai-mcp`, usando o directório deste repositório como directório de trabalho. Fora de Docker, execute `dotnet run --project src/DenariusAI.Mcp` e forneça `ConnectionStrings__DenariusAIDatabase` no ambiente.
-
-## Configuração da Mistral
-
-A integração usa `ILLMService` e a implementação `MistralLLMService`, através do endpoint oficial de chat completions. O fornecedor pode ser substituído sem alterar os consumidores da camada Application. O modelo configurado por omissão é `mistral-small-latest`.
-
-Configure a chave apenas por User Secrets ou ambiente:
-
-```powershell
-dotnet user-secrets set "Mistral:ApiKey" "SUA_CHAVE" --project src/DenariusAI.Web
-```
-
-Em Docker, preencha `MISTRAL_API_KEY` no ficheiro `.env` local. A página Definições apresenta o estado da integração e permite testar a ligação. A chave nunca é apresentada, registada nos logs ou guardada na base de dados.
-
-## Assistente financeiro
-
-O menu **Assistente** disponibiliza uma conversa com os dados financeiros. Cada pergunta é acompanhada por contexto estruturado produzido pelos serviços read-only usados pelas ferramentas MCP: contas, movimentos recentes, orçamento corrente, reconciliação, dashboard e análise anual. O modelo é instruído a não inventar valores e a indicar quando os dados são insuficientes. O histórico mantido no browser é limitado e não é persistido na base de dados.
-
-No formulário **Novo movimento**, a opção **Preencher com IA** permite descrever uma operação em linguagem natural. O modelo pede esclarecimentos enquanto faltarem dados e só depois sugere o preenchimento de campos e partidas equilibradas. A sugestão é validada contra as contas, categorias e orçamentos ativos; nunca é gravada automaticamente.
-
-## Definições e preferências
-
-**Preferências**, no menu do utilizador, contém apenas dados pessoais. **Definições**, na navegação de configuração, contém parâmetros globais e constitui a fronteira preparada para futura autorização exclusiva de administradores. Modelo, endpoint, temperatura, tokens, limites de contexto e os prompts do Assistente e da sugestão de movimentos são persistidos na base de dados e aplicados nas chamadas seguintes sem reiniciar. Segredos, incluindo `MISTRAL_API_KEY`, permanecem exclusivamente no ambiente.
-
-## Roadmap
-
-1. Fundação
-2. Autenticação e layout
-3. Domínio financeiro
-4. Repositories e services
-5. Grupos e categorias
-6. Contas
-7. Movimentos por partidas dobradas
-8. Reconciliação
-9. Orçamento
-10. Dashboard
-11. Análise
-12. MCP
-13. Mistral
-14. Assistente
-15. Hardening
+Distributed under the [MIT License](LICENSE). Copyright © 2026 [Rui Ribeiro](https://github.com/ruialexrib).
