@@ -18,6 +18,8 @@ Developed by [Rui Ribeiro](https://github.com/ruialexrib)
 
 Demo access: `guest@denarius-ai.local` / `Denarius2026!`
 
+_The demo runs on an Azure virtual machine and may be temporarily unavailable when the VM is switched off._
+
 ### Application tour
 
 ![DenariusAI application tour](docs/assets/denarius-ai-tour.gif)
