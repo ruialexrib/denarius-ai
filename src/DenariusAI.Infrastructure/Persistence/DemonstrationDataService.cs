@@ -7,8 +7,18 @@ using System.Security.Cryptography;
 
 namespace DenariusAI.Infrastructure.Persistence;
 
+/// <summary>
+/// Service responsible for loading demonstration data into the database.
+/// </summary>
+/// <param name="dbContext">The database context for data operations.</param>
+/// <param name="userManager">Optional user manager for creating demonstration users.</param>
 public sealed class DemonstrationDataService(DenariusDbContext dbContext, UserManager<ApplicationUser>? userManager = null) : IDemonstrationDataService
 {
+    /// <summary>
+    /// Loads demonstration data into the database if no data exists.
+    /// </summary>
+    /// <param name="cancellationToken">Cancellation token to cancel the operation.</param>
+    /// <returns>A result containing information about the loaded data.</returns>
     public async Task<DemonstrationDataLoadResult> LoadAsync(CancellationToken cancellationToken = default)
     {
         if (await dbContext.Accounts.AnyAsync(cancellationToken)
@@ -46,6 +56,10 @@ public sealed class DemonstrationDataService(DenariusDbContext dbContext, UserMa
         return new(true, accounts.Length, entries.Length, budgets.Length);
     }
 
+    /// <summary>
+    /// Creates an array of sample savings certificates for demonstration purposes.
+    /// </summary>
+    /// <returns>An array of savings certificates.</returns>
     private static SavingsCertificate[] CreateSavingsCertificates() =>
     [
         Certificate(1, new DateOnly(2023, 3, 15), "E-2023-001842", "Poupança familiar", 2500m, 2.50m, 2684.72m, new DateOnly(2026, 9, 15)),
@@ -53,6 +67,18 @@ public sealed class DemonstrationDataService(DenariusDbContext dbContext, UserMa
         Certificate(3, new DateOnly(2025, 11, 21), "F-2025-014908", "Objetivos de longo prazo", 1500m, 2.00m, 1521.66m, new DateOnly(2026, 8, 21))
     ];
 
+    /// <summary>
+    /// Creates a savings certificate with the specified parameters.
+    /// </summary>
+    /// <param name="id">The certificate identifier.</param>
+    /// <param name="date">The certificate date.</param>
+    /// <param name="number">The certificate number.</param>
+    /// <param name="description">The certificate description.</param>
+    /// <param name="investment">The investment amount.</param>
+    /// <param name="rate">The interest rate.</param>
+    /// <param name="currentValue">The current value of the certificate.</param>
+    /// <param name="nextCapitalization">The next capitalization date.</param>
+    /// <returns>A configured savings certificate.</returns>
     private static SavingsCertificate Certificate(int id, DateOnly date, string number, string description,
         decimal investment, decimal rate, decimal currentValue, DateOnly nextCapitalization) =>
         new(date, number, description, investment, rate, currentValue, nextCapitalization)
@@ -60,6 +86,10 @@ public sealed class DemonstrationDataService(DenariusDbContext dbContext, UserMa
             Id = Id("70000000", id), CreatedAt = new DateTimeOffset(2026, 8, 24, 0, 0, 0, TimeSpan.Zero), CreatedBy = "demo-seed"
         };
 
+    /// <summary>
+    /// Creates sample journal entries for demonstration purposes covering 8 months.
+    /// </summary>
+    /// <returns>An array of journal entries.</returns>
     private static JournalEntry[] CreateEntries()
     {
         var entries = new List<JournalEntry>();
@@ -79,6 +109,17 @@ public sealed class DemonstrationDataService(DenariusDbContext dbContext, UserMa
         return entries.ToArray();
     }
 
+    /// <summary>
+    /// Creates a journal entry with two lines (debit and credit).
+    /// </summary>
+    /// <param name="month">The month of the entry.</param>
+    /// <param name="slot">The slot number within the month.</param>
+    /// <param name="day">The day of the month.</param>
+    /// <param name="description">The entry description.</param>
+    /// <param name="reference">The entry reference.</param>
+    /// <param name="first">The first line details (account, debit, credit, category).</param>
+    /// <param name="second">The second line details (account, debit, credit, category).</param>
+    /// <returns>A configured journal entry.</returns>
     private static JournalEntry Entry(int month, int slot, int day, string description, string reference,
         (int Account, decimal Debit, decimal Credit, int? Category) first,
         (int Account, decimal Debit, decimal Credit, int? Category) second)
@@ -99,6 +140,10 @@ public sealed class DemonstrationDataService(DenariusDbContext dbContext, UserMa
         return entry;
     }
 
+    /// <summary>
+    /// Ensures demonstration users exist in the system.
+    /// </summary>
+    /// <param name="cancellationToken">Cancellation token to cancel the operation.</param>
     public async Task EnsureUsersAsync(CancellationToken cancellationToken = default)
     {
         if (userManager is null) return;
@@ -117,5 +162,11 @@ public sealed class DemonstrationDataService(DenariusDbContext dbContext, UserMa
         }
     }
 
+    /// <summary>
+    /// Generates a GUID by combining a prefix with a numeric value.
+    /// </summary>
+    /// <param name="prefix">The prefix for the GUID.</param>
+    /// <param name="value">The numeric value to include in the GUID.</param>
+    /// <returns>A generated GUID.</returns>
     private static Guid Id(string prefix, int value) => Guid.Parse($"{prefix}-0000-0000-0000-{value:D12}");
 }

@@ -3,8 +3,19 @@ using Microsoft.EntityFrameworkCore;
 
 namespace DenariusAI.Infrastructure.Persistence;
 
+/// <summary>
+/// Service responsible for resetting financial data by removing all related entities from the database.
+/// </summary>
+/// <param name="dbContext">The database context used to access and manipulate financial data.</param>
 public sealed class FinancialDataResetService(DenariusDbContext dbContext) : IFinancialDataResetService
 {
+    /// <summary>
+    /// Resets all financial data by deleting accounts, journal entries, reconciliations, budgets, and related entities.
+    /// Uses transactions for relational databases to ensure data consistency.
+    /// </summary>
+    /// <param name="cancellationToken">Token to monitor for cancellation requests.</param>
+    /// <returns>A result containing the count of deleted entities.</returns>
+    /// <exception cref="InvalidOperationException">Thrown when the reset operation does not complete successfully.</exception>
     public async Task<FinancialDataResetResult> ResetAsync(CancellationToken cancellationToken = default)
     {
         if (!dbContext.Database.IsRelational())
@@ -28,6 +39,11 @@ public sealed class FinancialDataResetService(DenariusDbContext dbContext) : IFi
         return result ?? throw new InvalidOperationException("The financial data reset did not complete.");
     }
 
+    /// <summary>
+    /// Deletes all financial data entities from the database in the correct order to maintain referential integrity.
+    /// </summary>
+    /// <param name="cancellationToken">Token to monitor for cancellation requests.</param>
+    /// <returns>A result containing the count of deleted accounts, journal entries, reconciliations, and budgets.</returns>
     private async Task<FinancialDataResetResult> DeleteFinancialDataAsync(CancellationToken cancellationToken)
     {
         var accounts = await dbContext.Accounts.ToListAsync(cancellationToken);

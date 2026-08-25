@@ -13,8 +13,18 @@ using Microsoft.AspNetCore.Authentication;
 
 namespace DenariusAI.Infrastructure;
 
+/// <summary>
+/// Provides extension methods for configuring infrastructure services.
+/// </summary>
 public static class DependencyInjection
 {
+    /// <summary>
+    /// Adds infrastructure services to the service collection.
+    /// </summary>
+    /// <param name="services">The service collection to add services to.</param>
+    /// <param name="configuration">The configuration to read settings from.</param>
+    /// <returns>The service collection for chaining.</returns>
+    /// <exception cref="InvalidOperationException">Thrown when the database connection string is not configured.</exception>
     public static IServiceCollection AddInfrastructure(
         this IServiceCollection services,
         IConfiguration configuration)
