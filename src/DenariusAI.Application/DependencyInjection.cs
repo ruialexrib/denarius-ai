@@ -4,8 +4,16 @@ using DenariusAI.Application.Services;
 
 namespace DenariusAI.Application;
 
+/// <summary>
+/// Provides extension methods for registering application services.
+/// </summary>
 public static class DependencyInjection
 {
+    /// <summary>
+    /// Adds application layer services to the dependency injection container.
+    /// </summary>
+    /// <param name="services">The service collection to add services to.</param>
+    /// <returns>The service collection with registered application services.</returns>
     public static IServiceCollection AddApplication(this IServiceCollection services)
     {
         services.AddScoped<IFinancialGroupService, FinancialGroupService>();
