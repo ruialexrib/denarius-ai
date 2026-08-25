@@ -6,8 +6,17 @@ using Microsoft.EntityFrameworkCore;
 
 namespace DenariusAI.Infrastructure.Persistence.Repositories;
 
+/// <summary>
+/// Repository implementation for managing journal entries in the database.
+/// </summary>
+/// <param name="dbContext">The database context used for data access.</param>
 public sealed class JournalEntryRepository(DenariusDbContext dbContext) : Repository<JournalEntry>(dbContext), IJournalEntryRepository
 {
+    /// <summary>
+    /// Retrieves a list of journal entry summaries ordered by date and creation time.
+    /// </summary>
+    /// <param name="cancellationToken">Token to cancel the asynchronous operation.</param>
+    /// <returns>A read-only list of journal entry summary DTOs.</returns>
     public async Task<IReadOnlyList<JournalEntrySummaryDto>> ListSummariesAsync(CancellationToken cancellationToken = default) =>
         await Set.AsNoTracking().OrderByDescending(entry => entry.Date).ThenByDescending(entry => entry.CreatedAt)
             .Select(entry => new JournalEntrySummaryDto(
@@ -28,6 +37,12 @@ public sealed class JournalEntryRepository(DenariusDbContext dbContext) : Reposi
                 entry.Lines.Any(line => line.Account.AccountType != AccountType.Income && line.Account.AccountType != AccountType.Expense && line.Credit > 0) ? "Saída" : "Transferência"))
             .ToListAsync(cancellationToken);
 
+    /// <summary>
+    /// Retrieves a journal entry with all its related details including lines, accounts, categories, reconciliation, and budget information.
+    /// </summary>
+    /// <param name="id">The unique identifier of the journal entry.</param>
+    /// <param name="cancellationToken">Token to cancel the asynchronous operation.</param>
+    /// <returns>The journal entry with details, or null if not found.</returns>
     public Task<JournalEntry?> GetWithDetailsAsync(Guid id, CancellationToken cancellationToken = default) =>
         Set.Include(entry => entry.Lines).ThenInclude(line => line.Account)
             .Include(entry => entry.Lines).ThenInclude(line => line.Category)
@@ -35,6 +50,16 @@ public sealed class JournalEntryRepository(DenariusDbContext dbContext) : Reposi
             .Include(entry => entry.Budget)
             .SingleOrDefaultAsync(entry => entry.Id == id, cancellationToken);
 
+    /// <summary>
+    /// Retrieves a filtered list of journal entries for reconciliation purposes.
+    /// </summary>
+    /// <param name="accountId">Optional account identifier to filter by.</param>
+    /// <param name="from">Optional start date for filtering.</param>
+    /// <param name="to">Optional end date for filtering.</param>
+    /// <param name="status">Optional reconciliation status to filter by.</param>
+    /// <param name="search">Optional search term to filter by description or reference.</param>
+    /// <param name="cancellationToken">Token to cancel the asynchronous operation.</param>
+    /// <returns>A read-only list of reconciliation item DTOs.</returns>
     public async Task<IReadOnlyList<ReconciliationItemDto>> ListForReconciliationAsync(Guid? accountId, DateOnly? from, DateOnly? to, ReconciliationStatus? status, string? search, CancellationToken cancellationToken = default)
     {
         var bankingTypes = new[] { AccountType.BankAccount, AccountType.Savings, AccountType.TermDeposit };
@@ -62,6 +87,14 @@ public sealed class JournalEntryRepository(DenariusDbContext dbContext) : Reposi
             .ToListAsync(cancellationToken);
     }
 
+    /// <summary>
+    /// Calculates the total amount for a specific financial group kind within a date range.
+    /// </summary>
+    /// <param name="from">The start date of the period.</param>
+    /// <param name="to">The end date of the period.</param>
+    /// <param name="kind">The financial group kind (Income or Expense).</param>
+    /// <param name="cancellationToken">Token to cancel the asynchronous operation.</param>
+    /// <returns>The total amount for the specified financial group kind.</returns>
     public Task<decimal> GetAmountByGroupKindAsync(DateOnly from, DateOnly to, FinancialGroupKind kind, CancellationToken cancellationToken = default)
     {
         var lines = DbContext.JournalEntryLines.AsNoTracking().Where(line =>
@@ -73,6 +106,14 @@ public sealed class JournalEntryRepository(DenariusDbContext dbContext) : Reposi
             : lines.SumAsync(line => line.Debit - line.Credit, cancellationToken);
     }
 
+    /// <summary>
+    /// Generates a classification statement for a specific financial group or category, showing all transactions and running balance.
+    /// </summary>
+    /// <param name="groupId">Optional financial group identifier to filter by.</param>
+    /// <param name="categoryId">Optional category identifier to filter by.</param>
+    /// <param name="kind">The financial group kind (Income or Expense) for balance calculation.</param>
+    /// <param name="cancellationToken">Token to cancel the asynchronous operation.</param>
+    /// <returns>A read-only list of classification statement line DTOs with running balances.</returns>
     public async Task<IReadOnlyList<ClassificationStatementLineDto>> GetClassificationStatementAsync(Guid? groupId, Guid? categoryId, FinancialGroupKind kind, CancellationToken cancellationToken = default)
     {
         var query = DbContext.JournalEntryLines.AsNoTracking().Where(line => line.JournalEntry.Status == JournalEntryStatus.Active);
@@ -110,5 +151,5 @@ public sealed class JournalEntryRepository(DenariusDbContext dbContext) : Reposi
                 line.Description, line.Reference, line.AccountName, line.CategoryName, line.Debit, line.Credit, balance));
         }
         return statement;
-}
+    }
 }

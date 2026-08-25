@@ -6,8 +6,18 @@ using Microsoft.EntityFrameworkCore;
 
 namespace DenariusAI.Infrastructure.Persistence.Repositories;
 
+/// <summary>
+/// Repository for retrieving analytics data from the database.
+/// </summary>
+/// <param name="dbContext">The database context.</param>
 public sealed class AnalyticsRepository(DenariusDbContext dbContext) : IAnalyticsRepository
 {
+    /// <summary>
+    /// Gets analytics data based on the specified filter criteria.
+    /// </summary>
+    /// <param name="filter">The filter criteria for analytics.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>A task that represents the asynchronous operation. The task result contains the analytics data.</returns>
     public async Task<AnalyticsDto> GetAsync(AnalyticsFilterDto filter, CancellationToken cancellationToken = default)
     {
         var current = FilterLines(filter, filter.From, filter.To);
@@ -55,16 +65,36 @@ public sealed class AnalyticsRepository(DenariusDbContext dbContext) : IAnalytic
             certificates.Sum(item => item.CurrentValue), certificates.Sum(item => item.Yield), certificates, groups, categories, accounts, trend);
     }
 
+    /// <summary>
+    /// Filters journal entry lines based on the specified criteria and date range.
+    /// </summary>
+    /// <param name="filter">The filter criteria.</param>
+    /// <param name="from">The start date.</param>
+    /// <param name="to">The end date.</param>
+    /// <returns>A queryable collection of filtered journal entry lines.</returns>
     private IQueryable<JournalEntryLine> FilterLines(AnalyticsFilterDto filter, DateOnly from, DateOnly to) =>
         dbContext.JournalEntryLines.AsNoTracking().Where(line => line.JournalEntry.Status == JournalEntryStatus.Active && line.JournalEntry.Date >= from && line.JournalEntry.Date <= to
             && (!filter.AccountId.HasValue || line.JournalEntry.Lines.Any(item => item.AccountId == filter.AccountId.Value))
             && (!filter.CategoryId.HasValue || (line.CategoryId ?? line.Account.CategoryId) == filter.CategoryId)
             && (!filter.GroupId.HasValue || (line.Category != null ? line.Category.FinancialGroupId : line.Account.Category!.FinancialGroupId) == filter.GroupId));
 
+    /// <summary>
+    /// Calculates the total amount for a specific financial group kind from the provided query.
+    /// </summary>
+    /// <param name="query">The journal entry lines query.</param>
+    /// <param name="kind">The financial group kind (Income or Expense).</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>A task that represents the asynchronous operation. The task result contains the total amount.</returns>
     private static Task<decimal> AmountAsync(IQueryable<JournalEntryLine> query, FinancialGroupKind kind, CancellationToken cancellationToken) => kind == FinancialGroupKind.Income
         ? query.Where(line => (line.Category != null ? line.Category.FinancialGroup.Kind : line.Account.Category!.FinancialGroup.Kind) == kind).SumAsync(line => line.Credit - line.Debit, cancellationToken)
         : query.Where(line => (line.Category != null ? line.Category.FinancialGroup.Kind : line.Account.Category!.FinancialGroup.Kind) == kind).SumAsync(line => line.Debit - line.Credit, cancellationToken);
 
+    /// <summary>
+    /// Calculates the net worth as of the specified date.
+    /// </summary>
+    /// <param name="to">The date to calculate net worth.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>A task that represents the asynchronous operation. The task result contains the net worth value.</returns>
     private async Task<decimal> NetWorthAsync(DateOnly to, CancellationToken cancellationToken)
     {
         var assets = await dbContext.Accounts.AsNoTracking().Where(account => account.AccountType != AccountType.Income && account.AccountType != AccountType.Expense)
