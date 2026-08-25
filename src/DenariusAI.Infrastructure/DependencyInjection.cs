@@ -29,6 +29,7 @@ public static class DependencyInjection
         this IServiceCollection services,
         IConfiguration configuration)
     {
+        services.AddHttpContextAccessor();
         var connectionString = configuration.GetConnectionString("DenariusAIDatabase")
             ?? throw new InvalidOperationException(
                 "Connection string 'DenariusAIDatabase' is not configured.");

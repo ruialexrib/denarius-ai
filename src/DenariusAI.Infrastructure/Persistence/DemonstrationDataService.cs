@@ -147,12 +147,17 @@ public sealed class DemonstrationDataService(DenariusDbContext dbContext, UserMa
     public async Task EnsureUsersAsync(CancellationToken cancellationToken = default)
     {
         if (userManager is null) return;
-        foreach (var (email, name) in new[] { ("demo.familia@denarius.local", "Membro da família — Demo"), ("demo.consulta@denarius.local", "Consulta financeira — Demo") })
+        foreach (var (email, name, fixedPassword) in new[]
+        {
+            ("guest@denarius-ai.local", "Convidado — Demo", "Denarius2026!"),
+            ("demo.familia@denarius.local", "Membro da família — Demo", (string?)null),
+            ("demo.consulta@denarius.local", "Consulta financeira — Demo", (string?)null)
+        })
         {
             cancellationToken.ThrowIfCancellationRequested();
             if (await userManager.FindByEmailAsync(email) is not null) continue;
             var user = new ApplicationUser { UserName = email, Email = email, EmailConfirmed = true, DisplayName = name };
-            var password = $"Demo!{Convert.ToHexString(RandomNumberGenerator.GetBytes(12))}aA1";
+            var password = fixedPassword ?? $"Demo!{Convert.ToHexString(RandomNumberGenerator.GetBytes(12))}aA1";
             var result = await userManager.CreateAsync(user, password);
             if (!result.Succeeded)
                 throw new InvalidOperationException($"Demonstration user could not be created: {string.Join("; ", result.Errors.Select(error => error.Code))}");

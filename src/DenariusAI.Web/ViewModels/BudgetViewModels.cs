@@ -6,6 +6,7 @@ namespace DenariusAI.Web.ViewModels;
 
 public sealed class BudgetLineFormViewModel
 {
+    public Guid? AuditId { get; set; }
     public Guid CategoryId { get; set; }
     public string CategoryName { get; set; } = string.Empty;
     public string FinancialGroupName { get; set; } = string.Empty;

@@ -1,0 +1,3 @@
+@model AuditLinkViewModel
+@using DenariusAI.Infrastructure.Identity
+@if(User.IsInRole(ApplicationRoles.Administrator)){<a class="text-link audit-link" asp-controller="Audit" asp-action="Record" asp-route-entityType="@Model.EntityType" asp-route-entityId="@Model.EntityId">Auditoria</a>}

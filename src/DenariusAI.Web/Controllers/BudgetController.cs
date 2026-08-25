@@ -37,8 +37,11 @@ public sealed class BudgetController(IBudgetService service, DenariusDbContext d
         var totalBudgeted = execution.Sum(item => item.Budgeted);
         var totalActual = execution.Sum(item => item.Actual);
         var pagination = PaginationViewModel.Create(execution.Count, page, pageSize);
+        var auditIds = await dbContext.BudgetLines.AsNoTracking()
+            .Where(line => line.Budget.Year == selectedYear && line.Budget.Month == selectedMonth)
+            .ToDictionaryAsync(line => line.CategoryId, line => line.Id, cancellationToken);
         var lines = execution.Skip((pagination.Page - 1) * pagination.PageSize).Take(pagination.PageSize)
-            .Select(item => new BudgetLineFormViewModel { CategoryId = item.CategoryId, CategoryName = item.CategoryName, FinancialGroupName = item.FinancialGroupName, Kind = FinancialGroupKind.Expense, Amount = item.Budgeted, Actual = item.Actual }).ToList();
+            .Select(item => new BudgetLineFormViewModel { AuditId = auditIds.GetValueOrDefault(item.CategoryId), CategoryId = item.CategoryId, CategoryName = item.CategoryName, FinancialGroupName = item.FinancialGroupName, Kind = FinancialGroupKind.Expense, Amount = item.Budgeted, Actual = item.Actual }).ToList();
         return View(new BudgetIndexViewModel(selectedYear, selectedMonth, groupId, search, sort, lines, YearItems(selectedYear), MonthItems(selectedMonth),
             groups.Select(group => new SelectListItem(group.Key.FinancialGroupName, group.Key.FinancialGroupId.ToString(), group.Key.FinancialGroupId == groupId)).Prepend(new SelectListItem("Todos os grupos", string.Empty, groupId is null)).ToList(), SortItems(sort), totalBudgeted, totalActual, pagination));
     }
