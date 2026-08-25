@@ -10,8 +10,12 @@ updates:
       timezone: Europe/Lisbon
     open-pull-requests-limit: 5
     groups:
-      nuget-dependencies:
+      nuget-minor-and-patch:
         patterns: ["*"]
+        update-types: ["minor", "patch"]
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: docker
     directory: /
@@ -22,8 +26,12 @@ updates:
       timezone: Europe/Lisbon
     open-pull-requests-limit: 3
     groups:
-      docker-images:
+      docker-minor-and-patch:
         patterns: ["*"]
+        update-types: ["minor", "patch"]
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: github-actions
     directory: /
