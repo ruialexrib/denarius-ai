@@ -4,8 +4,15 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace DenariusAI.Infrastructure.Persistence.Configurations;
 
+/// <summary>
+/// Configures the entity type mapping for the <see cref="Reminder"/> entity.
+/// </summary>
 internal sealed class ReminderConfiguration : IEntityTypeConfiguration<Reminder>
 {
+    /// <summary>
+    /// Configures the <see cref="Reminder"/> entity type.
+    /// </summary>
+    /// <param name="builder">The builder to be used to configure the entity type.</param>
     public void Configure(EntityTypeBuilder<Reminder> builder)
     {
         builder.ToTable("Reminders"); builder.ConfigureAuditing();
@@ -17,8 +24,15 @@ internal sealed class ReminderConfiguration : IEntityTypeConfiguration<Reminder>
     }
 }
 
+/// <summary>
+/// Configures the entity type mapping for the <see cref="ReminderAcknowledgement"/> entity.
+/// </summary>
 internal sealed class ReminderAcknowledgementConfiguration : IEntityTypeConfiguration<ReminderAcknowledgement>
 {
+    /// <summary>
+    /// Configures the <see cref="ReminderAcknowledgement"/> entity type.
+    /// </summary>
+    /// <param name="builder">The builder to be used to configure the entity type.</param>
     public void Configure(EntityTypeBuilder<ReminderAcknowledgement> builder)
     {
         builder.ToTable("ReminderAcknowledgements");

@@ -4,8 +4,16 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace DenariusAI.Infrastructure.Persistence.Configurations;
 
+/// <summary>
+/// Entity type configuration for the <see cref="SavingsCertificate"/> entity.
+/// Defines the database schema, constraints, indexes, and property mappings.
+/// </summary>
 internal sealed class SavingsCertificateConfiguration : IEntityTypeConfiguration<SavingsCertificate>
 {
+    /// <summary>
+    /// Configures the entity type for <see cref="SavingsCertificate"/>.
+    /// </summary>
+    /// <param name="builder">The builder used to configure the entity type.</param>
     public void Configure(EntityTypeBuilder<SavingsCertificate> builder)
     {
         builder.ToTable("SavingsCertificates");

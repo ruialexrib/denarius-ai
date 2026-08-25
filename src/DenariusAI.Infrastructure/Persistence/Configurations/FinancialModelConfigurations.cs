@@ -5,8 +5,16 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace DenariusAI.Infrastructure.Persistence.Configurations;
 
+/// <summary>
+/// Provides extension methods for Entity Framework Core entity type configuration.
+/// </summary>
 internal static class ConfigurationExtensions
 {
+    /// <summary>
+    /// Configures common auditing properties for entities that inherit from <see cref="AuditableEntity"/>.
+    /// </summary>
+    /// <typeparam name="TEntity">The entity type that inherits from <see cref="AuditableEntity"/>.</typeparam>
+    /// <param name="builder">The entity type builder.</param>
     public static void ConfigureAuditing<TEntity>(this EntityTypeBuilder<TEntity> builder) where TEntity : AuditableEntity
     {
         builder.HasKey(entity => entity.Id);
@@ -16,8 +24,15 @@ internal static class ConfigurationExtensions
     }
 }
 
+/// <summary>
+/// Entity Framework Core configuration for the <see cref="FinancialGroup"/> entity.
+/// </summary>
 internal sealed class FinancialGroupConfiguration : IEntityTypeConfiguration<FinancialGroup>
 {
+    /// <summary>
+    /// Configures the <see cref="FinancialGroup"/> entity.
+    /// </summary>
+    /// <param name="builder">The entity type builder.</param>
     public void Configure(EntityTypeBuilder<FinancialGroup> builder)
     {
         builder.ToTable("FinancialGroups"); builder.ConfigureAuditing();
@@ -29,8 +44,15 @@ internal sealed class FinancialGroupConfiguration : IEntityTypeConfiguration<Fin
     }
 }
 
+/// <summary>
+/// Entity Framework Core configuration for the <see cref="Category"/> entity.
+/// </summary>
 internal sealed class CategoryConfiguration : IEntityTypeConfiguration<Category>
 {
+    /// <summary>
+    /// Configures the <see cref="Category"/> entity.
+    /// </summary>
+    /// <param name="builder">The entity type builder.</param>
     public void Configure(EntityTypeBuilder<Category> builder)
     {
         builder.ToTable("Categories"); builder.ConfigureAuditing();
@@ -44,8 +66,15 @@ internal sealed class CategoryConfiguration : IEntityTypeConfiguration<Category>
     }
 }
 
+/// <summary>
+/// Entity Framework Core configuration for the <see cref="Account"/> entity.
+/// </summary>
 internal sealed class AccountConfiguration : IEntityTypeConfiguration<Account>
 {
+    /// <summary>
+    /// Configures the <see cref="Account"/> entity.
+    /// </summary>
+    /// <param name="builder">The entity type builder.</param>
     public void Configure(EntityTypeBuilder<Account> builder)
     {
         builder.ToTable("Accounts", table => table.HasCheckConstraint("CK_Accounts_Currency", "LEN([Currency]) = 3")); builder.ConfigureAuditing();
@@ -60,8 +89,15 @@ internal sealed class AccountConfiguration : IEntityTypeConfiguration<Account>
     }
 }
 
+/// <summary>
+/// Entity Framework Core configuration for the <see cref="JournalEntry"/> entity.
+/// </summary>
 internal sealed class JournalEntryConfiguration : IEntityTypeConfiguration<JournalEntry>
 {
+    /// <summary>
+    /// Configures the <see cref="JournalEntry"/> entity.
+    /// </summary>
+    /// <param name="builder">The entity type builder.</param>
     public void Configure(EntityTypeBuilder<JournalEntry> builder)
     {
         builder.ToTable("JournalEntries"); builder.ConfigureAuditing();
@@ -81,8 +117,15 @@ internal sealed class JournalEntryConfiguration : IEntityTypeConfiguration<Journ
     }
 }
 
+/// <summary>
+/// Entity Framework Core configuration for the <see cref="JournalEntryLine"/> entity.
+/// </summary>
 internal sealed class JournalEntryLineConfiguration : IEntityTypeConfiguration<JournalEntryLine>
 {
+    /// <summary>
+    /// Configures the <see cref="JournalEntryLine"/> entity.
+    /// </summary>
+    /// <param name="builder">The entity type builder.</param>
     public void Configure(EntityTypeBuilder<JournalEntryLine> builder)
     {
         builder.ToTable("JournalEntryLines", table => table.HasCheckConstraint("CK_JournalEntryLines_DebitCredit", "([Debit] > 0 AND [Credit] = 0) OR ([Credit] > 0 AND [Debit] = 0)")); builder.ConfigureAuditing();
@@ -98,8 +141,15 @@ internal sealed class JournalEntryLineConfiguration : IEntityTypeConfiguration<J
     }
 }
 
+/// <summary>
+/// Entity Framework Core configuration for the <see cref="Budget"/> entity.
+/// </summary>
 internal sealed class BudgetConfiguration : IEntityTypeConfiguration<Budget>
 {
+    /// <summary>
+    /// Configures the <see cref="Budget"/> entity.
+    /// </summary>
+    /// <param name="builder">The entity type builder.</param>
     public void Configure(EntityTypeBuilder<Budget> builder)
     {
         builder.ToTable("Budgets", table => { table.HasCheckConstraint("CK_Budgets_Month", "[Month] BETWEEN 1 AND 12"); table.HasCheckConstraint("CK_Budgets_Year", "[Year] BETWEEN 2000 AND 9999"); }); builder.ConfigureAuditing();
@@ -108,8 +158,15 @@ internal sealed class BudgetConfiguration : IEntityTypeConfiguration<Budget>
     }
 }
 
+/// <summary>
+/// Entity Framework Core configuration for the <see cref="BudgetLine"/> entity.
+/// </summary>
 internal sealed class BudgetLineConfiguration : IEntityTypeConfiguration<BudgetLine>
 {
+    /// <summary>
+    /// Configures the <see cref="BudgetLine"/> entity.
+    /// </summary>
+    /// <param name="builder">The entity type builder.</param>
     public void Configure(EntityTypeBuilder<BudgetLine> builder)
     {
         builder.ToTable("BudgetLines", table => table.HasCheckConstraint("CK_BudgetLines_Amount", "[Amount] >= 0")); builder.ConfigureAuditing();
@@ -120,8 +177,15 @@ internal sealed class BudgetLineConfiguration : IEntityTypeConfiguration<BudgetL
     }
 }
 
+/// <summary>
+/// Entity Framework Core configuration for the <see cref="Reconciliation"/> entity.
+/// </summary>
 internal sealed class ReconciliationConfiguration : IEntityTypeConfiguration<Reconciliation>
 {
+    /// <summary>
+    /// Configures the <see cref="Reconciliation"/> entity.
+    /// </summary>
+    /// <param name="builder">The entity type builder.</param>
     public void Configure(EntityTypeBuilder<Reconciliation> builder)
     {
         builder.ToTable("Reconciliations"); builder.ConfigureAuditing();
