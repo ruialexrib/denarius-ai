@@ -8,8 +8,18 @@ using Microsoft.Extensions.Options;
 
 namespace DenariusAI.Infrastructure.ArtificialIntelligence;
 
+/// <summary>
+/// Service for managing application settings stored in the database.
+/// </summary>
+/// <param name="dbContext">The database context for accessing application settings.</param>
+/// <param name="mistralOptions">Configuration options for Mistral AI integration.</param>
 public sealed class ApplicationSettingsService(DenariusDbContext dbContext, IOptions<MistralOptions> mistralOptions) : IApplicationSettingsService
 {
+    /// <summary>
+    /// Retrieves the current application settings.
+    /// </summary>
+    /// <param name="cancellationToken">Token to monitor for cancellation requests.</param>
+    /// <returns>A task that represents the asynchronous operation, containing the application settings.</returns>
     public async Task<ApplicationSettingsDto> GetAsync(CancellationToken cancellationToken = default)
     {
         var values = await dbContext.ApplicationSettings.AsNoTracking().ToDictionaryAsync(item => item.Key, item => item.Value, cancellationToken);
@@ -30,6 +40,13 @@ public sealed class ApplicationSettingsService(DenariusDbContext dbContext, IOpt
             Get(values, "Prompts.DashboardWelcome", ApplicationSettingsDefaults.DashboardWelcomePrompt));
     }
 
+    /// <summary>
+    /// Updates the application settings in the database.
+    /// </summary>
+    /// <param name="settings">The new settings to be saved.</param>
+    /// <param name="userId">The ID of the user performing the update.</param>
+    /// <param name="cancellationToken">Token to monitor for cancellation requests.</param>
+    /// <returns>A task that represents the asynchronous operation.</returns>
     public async Task UpdateAsync(ApplicationSettingsDto settings, string userId, CancellationToken cancellationToken = default)
     {
         Validate(settings);
@@ -52,6 +69,11 @@ public sealed class ApplicationSettingsService(DenariusDbContext dbContext, IOpt
         await dbContext.SaveChangesAsync(cancellationToken);
     }
 
+    /// <summary>
+    /// Validates the application settings to ensure all required fields are present and within valid ranges.
+    /// </summary>
+    /// <param name="value">The settings to validate.</param>
+    /// <exception cref="ArgumentException">Thrown when validation fails.</exception>
     private static void Validate(ApplicationSettingsDto value)
     {
         if (string.IsNullOrWhiteSpace(value.MistralModel) || string.IsNullOrWhiteSpace(value.AssistantSystemPrompt) || string.IsNullOrWhiteSpace(value.JournalSuggestionSystemPrompt) || string.IsNullOrWhiteSpace(value.ReconciliationExtractionPrompt) || string.IsNullOrWhiteSpace(value.ReconciliationClassificationPrompt) || string.IsNullOrWhiteSpace(value.DashboardWelcomePrompt)) throw new ArgumentException("Modelo e prompts são obrigatórios.");
@@ -59,7 +81,31 @@ public sealed class ApplicationSettingsService(DenariusDbContext dbContext, IOpt
         if (value.MistralMaxTokens is < 64 or > 8192 || value.MistralTemperature is < 0 or > 1) throw new ArgumentException("Os parâmetros do modelo estão fora dos limites permitidos.");
         if (value.AssistantContextMonths is < 1 or > 60 || value.AssistantMaxTransactions is < 10 or > 1000 || value.AssistantHistoryMessages is < 0 or > 50 || value.JournalSuggestionHistoryMessages is < 0 or > 50) throw new ArgumentException("Os limites da aplicação estão fora dos intervalos permitidos.");
     }
+    
+    /// <summary>
+    /// Gets a string value from the dictionary or returns the fallback value if not found.
+    /// </summary>
+    /// <param name="values">The dictionary containing settings values.</param>
+    /// <param name="key">The key to look up.</param>
+    /// <param name="fallback">The fallback value to return if the key is not found.</param>
+    /// <returns>The value from the dictionary or the fallback value.</returns>
     private static string Get(IReadOnlyDictionary<string, string> values, string key, string fallback) => values.GetValueOrDefault(key, fallback);
+    
+    /// <summary>
+    /// Gets an integer value from the dictionary or returns the fallback value if not found or parsing fails.
+    /// </summary>
+    /// <param name="values">The dictionary containing settings values.</param>
+    /// <param name="key">The key to look up.</param>
+    /// <param name="fallback">The fallback value to return if the key is not found or parsing fails.</param>
+    /// <returns>The parsed integer value or the fallback value.</returns>
     private static int GetInt(IReadOnlyDictionary<string, string> values, string key, int fallback) => int.TryParse(values.GetValueOrDefault(key), CultureInfo.InvariantCulture, out var value) ? value : fallback;
+    
+    /// <summary>
+    /// Gets a double value from the dictionary or returns the fallback value if not found or parsing fails.
+    /// </summary>
+    /// <param name="values">The dictionary containing settings values.</param>
+    /// <param name="key">The key to look up.</param>
+    /// <param name="fallback">The fallback value to return if the key is not found or parsing fails.</param>
+    /// <returns>The parsed double value or the fallback value.</returns>
     private static double GetDouble(IReadOnlyDictionary<string, string> values, string key, double fallback) => double.TryParse(values.GetValueOrDefault(key), CultureInfo.InvariantCulture, out var value) ? value : fallback;
 }
