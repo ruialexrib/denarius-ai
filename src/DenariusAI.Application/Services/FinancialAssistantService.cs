@@ -1,10 +1,16 @@
 using System.Text.Json;
+using DenariusAI.Application.Abstractions.Persistence;
 using DenariusAI.Application.Abstractions.Services;
 using DenariusAI.Application.DTOs;
 using DenariusAI.Domain.Enums;
 
 namespace DenariusAI.Application.Services;
 
+/// <summary>
+/// Provides financial assistant services powered by a Large Language Model (LLM).
+/// This service processes user questions about financial data and returns AI-generated responses
+/// based on accounts, transactions, budgets, and analytics context.
+/// </summary>
 public sealed class FinancialAssistantService(
     ILLMService llmService,
     IAccountService accountService,
@@ -14,11 +20,26 @@ public sealed class FinancialAssistantService(
     IDashboardService dashboardService,
     IAnalyticsService analyticsService,
     IApplicationSettingsService settingsService,
-    DenariusAI.Application.Abstractions.Persistence.ISavingsCertificateReadRepository? savingsRepository = null) : IAssistantService
+    ISavingsCertificateReadRepository? savingsRepository = null) : IAssistantService
 {
+    /// <summary>
+    /// Gets a value indicating whether the assistant is available and properly configured.
+    /// </summary>
     public bool IsAvailable => llmService.IsConfigured;
+    
+    /// <summary>
+    /// Gets the name of the LLM model being used by the assistant.
+    /// </summary>
     public string Model => llmService.Model;
 
+    /// <summary>
+    /// Processes a user question and returns an AI-generated response based on financial context.
+    /// </summary>
+    /// <param name="request">The assistant request containing the user's question and conversation history.</param>
+    /// <param name="cancellationToken">A cancellation token to cancel the operation.</param>
+    /// <returns>An assistant response containing the AI-generated answer and metadata.</returns>
+    /// <exception cref="ArgumentException">Thrown when the question is empty or exceeds 1000 characters.</exception>
+    /// <exception cref="InvalidOperationException">Thrown when the AI assistant is not configured.</exception>
     public async Task<AssistantResponseDto> AskAsync(AssistantRequestDto request, CancellationToken cancellationToken = default)
     {
         var question = request.Question?.Trim();

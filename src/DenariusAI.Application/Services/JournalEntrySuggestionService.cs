@@ -4,6 +4,13 @@ using DenariusAI.Application.DTOs;
 
 namespace DenariusAI.Application.Services;
 
+/// <summary>
+/// Service responsible for generating journal entry suggestions using AI/LLM integration.
+/// </summary>
+/// <remarks>
+/// This service processes natural language requests and generates structured journal entry suggestions
+/// by leveraging historical data, account catalogs, and LLM capabilities.
+/// </remarks>
 public sealed class JournalEntrySuggestionService(
     ILLMService llmService,
     IAccountService accountService,
@@ -14,8 +21,20 @@ public sealed class JournalEntrySuggestionService(
     IApplicationSettingsService settingsService) : IJournalEntrySuggestionService
 {
     private static readonly JsonSerializerOptions JsonOptions = new() { PropertyNameCaseInsensitive = true };
+    
+    /// <summary>
+    /// Gets a value indicating whether the LLM service is configured and available.
+    /// </summary>
     public bool IsAvailable => llmService.IsConfigured;
 
+    /// <summary>
+    /// Generates a journal entry suggestion based on a natural language request.
+    /// </summary>
+    /// <param name="request">The suggestion request containing the user message and conversation history.</param>
+    /// <param name="cancellationToken">Token to cancel the asynchronous operation.</param>
+    /// <returns>A result containing the suggested journal entry or error messages.</returns>
+    /// <exception cref="ArgumentException">Thrown when the message is null, empty, or exceeds 1000 characters.</exception>
+    /// <exception cref="InvalidOperationException">Thrown when the LLM service is not configured.</exception>
     public async Task<JournalEntrySuggestionResultDto> SuggestAsync(JournalEntrySuggestionRequestDto request, CancellationToken cancellationToken = default)
     {
         var userMessage = request.Message?.Trim();
@@ -75,6 +94,11 @@ public sealed class JournalEntrySuggestionService(
                 suggestion.Lines!.Select(line => new SuggestedJournalEntryLineDto(line.AccountId!.Value, line.CategoryId, line.Debit, line.Credit, line.Description)).ToList()));
     }
 
+    /// <summary>
+    /// Parses the LLM response content into a structured format.
+    /// </summary>
+    /// <param name="content">The raw content from the LLM response.</param>
+    /// <returns>A parsed response object containing status, message, explanation, and suggestion data.</returns>
     private static ParsedResponse Parse(string content)
     {
         var json = content.Trim();
@@ -83,6 +107,14 @@ public sealed class JournalEntrySuggestionService(
         catch (JsonException) { return new ParsedResponse { Message = "Não consegui interpretar todos os dados. Pode reformular o movimento?" }; }
     }
 
+    /// <summary>
+    /// Validates the suggested journal entry against existing catalogs and business rules.
+    /// </summary>
+    /// <param name="suggestion">The parsed suggestion to validate.</param>
+    /// <param name="accounts">The collection of available accounts.</param>
+    /// <param name="categories">The collection of available categories.</param>
+    /// <param name="budgets">The collection of available budget periods.</param>
+    /// <returns>An error message if validation fails; otherwise, null.</returns>
     private static string? Validate(ParsedSuggestion suggestion, IReadOnlyCollection<AccountDto> accounts, IReadOnlyCollection<CategoryDto> categories, IReadOnlyCollection<BudgetPeriodDto> budgets)
     {
         if (!suggestion.Date.HasValue || string.IsNullOrWhiteSpace(suggestion.Description)) return "Qual é a data e a descrição do movimento?";
@@ -97,7 +129,18 @@ public sealed class JournalEntrySuggestionService(
         return null;
     }
 
+    /// <summary>
+    /// Represents the parsed response from the LLM containing status and suggestion data.
+    /// </summary>
     private sealed class ParsedResponse { public string? Status { get; set; } public string? Message { get; set; } public string? ClassificationExplanation { get; set; } public ParsedSuggestion? Suggestion { get; set; } }
+    
+    /// <summary>
+    /// Represents a parsed journal entry suggestion with all required fields.
+    /// </summary>
     private sealed class ParsedSuggestion { public DateOnly? Date { get; set; } public string? Description { get; set; } public string? Reference { get; set; } public string? Notes { get; set; } public Guid? BudgetId { get; set; } public List<ParsedLine>? Lines { get; set; } }
+    
+    /// <summary>
+    /// Represents a parsed journal entry line with account, category, and amount information.
+    /// </summary>
     private sealed class ParsedLine { public Guid? AccountId { get; set; } public Guid? CategoryId { get; set; } public decimal Debit { get; set; } public decimal Credit { get; set; } public string? Description { get; set; } }
 }

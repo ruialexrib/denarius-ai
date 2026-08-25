@@ -1,16 +1,33 @@
+using DenariusAI.Application.Abstractions.Persistence;
 using DenariusAI.Application.Abstractions.Services;
 using DenariusAI.Application.DTOs;
 using DenariusAI.Domain.Enums;
 
 namespace DenariusAI.Application.Services;
 
+/// <summary>
+/// Service responsible for aggregating and providing dashboard data.
+/// </summary>
+/// <param name="accountService">Service for managing accounts.</param>
+/// <param name="journalEntryService">Service for managing journal entries.</param>
+/// <param name="budgetService">Service for managing budgets.</param>
+/// <param name="reconciliationService">Service for managing reconciliations.</param>
+/// <param name="savingsRepository">Optional repository for savings certificates.</param>
 public sealed class DashboardService(
     IAccountService accountService,
     IJournalEntryService journalEntryService,
     IBudgetService budgetService,
     IReconciliationService reconciliationService,
-    DenariusAI.Application.Abstractions.Persistence.ISavingsCertificateReadRepository? savingsRepository = null) : IDashboardService
+    ISavingsCertificateReadRepository? savingsRepository = null) : IDashboardService
 {
+    /// <summary>
+    /// Retrieves dashboard data for a specific year and month.
+    /// </summary>
+    /// <param name="year">The year to retrieve data for (must be between 2000 and 9999).</param>
+    /// <param name="month">The month to retrieve data for (must be between 1 and 12).</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A <see cref="DashboardDto"/> containing aggregated dashboard data.</returns>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when year or month is outside valid range.</exception>
     public async Task<DashboardDto> GetAsync(int year, int month, CancellationToken cancellationToken = default)
     {
         if (year is < 2000 or > 9999 || month is < 1 or > 12) throw new ArgumentOutOfRangeException(nameof(month));
