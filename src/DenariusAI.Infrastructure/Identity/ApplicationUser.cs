@@ -6,4 +6,6 @@ public sealed class ApplicationUser : IdentityUser
 {
     public string DisplayName { get; set; } = string.Empty;
     public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
+    public DateTimeOffset? DemonstrationDataAcknowledgedAt { get; set; }
+    public DateTimeOffset? CookieConsentAcceptedAt { get; set; }
 }

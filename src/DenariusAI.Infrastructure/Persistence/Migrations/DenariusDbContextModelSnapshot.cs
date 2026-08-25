@@ -18,7 +18,7 @@ namespace DenariusAI.Infrastructure.Persistence.Migrations
 #pragma warning disable 612, 618
             modelBuilder
                 .HasDefaultSchema("denarius")
-                .HasAnnotation("ProductVersion", "9.0.14")
+                .HasAnnotation("ProductVersion", "9.0.19")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -92,7 +92,7 @@ namespace DenariusAI.Infrastructure.Persistence.Migrations
                             CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
                             Currency = "EUR",
                             Description = "Conta bancária principal do cenário de demonstração.",
-                            InitialBalance = 0m,
+                            InitialBalance = 1850m,
                             IsActive = true,
                             Name = "Conta à Ordem — Demonstração"
                         },
@@ -104,7 +104,7 @@ namespace DenariusAI.Infrastructure.Persistence.Migrations
                             CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
                             Currency = "EUR",
                             Description = "Poupança familiar do cenário de demonstração.",
-                            InitialBalance = 500m,
+                            InitialBalance = 4200m,
                             IsActive = true,
                             Name = "Conta Poupança — Demonstração"
                         },
@@ -116,7 +116,7 @@ namespace DenariusAI.Infrastructure.Persistence.Migrations
                             CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
                             Currency = "EUR",
                             Description = "Carteira de numerário do cenário de demonstração.",
-                            InitialBalance = 100m,
+                            InitialBalance = 120m,
                             IsActive = true,
                             Name = "Dinheiro — Demonstração"
                         },
@@ -735,121 +735,793 @@ namespace DenariusAI.Infrastructure.Persistence.Migrations
                         new
                         {
                             Id = new Guid("40000000-0000-0000-0000-000000000001"),
-                            BudgetId = new Guid("60000000-0000-0000-0000-000000000001"),
                             CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
                             CreatedBy = "demo-seed",
-                            Date = new DateOnly(2026, 7, 1),
+                            Date = new DateOnly(2026, 1, 1),
                             Description = "Salário mensal",
-                            Notes = "Dados de demonstração — julho 2026",
-                            Reference = "REC-JUL-001",
+                            Notes = "Dados de demonstração — 01/2026",
+                            Reference = "SAL-2026-01",
                             Status = 1
                         },
                         new
                         {
                             Id = new Guid("40000000-0000-0000-0000-000000000002"),
-                            BudgetId = new Guid("60000000-0000-0000-0000-000000000001"),
                             CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
                             CreatedBy = "demo-seed",
-                            Date = new DateOnly(2026, 7, 3),
+                            Date = new DateOnly(2026, 1, 3),
                             Description = "Renda da casa",
-                            Notes = "Dados de demonstração — julho 2026",
-                            Reference = "PAG-JUL-001",
+                            Notes = "Dados de demonstração — 01/2026",
+                            Reference = "RENDA-01",
                             Status = 1
                         },
                         new
                         {
                             Id = new Guid("40000000-0000-0000-0000-000000000003"),
-                            BudgetId = new Guid("60000000-0000-0000-0000-000000000001"),
                             CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
                             CreatedBy = "demo-seed",
-                            Date = new DateOnly(2026, 7, 5),
+                            Date = new DateOnly(2026, 1, 6),
                             Description = "Compras de supermercado",
-                            Notes = "Dados de demonstração — julho 2026",
-                            Reference = "TALAO-1842",
+                            Notes = "Dados de demonstração — 01/2026",
+                            Reference = "SUPER-01",
                             Status = 1
                         },
                         new
                         {
                             Id = new Guid("40000000-0000-0000-0000-000000000004"),
-                            BudgetId = new Guid("60000000-0000-0000-0000-000000000001"),
                             CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
                             CreatedBy = "demo-seed",
-                            Date = new DateOnly(2026, 7, 7),
+                            Date = new DateOnly(2026, 1, 8),
                             Description = "Fatura de eletricidade",
-                            Notes = "Dados de demonstração — julho 2026",
-                            Reference = "ELEC-0726",
+                            Notes = "Dados de demonstração — 01/2026",
+                            Reference = "ELEC-01",
                             Status = 1
                         },
                         new
                         {
                             Id = new Guid("40000000-0000-0000-0000-000000000005"),
-                            BudgetId = new Guid("60000000-0000-0000-0000-000000000001"),
                             CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
                             CreatedBy = "demo-seed",
-                            Date = new DateOnly(2026, 7, 8),
+                            Date = new DateOnly(2026, 1, 9),
                             Description = "Fatura de água",
-                            Notes = "Dados de demonstração — julho 2026",
-                            Reference = "AGUA-0726",
+                            Notes = "Dados de demonstração — 01/2026",
+                            Reference = "AGUA-01",
                             Status = 1
                         },
                         new
                         {
                             Id = new Guid("40000000-0000-0000-0000-000000000006"),
-                            BudgetId = new Guid("60000000-0000-0000-0000-000000000001"),
                             CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
                             CreatedBy = "demo-seed",
-                            Date = new DateOnly(2026, 7, 10),
-                            Description = "Transferência para poupança",
-                            Notes = "Dados de demonstração — julho 2026",
-                            Reference = "TRF-POUP",
+                            Date = new DateOnly(2026, 1, 12),
+                            Description = "Passe e combustível",
+                            Notes = "Dados de demonstração — 01/2026",
+                            Reference = "TRANSP-01",
                             Status = 1
                         },
                         new
                         {
                             Id = new Guid("40000000-0000-0000-0000-000000000007"),
-                            BudgetId = new Guid("60000000-0000-0000-0000-000000000001"),
                             CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
                             CreatedBy = "demo-seed",
-                            Date = new DateOnly(2026, 7, 12),
-                            Description = "Levantamento ATM",
-                            Notes = "Dados de demonstração — julho 2026",
-                            Reference = "ATM-1208",
+                            Date = new DateOnly(2026, 1, 15),
+                            Description = "Transferência para poupança",
+                            Notes = "Dados de demonstração — 01/2026",
+                            Reference = "POUP-01",
                             Status = 1
                         },
                         new
                         {
                             Id = new Guid("40000000-0000-0000-0000-000000000008"),
-                            BudgetId = new Guid("60000000-0000-0000-0000-000000000001"),
                             CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
                             CreatedBy = "demo-seed",
-                            Date = new DateOnly(2026, 7, 15),
-                            Description = "Jantar em família",
-                            Notes = "Dados de demonstração — julho 2026",
-                            Reference = "REST-1508",
+                            Date = new DateOnly(2026, 1, 20),
+                            Description = "Lazer em família",
+                            Notes = "Dados de demonstração — 01/2026",
+                            Reference = "LAZER-01",
                             Status = 1
                         },
                         new
                         {
                             Id = new Guid("40000000-0000-0000-0000-000000000009"),
-                            BudgetId = new Guid("60000000-0000-0000-0000-000000000001"),
                             CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
                             CreatedBy = "demo-seed",
-                            Date = new DateOnly(2026, 7, 18),
+                            Date = new DateOnly(2026, 1, 24),
                             Description = "Trabalho ocasional",
-                            Notes = "Dados de demonstração — julho 2026",
-                            Reference = "FREELANCE-07",
+                            Notes = "Dados de demonstração — 01/2026",
+                            Reference = "EXTRA-01",
                             Status = 1
                         },
                         new
                         {
                             Id = new Guid("40000000-0000-0000-0000-000000000010"),
-                            BudgetId = new Guid("60000000-0000-0000-0000-000000000001"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Date = new DateOnly(2026, 2, 1),
+                            Description = "Salário mensal",
+                            Notes = "Dados de demonstração — 02/2026",
+                            Reference = "SAL-2026-02",
+                            Status = 1
+                        },
+                        new
+                        {
+                            Id = new Guid("40000000-0000-0000-0000-000000000011"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Date = new DateOnly(2026, 2, 3),
+                            Description = "Renda da casa",
+                            Notes = "Dados de demonstração — 02/2026",
+                            Reference = "RENDA-02",
+                            Status = 1
+                        },
+                        new
+                        {
+                            Id = new Guid("40000000-0000-0000-0000-000000000012"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Date = new DateOnly(2026, 2, 6),
+                            Description = "Compras de supermercado",
+                            Notes = "Dados de demonstração — 02/2026",
+                            Reference = "SUPER-02",
+                            Status = 1
+                        },
+                        new
+                        {
+                            Id = new Guid("40000000-0000-0000-0000-000000000013"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Date = new DateOnly(2026, 2, 8),
+                            Description = "Fatura de eletricidade",
+                            Notes = "Dados de demonstração — 02/2026",
+                            Reference = "ELEC-02",
+                            Status = 1
+                        },
+                        new
+                        {
+                            Id = new Guid("40000000-0000-0000-0000-000000000014"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Date = new DateOnly(2026, 2, 9),
+                            Description = "Fatura de água",
+                            Notes = "Dados de demonstração — 02/2026",
+                            Reference = "AGUA-02",
+                            Status = 1
+                        },
+                        new
+                        {
+                            Id = new Guid("40000000-0000-0000-0000-000000000015"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Date = new DateOnly(2026, 2, 12),
+                            Description = "Passe e combustível",
+                            Notes = "Dados de demonstração — 02/2026",
+                            Reference = "TRANSP-02",
+                            Status = 1
+                        },
+                        new
+                        {
+                            Id = new Guid("40000000-0000-0000-0000-000000000016"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Date = new DateOnly(2026, 2, 15),
+                            Description = "Transferência para poupança",
+                            Notes = "Dados de demonstração — 02/2026",
+                            Reference = "POUP-02",
+                            Status = 1
+                        },
+                        new
+                        {
+                            Id = new Guid("40000000-0000-0000-0000-000000000017"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Date = new DateOnly(2026, 2, 20),
+                            Description = "Lazer em família",
+                            Notes = "Dados de demonstração — 02/2026",
+                            Reference = "LAZER-02",
+                            Status = 1
+                        },
+                        new
+                        {
+                            Id = new Guid("40000000-0000-0000-0000-000000000018"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Date = new DateOnly(2026, 2, 24),
+                            Description = "Trabalho ocasional",
+                            Notes = "Dados de demonstração — 02/2026",
+                            Reference = "EXTRA-02",
+                            Status = 1
+                        },
+                        new
+                        {
+                            Id = new Guid("40000000-0000-0000-0000-000000000019"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Date = new DateOnly(2026, 3, 1),
+                            Description = "Salário mensal",
+                            Notes = "Dados de demonstração — 03/2026",
+                            Reference = "SAL-2026-03",
+                            Status = 1
+                        },
+                        new
+                        {
+                            Id = new Guid("40000000-0000-0000-0000-000000000020"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Date = new DateOnly(2026, 3, 3),
+                            Description = "Renda da casa",
+                            Notes = "Dados de demonstração — 03/2026",
+                            Reference = "RENDA-03",
+                            Status = 1
+                        },
+                        new
+                        {
+                            Id = new Guid("40000000-0000-0000-0000-000000000021"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Date = new DateOnly(2026, 3, 6),
+                            Description = "Compras de supermercado",
+                            Notes = "Dados de demonstração — 03/2026",
+                            Reference = "SUPER-03",
+                            Status = 1
+                        },
+                        new
+                        {
+                            Id = new Guid("40000000-0000-0000-0000-000000000022"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Date = new DateOnly(2026, 3, 8),
+                            Description = "Fatura de eletricidade",
+                            Notes = "Dados de demonstração — 03/2026",
+                            Reference = "ELEC-03",
+                            Status = 1
+                        },
+                        new
+                        {
+                            Id = new Guid("40000000-0000-0000-0000-000000000023"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Date = new DateOnly(2026, 3, 9),
+                            Description = "Fatura de água",
+                            Notes = "Dados de demonstração — 03/2026",
+                            Reference = "AGUA-03",
+                            Status = 1
+                        },
+                        new
+                        {
+                            Id = new Guid("40000000-0000-0000-0000-000000000024"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Date = new DateOnly(2026, 3, 12),
+                            Description = "Passe e combustível",
+                            Notes = "Dados de demonstração — 03/2026",
+                            Reference = "TRANSP-03",
+                            Status = 1
+                        },
+                        new
+                        {
+                            Id = new Guid("40000000-0000-0000-0000-000000000025"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Date = new DateOnly(2026, 3, 15),
+                            Description = "Transferência para poupança",
+                            Notes = "Dados de demonstração — 03/2026",
+                            Reference = "POUP-03",
+                            Status = 1
+                        },
+                        new
+                        {
+                            Id = new Guid("40000000-0000-0000-0000-000000000026"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Date = new DateOnly(2026, 3, 20),
+                            Description = "Lazer em família",
+                            Notes = "Dados de demonstração — 03/2026",
+                            Reference = "LAZER-03",
+                            Status = 1
+                        },
+                        new
+                        {
+                            Id = new Guid("40000000-0000-0000-0000-000000000027"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Date = new DateOnly(2026, 3, 24),
+                            Description = "Trabalho ocasional",
+                            Notes = "Dados de demonstração — 03/2026",
+                            Reference = "EXTRA-03",
+                            Status = 1
+                        },
+                        new
+                        {
+                            Id = new Guid("40000000-0000-0000-0000-000000000028"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Date = new DateOnly(2026, 4, 1),
+                            Description = "Salário mensal",
+                            Notes = "Dados de demonstração — 04/2026",
+                            Reference = "SAL-2026-04",
+                            Status = 1
+                        },
+                        new
+                        {
+                            Id = new Guid("40000000-0000-0000-0000-000000000029"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Date = new DateOnly(2026, 4, 3),
+                            Description = "Renda da casa",
+                            Notes = "Dados de demonstração — 04/2026",
+                            Reference = "RENDA-04",
+                            Status = 1
+                        },
+                        new
+                        {
+                            Id = new Guid("40000000-0000-0000-0000-000000000030"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Date = new DateOnly(2026, 4, 6),
+                            Description = "Compras de supermercado",
+                            Notes = "Dados de demonstração — 04/2026",
+                            Reference = "SUPER-04",
+                            Status = 1
+                        },
+                        new
+                        {
+                            Id = new Guid("40000000-0000-0000-0000-000000000031"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Date = new DateOnly(2026, 4, 8),
+                            Description = "Fatura de eletricidade",
+                            Notes = "Dados de demonstração — 04/2026",
+                            Reference = "ELEC-04",
+                            Status = 1
+                        },
+                        new
+                        {
+                            Id = new Guid("40000000-0000-0000-0000-000000000032"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Date = new DateOnly(2026, 4, 9),
+                            Description = "Fatura de água",
+                            Notes = "Dados de demonstração — 04/2026",
+                            Reference = "AGUA-04",
+                            Status = 1
+                        },
+                        new
+                        {
+                            Id = new Guid("40000000-0000-0000-0000-000000000033"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Date = new DateOnly(2026, 4, 12),
+                            Description = "Passe e combustível",
+                            Notes = "Dados de demonstração — 04/2026",
+                            Reference = "TRANSP-04",
+                            Status = 1
+                        },
+                        new
+                        {
+                            Id = new Guid("40000000-0000-0000-0000-000000000034"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Date = new DateOnly(2026, 4, 15),
+                            Description = "Transferência para poupança",
+                            Notes = "Dados de demonstração — 04/2026",
+                            Reference = "POUP-04",
+                            Status = 1
+                        },
+                        new
+                        {
+                            Id = new Guid("40000000-0000-0000-0000-000000000035"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Date = new DateOnly(2026, 4, 20),
+                            Description = "Lazer em família",
+                            Notes = "Dados de demonstração — 04/2026",
+                            Reference = "LAZER-04",
+                            Status = 1
+                        },
+                        new
+                        {
+                            Id = new Guid("40000000-0000-0000-0000-000000000036"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Date = new DateOnly(2026, 4, 24),
+                            Description = "Trabalho ocasional",
+                            Notes = "Dados de demonstração — 04/2026",
+                            Reference = "EXTRA-04",
+                            Status = 1
+                        },
+                        new
+                        {
+                            Id = new Guid("40000000-0000-0000-0000-000000000037"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Date = new DateOnly(2026, 5, 1),
+                            Description = "Salário mensal",
+                            Notes = "Dados de demonstração — 05/2026",
+                            Reference = "SAL-2026-05",
+                            Status = 1
+                        },
+                        new
+                        {
+                            Id = new Guid("40000000-0000-0000-0000-000000000038"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Date = new DateOnly(2026, 5, 3),
+                            Description = "Renda da casa",
+                            Notes = "Dados de demonstração — 05/2026",
+                            Reference = "RENDA-05",
+                            Status = 1
+                        },
+                        new
+                        {
+                            Id = new Guid("40000000-0000-0000-0000-000000000039"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Date = new DateOnly(2026, 5, 6),
+                            Description = "Compras de supermercado",
+                            Notes = "Dados de demonstração — 05/2026",
+                            Reference = "SUPER-05",
+                            Status = 1
+                        },
+                        new
+                        {
+                            Id = new Guid("40000000-0000-0000-0000-000000000040"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Date = new DateOnly(2026, 5, 8),
+                            Description = "Fatura de eletricidade",
+                            Notes = "Dados de demonstração — 05/2026",
+                            Reference = "ELEC-05",
+                            Status = 1
+                        },
+                        new
+                        {
+                            Id = new Guid("40000000-0000-0000-0000-000000000041"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Date = new DateOnly(2026, 5, 9),
+                            Description = "Fatura de água",
+                            Notes = "Dados de demonstração — 05/2026",
+                            Reference = "AGUA-05",
+                            Status = 1
+                        },
+                        new
+                        {
+                            Id = new Guid("40000000-0000-0000-0000-000000000042"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Date = new DateOnly(2026, 5, 12),
+                            Description = "Passe e combustível",
+                            Notes = "Dados de demonstração — 05/2026",
+                            Reference = "TRANSP-05",
+                            Status = 1
+                        },
+                        new
+                        {
+                            Id = new Guid("40000000-0000-0000-0000-000000000043"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Date = new DateOnly(2026, 5, 15),
+                            Description = "Transferência para poupança",
+                            Notes = "Dados de demonstração — 05/2026",
+                            Reference = "POUP-05",
+                            Status = 1
+                        },
+                        new
+                        {
+                            Id = new Guid("40000000-0000-0000-0000-000000000044"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Date = new DateOnly(2026, 5, 20),
+                            Description = "Lazer em família",
+                            Notes = "Dados de demonstração — 05/2026",
+                            Reference = "LAZER-05",
+                            Status = 1
+                        },
+                        new
+                        {
+                            Id = new Guid("40000000-0000-0000-0000-000000000045"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Date = new DateOnly(2026, 5, 24),
+                            Description = "Trabalho ocasional",
+                            Notes = "Dados de demonstração — 05/2026",
+                            Reference = "EXTRA-05",
+                            Status = 1
+                        },
+                        new
+                        {
+                            Id = new Guid("40000000-0000-0000-0000-000000000046"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Date = new DateOnly(2026, 6, 1),
+                            Description = "Salário mensal",
+                            Notes = "Dados de demonstração — 06/2026",
+                            Reference = "SAL-2026-06",
+                            Status = 1
+                        },
+                        new
+                        {
+                            Id = new Guid("40000000-0000-0000-0000-000000000047"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Date = new DateOnly(2026, 6, 3),
+                            Description = "Renda da casa",
+                            Notes = "Dados de demonstração — 06/2026",
+                            Reference = "RENDA-06",
+                            Status = 1
+                        },
+                        new
+                        {
+                            Id = new Guid("40000000-0000-0000-0000-000000000048"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Date = new DateOnly(2026, 6, 6),
+                            Description = "Compras de supermercado",
+                            Notes = "Dados de demonstração — 06/2026",
+                            Reference = "SUPER-06",
+                            Status = 1
+                        },
+                        new
+                        {
+                            Id = new Guid("40000000-0000-0000-0000-000000000049"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Date = new DateOnly(2026, 6, 8),
+                            Description = "Fatura de eletricidade",
+                            Notes = "Dados de demonstração — 06/2026",
+                            Reference = "ELEC-06",
+                            Status = 1
+                        },
+                        new
+                        {
+                            Id = new Guid("40000000-0000-0000-0000-000000000050"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Date = new DateOnly(2026, 6, 9),
+                            Description = "Fatura de água",
+                            Notes = "Dados de demonstração — 06/2026",
+                            Reference = "AGUA-06",
+                            Status = 1
+                        },
+                        new
+                        {
+                            Id = new Guid("40000000-0000-0000-0000-000000000051"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Date = new DateOnly(2026, 6, 12),
+                            Description = "Passe e combustível",
+                            Notes = "Dados de demonstração — 06/2026",
+                            Reference = "TRANSP-06",
+                            Status = 1
+                        },
+                        new
+                        {
+                            Id = new Guid("40000000-0000-0000-0000-000000000052"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Date = new DateOnly(2026, 6, 15),
+                            Description = "Transferência para poupança",
+                            Notes = "Dados de demonstração — 06/2026",
+                            Reference = "POUP-06",
+                            Status = 1
+                        },
+                        new
+                        {
+                            Id = new Guid("40000000-0000-0000-0000-000000000053"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Date = new DateOnly(2026, 6, 20),
+                            Description = "Lazer em família",
+                            Notes = "Dados de demonstração — 06/2026",
+                            Reference = "LAZER-06",
+                            Status = 1
+                        },
+                        new
+                        {
+                            Id = new Guid("40000000-0000-0000-0000-000000000054"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Date = new DateOnly(2026, 6, 24),
+                            Description = "Trabalho ocasional",
+                            Notes = "Dados de demonstração — 06/2026",
+                            Reference = "EXTRA-06",
+                            Status = 1
+                        },
+                        new
+                        {
+                            Id = new Guid("40000000-0000-0000-0000-000000000055"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Date = new DateOnly(2026, 7, 1),
+                            Description = "Salário mensal",
+                            Notes = "Dados de demonstração — 07/2026",
+                            Reference = "SAL-2026-07",
+                            Status = 1
+                        },
+                        new
+                        {
+                            Id = new Guid("40000000-0000-0000-0000-000000000056"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Date = new DateOnly(2026, 7, 3),
+                            Description = "Renda da casa",
+                            Notes = "Dados de demonstração — 07/2026",
+                            Reference = "RENDA-07",
+                            Status = 1
+                        },
+                        new
+                        {
+                            Id = new Guid("40000000-0000-0000-0000-000000000057"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Date = new DateOnly(2026, 7, 6),
+                            Description = "Compras de supermercado",
+                            Notes = "Dados de demonstração — 07/2026",
+                            Reference = "SUPER-07",
+                            Status = 1
+                        },
+                        new
+                        {
+                            Id = new Guid("40000000-0000-0000-0000-000000000058"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Date = new DateOnly(2026, 7, 8),
+                            Description = "Fatura de eletricidade",
+                            Notes = "Dados de demonstração — 07/2026",
+                            Reference = "ELEC-07",
+                            Status = 1
+                        },
+                        new
+                        {
+                            Id = new Guid("40000000-0000-0000-0000-000000000059"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Date = new DateOnly(2026, 7, 9),
+                            Description = "Fatura de água",
+                            Notes = "Dados de demonstração — 07/2026",
+                            Reference = "AGUA-07",
+                            Status = 1
+                        },
+                        new
+                        {
+                            Id = new Guid("40000000-0000-0000-0000-000000000060"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Date = new DateOnly(2026, 7, 12),
+                            Description = "Passe e combustível",
+                            Notes = "Dados de demonstração — 07/2026",
+                            Reference = "TRANSP-07",
+                            Status = 1
+                        },
+                        new
+                        {
+                            Id = new Guid("40000000-0000-0000-0000-000000000061"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Date = new DateOnly(2026, 7, 15),
+                            Description = "Transferência para poupança",
+                            Notes = "Dados de demonstração — 07/2026",
+                            Reference = "POUP-07",
+                            Status = 1
+                        },
+                        new
+                        {
+                            Id = new Guid("40000000-0000-0000-0000-000000000062"),
                             CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
                             CreatedBy = "demo-seed",
                             Date = new DateOnly(2026, 7, 20),
-                            Description = "Viagem de verão",
-                            Notes = "Dados de demonstração — julho 2026",
-                            Reference = "VIAGEM-2026",
+                            Description = "Lazer em família",
+                            Notes = "Dados de demonstração — 07/2026",
+                            Reference = "LAZER-07",
+                            Status = 1
+                        },
+                        new
+                        {
+                            Id = new Guid("40000000-0000-0000-0000-000000000063"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Date = new DateOnly(2026, 7, 24),
+                            Description = "Trabalho ocasional",
+                            Notes = "Dados de demonstração — 07/2026",
+                            Reference = "EXTRA-07",
+                            Status = 1
+                        },
+                        new
+                        {
+                            Id = new Guid("40000000-0000-0000-0000-000000000064"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Date = new DateOnly(2026, 8, 1),
+                            Description = "Salário mensal",
+                            Notes = "Dados de demonstração — 08/2026",
+                            Reference = "SAL-2026-08",
+                            Status = 1
+                        },
+                        new
+                        {
+                            Id = new Guid("40000000-0000-0000-0000-000000000065"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Date = new DateOnly(2026, 8, 3),
+                            Description = "Renda da casa",
+                            Notes = "Dados de demonstração — 08/2026",
+                            Reference = "RENDA-08",
+                            Status = 1
+                        },
+                        new
+                        {
+                            Id = new Guid("40000000-0000-0000-0000-000000000066"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Date = new DateOnly(2026, 8, 6),
+                            Description = "Compras de supermercado",
+                            Notes = "Dados de demonstração — 08/2026",
+                            Reference = "SUPER-08",
+                            Status = 1
+                        },
+                        new
+                        {
+                            Id = new Guid("40000000-0000-0000-0000-000000000067"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Date = new DateOnly(2026, 8, 8),
+                            Description = "Fatura de eletricidade",
+                            Notes = "Dados de demonstração — 08/2026",
+                            Reference = "ELEC-08",
+                            Status = 1
+                        },
+                        new
+                        {
+                            Id = new Guid("40000000-0000-0000-0000-000000000068"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Date = new DateOnly(2026, 8, 9),
+                            Description = "Fatura de água",
+                            Notes = "Dados de demonstração — 08/2026",
+                            Reference = "AGUA-08",
+                            Status = 1
+                        },
+                        new
+                        {
+                            Id = new Guid("40000000-0000-0000-0000-000000000069"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Date = new DateOnly(2026, 8, 12),
+                            Description = "Passe e combustível",
+                            Notes = "Dados de demonstração — 08/2026",
+                            Reference = "TRANSP-08",
+                            Status = 1
+                        },
+                        new
+                        {
+                            Id = new Guid("40000000-0000-0000-0000-000000000070"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Date = new DateOnly(2026, 8, 15),
+                            Description = "Transferência para poupança",
+                            Notes = "Dados de demonstração — 08/2026",
+                            Reference = "POUP-08",
+                            Status = 1
+                        },
+                        new
+                        {
+                            Id = new Guid("40000000-0000-0000-0000-000000000071"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Date = new DateOnly(2026, 8, 20),
+                            Description = "Lazer em família",
+                            Notes = "Dados de demonstração — 08/2026",
+                            Reference = "LAZER-08",
+                            Status = 1
+                        },
+                        new
+                        {
+                            Id = new Guid("40000000-0000-0000-0000-000000000072"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Date = new DateOnly(2026, 8, 24),
+                            Description = "Trabalho ocasional",
+                            Notes = "Dados de demonstração — 08/2026",
+                            Reference = "EXTRA-08",
                             Status = 1
                         });
                 });
@@ -916,7 +1588,7 @@ namespace DenariusAI.Infrastructure.Persistence.Migrations
                             CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
                             CreatedBy = "demo-seed",
                             Credit = 0m,
-                            Debit = 2500m,
+                            Debit = 2650m,
                             JournalEntryId = new Guid("40000000-0000-0000-0000-000000000001")
                         },
                         new
@@ -926,7 +1598,7 @@ namespace DenariusAI.Infrastructure.Persistence.Migrations
                             CategoryId = new Guid("20000000-0000-0000-0000-000000000010"),
                             CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
                             CreatedBy = "demo-seed",
-                            Credit = 2500m,
+                            Credit = 2650m,
                             Debit = 0m,
                             JournalEntryId = new Guid("40000000-0000-0000-0000-000000000001")
                         },
@@ -938,7 +1610,7 @@ namespace DenariusAI.Infrastructure.Persistence.Migrations
                             CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
                             CreatedBy = "demo-seed",
                             Credit = 0m,
-                            Debit = 750m,
+                            Debit = 780m,
                             JournalEntryId = new Guid("40000000-0000-0000-0000-000000000002")
                         },
                         new
@@ -947,7 +1619,7 @@ namespace DenariusAI.Infrastructure.Persistence.Migrations
                             AccountId = new Guid("30000000-0000-0000-0000-000000000001"),
                             CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
                             CreatedBy = "demo-seed",
-                            Credit = 750m,
+                            Credit = 780m,
                             Debit = 0m,
                             JournalEntryId = new Guid("40000000-0000-0000-0000-000000000002")
                         },
@@ -959,7 +1631,7 @@ namespace DenariusAI.Infrastructure.Persistence.Migrations
                             CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
                             CreatedBy = "demo-seed",
                             Credit = 0m,
-                            Debit = 180m,
+                            Debit = 214m,
                             JournalEntryId = new Guid("40000000-0000-0000-0000-000000000003")
                         },
                         new
@@ -968,7 +1640,7 @@ namespace DenariusAI.Infrastructure.Persistence.Migrations
                             AccountId = new Guid("30000000-0000-0000-0000-000000000001"),
                             CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
                             CreatedBy = "demo-seed",
-                            Credit = 180m,
+                            Credit = 214m,
                             Debit = 0m,
                             JournalEntryId = new Guid("40000000-0000-0000-0000-000000000003")
                         },
@@ -980,7 +1652,7 @@ namespace DenariusAI.Infrastructure.Persistence.Migrations
                             CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
                             CreatedBy = "demo-seed",
                             Credit = 0m,
-                            Debit = 65m,
+                            Debit = 63m,
                             JournalEntryId = new Guid("40000000-0000-0000-0000-000000000004")
                         },
                         new
@@ -989,7 +1661,7 @@ namespace DenariusAI.Infrastructure.Persistence.Migrations
                             AccountId = new Guid("30000000-0000-0000-0000-000000000001"),
                             CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
                             CreatedBy = "demo-seed",
-                            Credit = 65m,
+                            Credit = 63m,
                             Debit = 0m,
                             JournalEntryId = new Guid("40000000-0000-0000-0000-000000000004")
                         },
@@ -1001,7 +1673,7 @@ namespace DenariusAI.Infrastructure.Persistence.Migrations
                             CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
                             CreatedBy = "demo-seed",
                             Credit = 0m,
-                            Debit = 32m,
+                            Debit = 29m,
                             JournalEntryId = new Guid("40000000-0000-0000-0000-000000000005")
                         },
                         new
@@ -1010,51 +1682,50 @@ namespace DenariusAI.Infrastructure.Persistence.Migrations
                             AccountId = new Guid("30000000-0000-0000-0000-000000000001"),
                             CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
                             CreatedBy = "demo-seed",
-                            Credit = 32m,
+                            Credit = 29m,
                             Debit = 0m,
                             JournalEntryId = new Guid("40000000-0000-0000-0000-000000000005")
                         },
                         new
                         {
                             Id = new Guid("50000000-0000-0000-0000-000000000011"),
-                            AccountId = new Guid("30000000-0000-0000-0000-000000000002"),
-                            CategoryId = new Guid("20000000-0000-0000-0000-000000000002"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000005"),
+                            CategoryId = new Guid("20000000-0000-0000-0000-000000000034"),
                             CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
                             CreatedBy = "demo-seed",
                             Credit = 0m,
-                            Debit = 300m,
+                            Debit = 95m,
                             JournalEntryId = new Guid("40000000-0000-0000-0000-000000000006")
                         },
                         new
                         {
                             Id = new Guid("50000000-0000-0000-0000-000000000012"),
                             AccountId = new Guid("30000000-0000-0000-0000-000000000001"),
-                            CategoryId = new Guid("20000000-0000-0000-0000-000000001100"),
                             CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
                             CreatedBy = "demo-seed",
-                            Credit = 300m,
+                            Credit = 95m,
                             Debit = 0m,
                             JournalEntryId = new Guid("40000000-0000-0000-0000-000000000006")
                         },
                         new
                         {
                             Id = new Guid("50000000-0000-0000-0000-000000000013"),
-                            AccountId = new Guid("30000000-0000-0000-0000-000000000003"),
-                            CategoryId = new Guid("20000000-0000-0000-0000-000000000004"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000002"),
+                            CategoryId = new Guid("20000000-0000-0000-0000-000000000002"),
                             CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
                             CreatedBy = "demo-seed",
                             Credit = 0m,
-                            Debit = 100m,
+                            Debit = 250m,
                             JournalEntryId = new Guid("40000000-0000-0000-0000-000000000007")
                         },
                         new
                         {
                             Id = new Guid("50000000-0000-0000-0000-000000000014"),
                             AccountId = new Guid("30000000-0000-0000-0000-000000000001"),
-                            CategoryId = new Guid("20000000-0000-0000-0000-000000000004"),
+                            CategoryId = new Guid("20000000-0000-0000-0000-000000001100"),
                             CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
                             CreatedBy = "demo-seed",
-                            Credit = 100m,
+                            Credit = 250m,
                             Debit = 0m,
                             JournalEntryId = new Guid("40000000-0000-0000-0000-000000000007")
                         },
@@ -1066,7 +1737,7 @@ namespace DenariusAI.Infrastructure.Persistence.Migrations
                             CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
                             CreatedBy = "demo-seed",
                             Credit = 0m,
-                            Debit = 80m,
+                            Debit = 73m,
                             JournalEntryId = new Guid("40000000-0000-0000-0000-000000000008")
                         },
                         new
@@ -1075,7 +1746,7 @@ namespace DenariusAI.Infrastructure.Persistence.Migrations
                             AccountId = new Guid("30000000-0000-0000-0000-000000000001"),
                             CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
                             CreatedBy = "demo-seed",
-                            Credit = 80m,
+                            Credit = 73m,
                             Debit = 0m,
                             JournalEntryId = new Guid("40000000-0000-0000-0000-000000000008")
                         },
@@ -1086,7 +1757,7 @@ namespace DenariusAI.Infrastructure.Persistence.Migrations
                             CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
                             CreatedBy = "demo-seed",
                             Credit = 0m,
-                            Debit = 350m,
+                            Debit = 190m,
                             JournalEntryId = new Guid("40000000-0000-0000-0000-000000000009")
                         },
                         new
@@ -1096,30 +1767,1339 @@ namespace DenariusAI.Infrastructure.Persistence.Migrations
                             CategoryId = new Guid("20000000-0000-0000-0000-000000000020"),
                             CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
                             CreatedBy = "demo-seed",
-                            Credit = 350m,
+                            Credit = 190m,
                             Debit = 0m,
                             JournalEntryId = new Guid("40000000-0000-0000-0000-000000000009")
                         },
                         new
                         {
                             Id = new Guid("50000000-0000-0000-0000-000000000019"),
-                            AccountId = new Guid("30000000-0000-0000-0000-000000000005"),
-                            CategoryId = new Guid("20000000-0000-0000-0000-000000000050"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000001"),
                             CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
                             CreatedBy = "demo-seed",
                             Credit = 0m,
-                            Debit = 450m,
+                            Debit = 2650m,
                             JournalEntryId = new Guid("40000000-0000-0000-0000-000000000010")
                         },
                         new
                         {
                             Id = new Guid("50000000-0000-0000-0000-000000000020"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000004"),
+                            CategoryId = new Guid("20000000-0000-0000-0000-000000000010"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 2650m,
+                            Debit = 0m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000010")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000021"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000005"),
+                            CategoryId = new Guid("20000000-0000-0000-0000-000000000030"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 0m,
+                            Debit = 780m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000011")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000022"),
                             AccountId = new Guid("30000000-0000-0000-0000-000000000001"),
                             CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
                             CreatedBy = "demo-seed",
-                            Credit = 450m,
+                            Credit = 780m,
                             Debit = 0m,
-                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000010")
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000011")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000023"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000005"),
+                            CategoryId = new Guid("20000000-0000-0000-0000-000000000033"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 0m,
+                            Debit = 218m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000012")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000024"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000001"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 218m,
+                            Debit = 0m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000012")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000025"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000005"),
+                            CategoryId = new Guid("20000000-0000-0000-0000-000000000032"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 0m,
+                            Debit = 64m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000013")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000026"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000001"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 64m,
+                            Debit = 0m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000013")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000027"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000005"),
+                            CategoryId = new Guid("20000000-0000-0000-0000-000000000031"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 0m,
+                            Debit = 30m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000014")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000028"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000001"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 30m,
+                            Debit = 0m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000014")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000029"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000005"),
+                            CategoryId = new Guid("20000000-0000-0000-0000-000000000034"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 0m,
+                            Debit = 95m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000015")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000030"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000001"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 95m,
+                            Debit = 0m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000015")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000031"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000002"),
+                            CategoryId = new Guid("20000000-0000-0000-0000-000000000002"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 0m,
+                            Debit = 250m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000016")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000032"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000001"),
+                            CategoryId = new Guid("20000000-0000-0000-0000-000000001100"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 250m,
+                            Debit = 0m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000016")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000033"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000005"),
+                            CategoryId = new Guid("20000000-0000-0000-0000-000000000038"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 0m,
+                            Debit = 76m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000017")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000034"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000001"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 76m,
+                            Debit = 0m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000017")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000035"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000001"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 0m,
+                            Debit = 200m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000018")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000036"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000004"),
+                            CategoryId = new Guid("20000000-0000-0000-0000-000000000020"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 200m,
+                            Debit = 0m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000018")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000037"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000001"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 0m,
+                            Debit = 2650m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000019")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000038"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000004"),
+                            CategoryId = new Guid("20000000-0000-0000-0000-000000000010"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 2650m,
+                            Debit = 0m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000019")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000039"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000005"),
+                            CategoryId = new Guid("20000000-0000-0000-0000-000000000030"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 0m,
+                            Debit = 780m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000020")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000040"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000001"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 780m,
+                            Debit = 0m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000020")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000041"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000005"),
+                            CategoryId = new Guid("20000000-0000-0000-0000-000000000033"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 0m,
+                            Debit = 222m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000021")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000042"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000001"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 222m,
+                            Debit = 0m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000021")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000043"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000005"),
+                            CategoryId = new Guid("20000000-0000-0000-0000-000000000032"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 0m,
+                            Debit = 65m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000022")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000044"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000001"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 65m,
+                            Debit = 0m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000022")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000045"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000005"),
+                            CategoryId = new Guid("20000000-0000-0000-0000-000000000031"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 0m,
+                            Debit = 31m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000023")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000046"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000001"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 31m,
+                            Debit = 0m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000023")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000047"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000005"),
+                            CategoryId = new Guid("20000000-0000-0000-0000-000000000034"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 0m,
+                            Debit = 95m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000024")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000048"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000001"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 95m,
+                            Debit = 0m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000024")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000049"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000002"),
+                            CategoryId = new Guid("20000000-0000-0000-0000-000000000002"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 0m,
+                            Debit = 250m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000025")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000050"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000001"),
+                            CategoryId = new Guid("20000000-0000-0000-0000-000000001100"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 250m,
+                            Debit = 0m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000025")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000051"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000005"),
+                            CategoryId = new Guid("20000000-0000-0000-0000-000000000038"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 0m,
+                            Debit = 79m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000026")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000052"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000001"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 79m,
+                            Debit = 0m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000026")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000053"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000001"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 0m,
+                            Debit = 210m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000027")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000054"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000004"),
+                            CategoryId = new Guid("20000000-0000-0000-0000-000000000020"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 210m,
+                            Debit = 0m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000027")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000055"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000001"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 0m,
+                            Debit = 2650m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000028")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000056"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000004"),
+                            CategoryId = new Guid("20000000-0000-0000-0000-000000000010"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 2650m,
+                            Debit = 0m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000028")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000057"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000005"),
+                            CategoryId = new Guid("20000000-0000-0000-0000-000000000030"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 0m,
+                            Debit = 780m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000029")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000058"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000001"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 780m,
+                            Debit = 0m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000029")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000059"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000005"),
+                            CategoryId = new Guid("20000000-0000-0000-0000-000000000033"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 0m,
+                            Debit = 226m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000030")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000060"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000001"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 226m,
+                            Debit = 0m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000030")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000061"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000005"),
+                            CategoryId = new Guid("20000000-0000-0000-0000-000000000032"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 0m,
+                            Debit = 66m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000031")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000062"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000001"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 66m,
+                            Debit = 0m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000031")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000063"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000005"),
+                            CategoryId = new Guid("20000000-0000-0000-0000-000000000031"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 0m,
+                            Debit = 32m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000032")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000064"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000001"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 32m,
+                            Debit = 0m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000032")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000065"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000005"),
+                            CategoryId = new Guid("20000000-0000-0000-0000-000000000034"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 0m,
+                            Debit = 95m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000033")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000066"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000001"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 95m,
+                            Debit = 0m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000033")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000067"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000002"),
+                            CategoryId = new Guid("20000000-0000-0000-0000-000000000002"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 0m,
+                            Debit = 250m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000034")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000068"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000001"),
+                            CategoryId = new Guid("20000000-0000-0000-0000-000000001100"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 250m,
+                            Debit = 0m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000034")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000069"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000005"),
+                            CategoryId = new Guid("20000000-0000-0000-0000-000000000038"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 0m,
+                            Debit = 82m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000035")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000070"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000001"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 82m,
+                            Debit = 0m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000035")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000071"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000001"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 0m,
+                            Debit = 220m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000036")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000072"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000004"),
+                            CategoryId = new Guid("20000000-0000-0000-0000-000000000020"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 220m,
+                            Debit = 0m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000036")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000073"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000001"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 0m,
+                            Debit = 2650m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000037")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000074"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000004"),
+                            CategoryId = new Guid("20000000-0000-0000-0000-000000000010"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 2650m,
+                            Debit = 0m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000037")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000075"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000005"),
+                            CategoryId = new Guid("20000000-0000-0000-0000-000000000030"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 0m,
+                            Debit = 780m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000038")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000076"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000001"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 780m,
+                            Debit = 0m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000038")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000077"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000005"),
+                            CategoryId = new Guid("20000000-0000-0000-0000-000000000033"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 0m,
+                            Debit = 230m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000039")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000078"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000001"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 230m,
+                            Debit = 0m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000039")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000079"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000005"),
+                            CategoryId = new Guid("20000000-0000-0000-0000-000000000032"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 0m,
+                            Debit = 67m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000040")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000080"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000001"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 67m,
+                            Debit = 0m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000040")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000081"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000005"),
+                            CategoryId = new Guid("20000000-0000-0000-0000-000000000031"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 0m,
+                            Debit = 33m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000041")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000082"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000001"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 33m,
+                            Debit = 0m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000041")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000083"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000005"),
+                            CategoryId = new Guid("20000000-0000-0000-0000-000000000034"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 0m,
+                            Debit = 95m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000042")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000084"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000001"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 95m,
+                            Debit = 0m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000042")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000085"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000002"),
+                            CategoryId = new Guid("20000000-0000-0000-0000-000000000002"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 0m,
+                            Debit = 250m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000043")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000086"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000001"),
+                            CategoryId = new Guid("20000000-0000-0000-0000-000000001100"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 250m,
+                            Debit = 0m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000043")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000087"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000005"),
+                            CategoryId = new Guid("20000000-0000-0000-0000-000000000038"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 0m,
+                            Debit = 85m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000044")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000088"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000001"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 85m,
+                            Debit = 0m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000044")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000089"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000001"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 0m,
+                            Debit = 230m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000045")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000090"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000004"),
+                            CategoryId = new Guid("20000000-0000-0000-0000-000000000020"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 230m,
+                            Debit = 0m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000045")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000091"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000001"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 0m,
+                            Debit = 2650m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000046")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000092"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000004"),
+                            CategoryId = new Guid("20000000-0000-0000-0000-000000000010"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 2650m,
+                            Debit = 0m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000046")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000093"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000005"),
+                            CategoryId = new Guid("20000000-0000-0000-0000-000000000030"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 0m,
+                            Debit = 780m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000047")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000094"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000001"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 780m,
+                            Debit = 0m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000047")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000095"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000005"),
+                            CategoryId = new Guid("20000000-0000-0000-0000-000000000033"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 0m,
+                            Debit = 234m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000048")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000096"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000001"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 234m,
+                            Debit = 0m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000048")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000097"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000005"),
+                            CategoryId = new Guid("20000000-0000-0000-0000-000000000032"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 0m,
+                            Debit = 68m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000049")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000098"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000001"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 68m,
+                            Debit = 0m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000049")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000099"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000005"),
+                            CategoryId = new Guid("20000000-0000-0000-0000-000000000031"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 0m,
+                            Debit = 34m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000050")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000100"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000001"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 34m,
+                            Debit = 0m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000050")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000101"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000005"),
+                            CategoryId = new Guid("20000000-0000-0000-0000-000000000034"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 0m,
+                            Debit = 95m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000051")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000102"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000001"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 95m,
+                            Debit = 0m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000051")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000103"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000002"),
+                            CategoryId = new Guid("20000000-0000-0000-0000-000000000002"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 0m,
+                            Debit = 250m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000052")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000104"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000001"),
+                            CategoryId = new Guid("20000000-0000-0000-0000-000000001100"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 250m,
+                            Debit = 0m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000052")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000105"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000005"),
+                            CategoryId = new Guid("20000000-0000-0000-0000-000000000038"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 0m,
+                            Debit = 88m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000053")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000106"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000001"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 88m,
+                            Debit = 0m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000053")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000107"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000001"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 0m,
+                            Debit = 240m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000054")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000108"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000004"),
+                            CategoryId = new Guid("20000000-0000-0000-0000-000000000020"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 240m,
+                            Debit = 0m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000054")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000109"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000001"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 0m,
+                            Debit = 2650m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000055")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000110"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000004"),
+                            CategoryId = new Guid("20000000-0000-0000-0000-000000000010"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 2650m,
+                            Debit = 0m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000055")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000111"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000005"),
+                            CategoryId = new Guid("20000000-0000-0000-0000-000000000030"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 0m,
+                            Debit = 780m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000056")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000112"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000001"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 780m,
+                            Debit = 0m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000056")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000113"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000005"),
+                            CategoryId = new Guid("20000000-0000-0000-0000-000000000033"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 0m,
+                            Debit = 238m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000057")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000114"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000001"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 238m,
+                            Debit = 0m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000057")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000115"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000005"),
+                            CategoryId = new Guid("20000000-0000-0000-0000-000000000032"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 0m,
+                            Debit = 69m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000058")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000116"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000001"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 69m,
+                            Debit = 0m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000058")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000117"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000005"),
+                            CategoryId = new Guid("20000000-0000-0000-0000-000000000031"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 0m,
+                            Debit = 35m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000059")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000118"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000001"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 35m,
+                            Debit = 0m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000059")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000119"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000005"),
+                            CategoryId = new Guid("20000000-0000-0000-0000-000000000034"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 0m,
+                            Debit = 95m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000060")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000120"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000001"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 95m,
+                            Debit = 0m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000060")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000121"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000002"),
+                            CategoryId = new Guid("20000000-0000-0000-0000-000000000002"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 0m,
+                            Debit = 250m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000061")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000122"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000001"),
+                            CategoryId = new Guid("20000000-0000-0000-0000-000000001100"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 250m,
+                            Debit = 0m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000061")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000123"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000005"),
+                            CategoryId = new Guid("20000000-0000-0000-0000-000000000038"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 0m,
+                            Debit = 91m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000062")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000124"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000001"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 91m,
+                            Debit = 0m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000062")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000125"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000001"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 0m,
+                            Debit = 250m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000063")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000126"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000004"),
+                            CategoryId = new Guid("20000000-0000-0000-0000-000000000020"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 250m,
+                            Debit = 0m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000063")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000127"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000001"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 0m,
+                            Debit = 2650m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000064")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000128"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000004"),
+                            CategoryId = new Guid("20000000-0000-0000-0000-000000000010"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 2650m,
+                            Debit = 0m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000064")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000129"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000005"),
+                            CategoryId = new Guid("20000000-0000-0000-0000-000000000030"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 0m,
+                            Debit = 780m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000065")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000130"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000001"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 780m,
+                            Debit = 0m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000065")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000131"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000005"),
+                            CategoryId = new Guid("20000000-0000-0000-0000-000000000033"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 0m,
+                            Debit = 242m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000066")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000132"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000001"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 242m,
+                            Debit = 0m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000066")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000133"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000005"),
+                            CategoryId = new Guid("20000000-0000-0000-0000-000000000032"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 0m,
+                            Debit = 70m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000067")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000134"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000001"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 70m,
+                            Debit = 0m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000067")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000135"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000005"),
+                            CategoryId = new Guid("20000000-0000-0000-0000-000000000031"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 0m,
+                            Debit = 36m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000068")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000136"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000001"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 36m,
+                            Debit = 0m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000068")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000137"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000005"),
+                            CategoryId = new Guid("20000000-0000-0000-0000-000000000034"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 0m,
+                            Debit = 95m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000069")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000138"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000001"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 95m,
+                            Debit = 0m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000069")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000139"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000002"),
+                            CategoryId = new Guid("20000000-0000-0000-0000-000000000002"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 0m,
+                            Debit = 250m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000070")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000140"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000001"),
+                            CategoryId = new Guid("20000000-0000-0000-0000-000000001100"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 250m,
+                            Debit = 0m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000070")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000141"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000005"),
+                            CategoryId = new Guid("20000000-0000-0000-0000-000000000038"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 0m,
+                            Debit = 94m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000071")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000142"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000001"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 94m,
+                            Debit = 0m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000071")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000143"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000001"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 0m,
+                            Debit = 260m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000072")
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000144"),
+                            AccountId = new Guid("30000000-0000-0000-0000-000000000004"),
+                            CategoryId = new Guid("20000000-0000-0000-0000-000000000020"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            Credit = 260m,
+                            Debit = 0m,
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000072")
                         });
                 });
 
@@ -1191,7 +3171,7 @@ namespace DenariusAI.Infrastructure.Persistence.Migrations
                             Id = new Guid("80000000-0000-0000-0000-000000000003"),
                             CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
                             CreatedBy = "demo-seed",
-                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000004"),
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000003"),
                             ReconciledAt = new DateTimeOffset(new DateTime(2026, 8, 27, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
                             ReconciledBy = "demo-seed",
                             Status = 2
@@ -1201,11 +3181,537 @@ namespace DenariusAI.Infrastructure.Persistence.Migrations
                             Id = new Guid("80000000-0000-0000-0000-000000000004"),
                             CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
                             CreatedBy = "demo-seed",
-                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000005"),
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000004"),
                             ReconciledAt = new DateTimeOffset(new DateTime(2026, 8, 28, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
                             ReconciledBy = "demo-seed",
                             Status = 2
+                        },
+                        new
+                        {
+                            Id = new Guid("80000000-0000-0000-0000-000000000005"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000005"),
+                            ReconciledAt = new DateTimeOffset(new DateTime(2026, 8, 29, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            ReconciledBy = "demo-seed",
+                            Status = 2
+                        },
+                        new
+                        {
+                            Id = new Guid("80000000-0000-0000-0000-000000000006"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000006"),
+                            ReconciledAt = new DateTimeOffset(new DateTime(2026, 8, 30, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            ReconciledBy = "demo-seed",
+                            Status = 2
+                        },
+                        new
+                        {
+                            Id = new Guid("80000000-0000-0000-0000-000000000007"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000010"),
+                            ReconciledAt = new DateTimeOffset(new DateTime(2026, 8, 31, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            ReconciledBy = "demo-seed",
+                            Status = 2
+                        },
+                        new
+                        {
+                            Id = new Guid("80000000-0000-0000-0000-000000000008"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000011"),
+                            ReconciledAt = new DateTimeOffset(new DateTime(2026, 9, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            ReconciledBy = "demo-seed",
+                            Status = 2
+                        },
+                        new
+                        {
+                            Id = new Guid("80000000-0000-0000-0000-000000000009"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000012"),
+                            ReconciledAt = new DateTimeOffset(new DateTime(2026, 9, 2, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            ReconciledBy = "demo-seed",
+                            Status = 2
+                        },
+                        new
+                        {
+                            Id = new Guid("80000000-0000-0000-0000-000000000010"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000013"),
+                            ReconciledAt = new DateTimeOffset(new DateTime(2026, 9, 3, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            ReconciledBy = "demo-seed",
+                            Status = 2
+                        },
+                        new
+                        {
+                            Id = new Guid("80000000-0000-0000-0000-000000000011"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000014"),
+                            ReconciledAt = new DateTimeOffset(new DateTime(2026, 9, 4, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            ReconciledBy = "demo-seed",
+                            Status = 2
+                        },
+                        new
+                        {
+                            Id = new Guid("80000000-0000-0000-0000-000000000012"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000015"),
+                            ReconciledAt = new DateTimeOffset(new DateTime(2026, 9, 5, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            ReconciledBy = "demo-seed",
+                            Status = 2
+                        },
+                        new
+                        {
+                            Id = new Guid("80000000-0000-0000-0000-000000000013"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000019"),
+                            ReconciledAt = new DateTimeOffset(new DateTime(2026, 9, 6, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            ReconciledBy = "demo-seed",
+                            Status = 2
+                        },
+                        new
+                        {
+                            Id = new Guid("80000000-0000-0000-0000-000000000014"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000020"),
+                            ReconciledAt = new DateTimeOffset(new DateTime(2026, 9, 7, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            ReconciledBy = "demo-seed",
+                            Status = 2
+                        },
+                        new
+                        {
+                            Id = new Guid("80000000-0000-0000-0000-000000000015"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000021"),
+                            ReconciledAt = new DateTimeOffset(new DateTime(2026, 9, 8, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            ReconciledBy = "demo-seed",
+                            Status = 2
+                        },
+                        new
+                        {
+                            Id = new Guid("80000000-0000-0000-0000-000000000016"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000022"),
+                            ReconciledAt = new DateTimeOffset(new DateTime(2026, 9, 9, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            ReconciledBy = "demo-seed",
+                            Status = 2
+                        },
+                        new
+                        {
+                            Id = new Guid("80000000-0000-0000-0000-000000000017"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000023"),
+                            ReconciledAt = new DateTimeOffset(new DateTime(2026, 9, 10, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            ReconciledBy = "demo-seed",
+                            Status = 2
+                        },
+                        new
+                        {
+                            Id = new Guid("80000000-0000-0000-0000-000000000018"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000024"),
+                            ReconciledAt = new DateTimeOffset(new DateTime(2026, 9, 11, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            ReconciledBy = "demo-seed",
+                            Status = 2
+                        },
+                        new
+                        {
+                            Id = new Guid("80000000-0000-0000-0000-000000000019"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000028"),
+                            ReconciledAt = new DateTimeOffset(new DateTime(2026, 9, 12, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            ReconciledBy = "demo-seed",
+                            Status = 2
+                        },
+                        new
+                        {
+                            Id = new Guid("80000000-0000-0000-0000-000000000020"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000029"),
+                            ReconciledAt = new DateTimeOffset(new DateTime(2026, 9, 13, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            ReconciledBy = "demo-seed",
+                            Status = 2
+                        },
+                        new
+                        {
+                            Id = new Guid("80000000-0000-0000-0000-000000000021"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000030"),
+                            ReconciledAt = new DateTimeOffset(new DateTime(2026, 9, 14, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            ReconciledBy = "demo-seed",
+                            Status = 2
+                        },
+                        new
+                        {
+                            Id = new Guid("80000000-0000-0000-0000-000000000022"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000031"),
+                            ReconciledAt = new DateTimeOffset(new DateTime(2026, 9, 15, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            ReconciledBy = "demo-seed",
+                            Status = 2
+                        },
+                        new
+                        {
+                            Id = new Guid("80000000-0000-0000-0000-000000000023"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000032"),
+                            ReconciledAt = new DateTimeOffset(new DateTime(2026, 9, 16, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            ReconciledBy = "demo-seed",
+                            Status = 2
+                        },
+                        new
+                        {
+                            Id = new Guid("80000000-0000-0000-0000-000000000024"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000033"),
+                            ReconciledAt = new DateTimeOffset(new DateTime(2026, 9, 17, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            ReconciledBy = "demo-seed",
+                            Status = 2
+                        },
+                        new
+                        {
+                            Id = new Guid("80000000-0000-0000-0000-000000000025"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000037"),
+                            ReconciledAt = new DateTimeOffset(new DateTime(2026, 9, 18, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            ReconciledBy = "demo-seed",
+                            Status = 2
+                        },
+                        new
+                        {
+                            Id = new Guid("80000000-0000-0000-0000-000000000026"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000038"),
+                            ReconciledAt = new DateTimeOffset(new DateTime(2026, 9, 19, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            ReconciledBy = "demo-seed",
+                            Status = 2
+                        },
+                        new
+                        {
+                            Id = new Guid("80000000-0000-0000-0000-000000000027"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000039"),
+                            ReconciledAt = new DateTimeOffset(new DateTime(2026, 9, 20, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            ReconciledBy = "demo-seed",
+                            Status = 2
+                        },
+                        new
+                        {
+                            Id = new Guid("80000000-0000-0000-0000-000000000028"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000040"),
+                            ReconciledAt = new DateTimeOffset(new DateTime(2026, 9, 21, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            ReconciledBy = "demo-seed",
+                            Status = 2
+                        },
+                        new
+                        {
+                            Id = new Guid("80000000-0000-0000-0000-000000000029"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000041"),
+                            ReconciledAt = new DateTimeOffset(new DateTime(2026, 9, 22, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            ReconciledBy = "demo-seed",
+                            Status = 2
+                        },
+                        new
+                        {
+                            Id = new Guid("80000000-0000-0000-0000-000000000030"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000042"),
+                            ReconciledAt = new DateTimeOffset(new DateTime(2026, 9, 23, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            ReconciledBy = "demo-seed",
+                            Status = 2
+                        },
+                        new
+                        {
+                            Id = new Guid("80000000-0000-0000-0000-000000000031"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000046"),
+                            ReconciledAt = new DateTimeOffset(new DateTime(2026, 9, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            ReconciledBy = "demo-seed",
+                            Status = 2
+                        },
+                        new
+                        {
+                            Id = new Guid("80000000-0000-0000-0000-000000000032"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000047"),
+                            ReconciledAt = new DateTimeOffset(new DateTime(2026, 9, 25, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            ReconciledBy = "demo-seed",
+                            Status = 2
+                        },
+                        new
+                        {
+                            Id = new Guid("80000000-0000-0000-0000-000000000033"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000048"),
+                            ReconciledAt = new DateTimeOffset(new DateTime(2026, 9, 26, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            ReconciledBy = "demo-seed",
+                            Status = 2
+                        },
+                        new
+                        {
+                            Id = new Guid("80000000-0000-0000-0000-000000000034"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000049"),
+                            ReconciledAt = new DateTimeOffset(new DateTime(2026, 9, 27, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            ReconciledBy = "demo-seed",
+                            Status = 2
+                        },
+                        new
+                        {
+                            Id = new Guid("80000000-0000-0000-0000-000000000035"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000050"),
+                            ReconciledAt = new DateTimeOffset(new DateTime(2026, 9, 28, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            ReconciledBy = "demo-seed",
+                            Status = 2
+                        },
+                        new
+                        {
+                            Id = new Guid("80000000-0000-0000-0000-000000000036"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000051"),
+                            ReconciledAt = new DateTimeOffset(new DateTime(2026, 9, 29, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            ReconciledBy = "demo-seed",
+                            Status = 2
+                        },
+                        new
+                        {
+                            Id = new Guid("80000000-0000-0000-0000-000000000037"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000055"),
+                            ReconciledAt = new DateTimeOffset(new DateTime(2026, 9, 30, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            ReconciledBy = "demo-seed",
+                            Status = 2
+                        },
+                        new
+                        {
+                            Id = new Guid("80000000-0000-0000-0000-000000000038"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000056"),
+                            ReconciledAt = new DateTimeOffset(new DateTime(2026, 10, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            ReconciledBy = "demo-seed",
+                            Status = 2
+                        },
+                        new
+                        {
+                            Id = new Guid("80000000-0000-0000-0000-000000000039"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000057"),
+                            ReconciledAt = new DateTimeOffset(new DateTime(2026, 10, 2, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            ReconciledBy = "demo-seed",
+                            Status = 2
+                        },
+                        new
+                        {
+                            Id = new Guid("80000000-0000-0000-0000-000000000040"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000058"),
+                            ReconciledAt = new DateTimeOffset(new DateTime(2026, 10, 3, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            ReconciledBy = "demo-seed",
+                            Status = 2
+                        },
+                        new
+                        {
+                            Id = new Guid("80000000-0000-0000-0000-000000000041"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000059"),
+                            ReconciledAt = new DateTimeOffset(new DateTime(2026, 10, 4, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            ReconciledBy = "demo-seed",
+                            Status = 2
+                        },
+                        new
+                        {
+                            Id = new Guid("80000000-0000-0000-0000-000000000042"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000060"),
+                            ReconciledAt = new DateTimeOffset(new DateTime(2026, 10, 5, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            ReconciledBy = "demo-seed",
+                            Status = 2
+                        },
+                        new
+                        {
+                            Id = new Guid("80000000-0000-0000-0000-000000000043"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000064"),
+                            ReconciledAt = new DateTimeOffset(new DateTime(2026, 10, 6, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            ReconciledBy = "demo-seed",
+                            Status = 2
+                        },
+                        new
+                        {
+                            Id = new Guid("80000000-0000-0000-0000-000000000044"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000065"),
+                            ReconciledAt = new DateTimeOffset(new DateTime(2026, 10, 7, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            ReconciledBy = "demo-seed",
+                            Status = 2
+                        },
+                        new
+                        {
+                            Id = new Guid("80000000-0000-0000-0000-000000000045"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000066"),
+                            ReconciledAt = new DateTimeOffset(new DateTime(2026, 10, 8, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            ReconciledBy = "demo-seed",
+                            Status = 2
+                        },
+                        new
+                        {
+                            Id = new Guid("80000000-0000-0000-0000-000000000046"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000067"),
+                            ReconciledAt = new DateTimeOffset(new DateTime(2026, 10, 9, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            ReconciledBy = "demo-seed",
+                            Status = 2
+                        },
+                        new
+                        {
+                            Id = new Guid("80000000-0000-0000-0000-000000000047"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000068"),
+                            ReconciledAt = new DateTimeOffset(new DateTime(2026, 10, 10, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            ReconciledBy = "demo-seed",
+                            Status = 2
+                        },
+                        new
+                        {
+                            Id = new Guid("80000000-0000-0000-0000-000000000048"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            JournalEntryId = new Guid("40000000-0000-0000-0000-000000000069"),
+                            ReconciledAt = new DateTimeOffset(new DateTime(2026, 10, 11, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            ReconciledBy = "demo-seed",
+                            Status = 2
                         });
+                });
+
+            modelBuilder.Entity("DenariusAI.Domain.Entities.Reminder", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateOnly>("EventDate")
+                        .HasColumnType("date");
+
+                    b.Property<int>("NoticeDays")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Text")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EventDate");
+
+                    b.ToTable("Reminders", "denarius");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("90000000-0000-0000-0000-000000000001"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            EventDate = new DateOnly(2026, 8, 28),
+                            NoticeDays = 7,
+                            Text = "Confirmar a próxima capitalização dos Certificados de Aforro"
+                        },
+                        new
+                        {
+                            Id = new Guid("90000000-0000-0000-0000-000000000002"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            EventDate = new DateOnly(2026, 9, 15),
+                            NoticeDays = 15,
+                            Text = "Rever e renovar o seguro automóvel"
+                        },
+                        new
+                        {
+                            Id = new Guid("90000000-0000-0000-0000-000000000003"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 8, 24, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            CreatedBy = "demo-seed",
+                            EventDate = new DateOnly(2026, 12, 15),
+                            NoticeDays = 30,
+                            Text = "Preparar o orçamento familiar do próximo ano"
+                        });
+                });
+
+            modelBuilder.Entity("DenariusAI.Domain.Entities.ReminderAcknowledgement", b =>
+                {
+                    b.Property<Guid>("ReminderId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("UserId")
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTimeOffset>("AcknowledgedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.HasKey("ReminderId", "UserId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("ReminderAcknowledgements", "denarius");
                 });
 
             modelBuilder.Entity("DenariusAI.Domain.Entities.SavingsCertificate", b =>
@@ -1278,7 +3784,13 @@ namespace DenariusAI.Infrastructure.Persistence.Migrations
                         .IsConcurrencyToken()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<DateTimeOffset?>("CookieConsentAcceptedAt")
+                        .HasColumnType("datetimeoffset");
+
                     b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<DateTimeOffset?>("DemonstrationDataAcknowledgedAt")
                         .HasColumnType("datetimeoffset");
 
                     b.Property<string>("DisplayName")
@@ -1593,6 +4105,17 @@ namespace DenariusAI.Infrastructure.Persistence.Migrations
                     b.Navigation("JournalEntry");
                 });
 
+            modelBuilder.Entity("DenariusAI.Domain.Entities.ReminderAcknowledgement", b =>
+                {
+                    b.HasOne("DenariusAI.Domain.Entities.Reminder", "Reminder")
+                        .WithMany("Acknowledgements")
+                        .HasForeignKey("ReminderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Reminder");
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
@@ -1675,6 +4198,11 @@ namespace DenariusAI.Infrastructure.Persistence.Migrations
                     b.Navigation("Lines");
 
                     b.Navigation("Reconciliation");
+                });
+
+            modelBuilder.Entity("DenariusAI.Domain.Entities.Reminder", b =>
+                {
+                    b.Navigation("Acknowledgements");
                 });
 #pragma warning restore 612, 618
         }

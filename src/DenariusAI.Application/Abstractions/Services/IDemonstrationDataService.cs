@@ -20,4 +20,7 @@ public interface IDemonstrationDataService
     /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
     /// <returns>A task that represents the asynchronous operation, containing the result of the load operation.</returns>
     Task<DemonstrationDataLoadResult> LoadAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>Ensures the two non-privileged users used by the demonstration scenario exist.</summary>
+    Task EnsureUsersAsync(CancellationToken cancellationToken = default);
 }

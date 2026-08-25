@@ -12,4 +12,5 @@ public sealed record ApplicationSettingsDto(
     string JournalSuggestionSystemPrompt,
     int JournalSuggestionHistoryMessages,
     string ReconciliationExtractionPrompt,
-    string ReconciliationClassificationPrompt);
+    string ReconciliationClassificationPrompt,
+    string DashboardWelcomePrompt = Application.Configuration.ApplicationSettingsDefaults.DashboardWelcomePrompt);

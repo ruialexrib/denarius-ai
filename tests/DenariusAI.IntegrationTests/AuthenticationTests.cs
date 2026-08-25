@@ -59,4 +59,15 @@ public sealed class AuthenticationTests
         Assert.NotNull(method.GetCustomAttributes(typeof(HttpPostAttribute), true).SingleOrDefault());
         Assert.NotNull(method.GetCustomAttributes(typeof(ValidateAntiForgeryTokenAttribute), true).SingleOrDefault());
     }
+
+    [Theory]
+    [InlineData(typeof(HomeController), nameof(HomeController.AcknowledgeDemonstrationData))]
+    [InlineData(typeof(AccountController), nameof(AccountController.AcceptCookieConsent))]
+    public void UserNoticeConfirmationsRequirePostAndAntiforgery(Type controllerType, string actionName)
+    {
+        var method = controllerType.GetMethods().Single(item => item.Name == actionName);
+
+        Assert.NotNull(method.GetCustomAttributes(typeof(HttpPostAttribute), true).SingleOrDefault());
+        Assert.NotNull(method.GetCustomAttributes(typeof(ValidateAntiForgeryTokenAttribute), true).SingleOrDefault());
+    }
 }

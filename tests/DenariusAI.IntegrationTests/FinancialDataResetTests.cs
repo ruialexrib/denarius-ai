@@ -47,12 +47,15 @@ public sealed class FinancialDataResetTests
 
         Assert.True(first.Loaded);
         Assert.Equal(5, first.Accounts);
-        Assert.Equal(10, first.JournalEntries);
-        Assert.Equal(1, first.Budgets);
+        Assert.Equal(72, first.JournalEntries);
+        Assert.Equal(8, first.Budgets);
         Assert.False(second.Loaded);
         Assert.Equal(5, await context.Accounts.CountAsync());
-        Assert.Equal(10, await context.JournalEntries.CountAsync());
-        Assert.Equal(20, await context.JournalEntryLines.CountAsync());
-        Assert.Equal(4, await context.Reconciliations.CountAsync());
+        Assert.Equal(72, await context.JournalEntries.CountAsync());
+        Assert.Equal(144, await context.JournalEntryLines.CountAsync());
+        Assert.Equal(48, await context.Reconciliations.CountAsync());
+        Assert.Equal(8, await context.Budgets.CountAsync());
+        Assert.Equal(72, await context.BudgetLines.CountAsync());
+        Assert.Equal(3, await context.SavingsCertificates.CountAsync());
     }
 }

@@ -26,6 +26,17 @@ public sealed class AccountController(SignInManager<ApplicationUser> signInManag
     public async Task<IActionResult> Logout() { await signInManager.SignOutAsync(); return RedirectToAction(nameof(Login)); }
     [AllowAnonymous] public IActionResult AccessDenied() => View();
 
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> AcceptCookieConsent(string? returnUrl = null)
+    {
+        var user = await userManager.GetUserAsync(User);
+        if (user is null) return Challenge();
+        user.CookieConsentAcceptedAt = DateTimeOffset.UtcNow;
+        var result = await userManager.UpdateAsync(user);
+        if (!result.Succeeded) TempData["ErrorMessage"] = "Não foi possível guardar o consentimento de cookies.";
+        return Url.IsLocalUrl(returnUrl) ? LocalRedirect(returnUrl) : RedirectToAction("Index", "Home");
+    }
+
     [HttpGet]
     public async Task<IActionResult> Profile()
     {

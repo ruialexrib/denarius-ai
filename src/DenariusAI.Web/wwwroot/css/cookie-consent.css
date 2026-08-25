@@ -1,0 +1,24 @@
+.cookie-consent {
+    position: fixed;
+    z-index: 900;
+    right: 24px;
+    bottom: 56px;
+    display: flex;
+    width: min(560px, calc(100% - 48px));
+    align-items: center;
+    gap: 20px;
+    padding: 20px 22px;
+    border: 1px solid #dce4e8;
+    border-radius: 16px;
+    background: #fff;
+    box-shadow: 0 22px 60px rgba(16, 24, 40, .22);
+}
+
+.cookie-consent strong { display: block; color: var(--ink); }
+.cookie-consent p { margin: 5px 0 0; color: var(--muted); font-size: .8rem; line-height: 1.5; }
+.cookie-consent form { flex: 0 0 auto; margin: 0; }
+
+@media (max-width: 650px) {
+    .cookie-consent { right: 16px; bottom: 58px; width: calc(100% - 32px); align-items: stretch; flex-direction: column; gap: 14px; }
+    .cookie-consent .button { width: 100%; }
+}

@@ -1,10 +1,13 @@
 using DenariusAI.Application.Abstractions.Services;
 using DenariusAI.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
+using DenariusAI.Infrastructure.Identity;
+using Microsoft.AspNetCore.Identity;
+using System.Security.Cryptography;
 
 namespace DenariusAI.Infrastructure.Persistence;
 
-public sealed class DemonstrationDataService(DenariusDbContext dbContext) : IDemonstrationDataService
+public sealed class DemonstrationDataService(DenariusDbContext dbContext, UserManager<ApplicationUser>? userManager = null) : IDemonstrationDataService
 {
     public async Task<DemonstrationDataLoadResult> LoadAsync(CancellationToken cancellationToken = default)
     {
@@ -26,7 +29,19 @@ public sealed class DemonstrationDataService(DenariusDbContext dbContext) : IDem
         dbContext.BudgetLines.AddRange(StructuralSeed.BudgetLines);
         dbContext.Reconciliations.AddRange(StructuralSeed.Reconciliations);
         dbContext.SavingsCertificates.AddRange(CreateSavingsCertificates());
+        if (dbContext.Database.IsRelational())
+        {
+            await dbContext.Set<ApplicationUser>()
+                .ExecuteUpdateAsync(setters => setters
+                    .SetProperty(user => user.DemonstrationDataAcknowledgedAt, (DateTimeOffset?)null), cancellationToken);
+        }
+        else
+        {
+            foreach (var user in await dbContext.Set<ApplicationUser>().ToListAsync(cancellationToken))
+                user.DemonstrationDataAcknowledgedAt = null;
+        }
         await dbContext.SaveChangesAsync(cancellationToken);
+        await EnsureUsersAsync(cancellationToken);
 
         return new(true, accounts.Length, entries.Length, budgets.Length);
     }
@@ -47,38 +62,59 @@ public sealed class DemonstrationDataService(DenariusDbContext dbContext) : IDem
 
     private static JournalEntry[] CreateEntries()
     {
-        return
-        [
-            Entry(1, 1, "Salário mensal", "REC-JUL-001", (1, 2500m, 0m, null), (4, 0m, 2500m, 10)),
-            Entry(2, 3, "Renda da casa", "PAG-JUL-001", (5, 750m, 0m, 30), (1, 0m, 750m, null)),
-            Entry(3, 5, "Compras de supermercado", "TALAO-1842", (5, 180m, 0m, 33), (1, 0m, 180m, null)),
-            Entry(4, 7, "Fatura de eletricidade", "ELEC-0726", (5, 65m, 0m, 32), (1, 0m, 65m, null)),
-            Entry(5, 8, "Fatura de água", "AGUA-0726", (5, 32m, 0m, 31), (1, 0m, 32m, null)),
-            Entry(6, 10, "Transferência para poupança", "TRF-POUP", (2, 300m, 0m, 2), (1, 0m, 300m, 1100)),
-            Entry(7, 12, "Levantamento ATM", "ATM-1208", (3, 100m, 0m, 4), (1, 0m, 100m, 4)),
-            Entry(8, 15, "Jantar em família", "REST-1508", (5, 80m, 0m, 38), (1, 0m, 80m, null)),
-            Entry(9, 18, "Trabalho ocasional", "FREELANCE-07", (1, 350m, 0m, null), (4, 0m, 350m, 20)),
-            Entry(10, 20, "Viagem de verão", "VIAGEM-2026", (5, 450m, 0m, 50), (1, 0m, 450m, null))
-        ];
+        var entries = new List<JournalEntry>();
+        for (var month = 1; month <= 8; month++)
+        {
+            var values = new[] { 2650m, 780m, 210m + month * 4m, 62m + month, 28m + month, 95m, 250m, 70m + month * 3m, 180m + month * 10m };
+            entries.Add(Entry(month,1,1,"Salário mensal",$"SAL-2026-{month:D2}",(1,values[0],0,null),(4,0,values[0],10)));
+            entries.Add(Entry(month,2,3,"Renda da casa",$"RENDA-{month:D2}",(5,values[1],0,30),(1,0,values[1],null)));
+            entries.Add(Entry(month,3,6,"Compras de supermercado",$"SUPER-{month:D2}",(5,values[2],0,33),(1,0,values[2],null)));
+            entries.Add(Entry(month,4,8,"Fatura de eletricidade",$"ELEC-{month:D2}",(5,values[3],0,32),(1,0,values[3],null)));
+            entries.Add(Entry(month,5,9,"Fatura de água",$"AGUA-{month:D2}",(5,values[4],0,31),(1,0,values[4],null)));
+            entries.Add(Entry(month,6,12,"Passe e combustível",$"TRANSP-{month:D2}",(5,values[5],0,34),(1,0,values[5],null)));
+            entries.Add(Entry(month,7,15,"Transferência para poupança",$"POUP-{month:D2}",(2,values[6],0,2),(1,0,values[6],1100)));
+            entries.Add(Entry(month,8,20,"Lazer em família",$"LAZER-{month:D2}",(5,values[7],0,38),(1,0,values[7],null)));
+            entries.Add(Entry(month,9,24,"Trabalho ocasional",$"EXTRA-{month:D2}",(1,values[8],0,null),(4,0,values[8],20)));
+        }
+        return entries.ToArray();
     }
 
-    private static JournalEntry Entry(int id, int day, string description, string reference,
+    private static JournalEntry Entry(int month, int slot, int day, string description, string reference,
         (int Account, decimal Debit, decimal Credit, int? Category) first,
         (int Account, decimal Debit, decimal Credit, int? Category) second)
     {
-        var entry = new JournalEntry(new DateOnly(2026, 7, day), description, reference, "Dados de demonstração — julho 2026")
+        var entryId = ((month - 1) * 9) + slot;
+        var entry = new JournalEntry(new DateOnly(2026, month, day), description, reference, $"Dados de demonstração — {month:D2}/2026")
         {
-            Id = Id("40000000", id), CreatedAt = new DateTimeOffset(2026, 8, 24, 0, 0, 0, TimeSpan.Zero), CreatedBy = "demo-seed"
+            Id = Id("40000000", entryId), CreatedAt = new DateTimeOffset(2026, 8, 24, 0, 0, 0, TimeSpan.Zero), CreatedBy = "demo-seed"
         };
-        entry.AssignBudget(Guid.Parse("60000000-0000-0000-0000-000000000001"));
+        entry.AssignBudget(Id("60000000", month));
         var firstLine = entry.AddLine(Id("30000000", first.Account), first.Debit, first.Credit, categoryId: first.Category.HasValue ? Id("20000000", first.Category.Value) : null);
         var secondLine = entry.AddLine(Id("30000000", second.Account), second.Debit, second.Credit, categoryId: second.Category.HasValue ? Id("20000000", second.Category.Value) : null);
-        firstLine.Id = Id("50000000", (id * 2) - 1);
-        secondLine.Id = Id("50000000", id * 2);
+        firstLine.Id = Id("50000000", (entryId * 2) - 1);
+        secondLine.Id = Id("50000000", entryId * 2);
         firstLine.CreatedAt = secondLine.CreatedAt = entry.CreatedAt;
         firstLine.CreatedBy = secondLine.CreatedBy = "demo-seed";
         entry.EnsureBalanced();
         return entry;
+    }
+
+    public async Task EnsureUsersAsync(CancellationToken cancellationToken = default)
+    {
+        if (userManager is null) return;
+        foreach (var (email, name) in new[] { ("demo.familia@denarius.local", "Membro da família — Demo"), ("demo.consulta@denarius.local", "Consulta financeira — Demo") })
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            if (await userManager.FindByEmailAsync(email) is not null) continue;
+            var user = new ApplicationUser { UserName = email, Email = email, EmailConfirmed = true, DisplayName = name };
+            var password = $"Demo!{Convert.ToHexString(RandomNumberGenerator.GetBytes(12))}aA1";
+            var result = await userManager.CreateAsync(user, password);
+            if (!result.Succeeded)
+                throw new InvalidOperationException($"Demonstration user could not be created: {string.Join("; ", result.Errors.Select(error => error.Code))}");
+            var roleResult = await userManager.AddToRoleAsync(user, ApplicationRoles.User);
+            if (!roleResult.Succeeded)
+                throw new InvalidOperationException($"Demonstration user role could not be assigned: {string.Join("; ", roleResult.Errors.Select(error => error.Code))}");
+        }
     }
 
     private static Guid Id(string prefix, int value) => Guid.Parse($"{prefix}-0000-0000-0000-{value:D12}");

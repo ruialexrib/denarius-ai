@@ -1,5 +1,6 @@
 @model AccountFormViewModel
 @{ var editing = Model.Id != Guid.Empty; ViewData["Title"] = editing ? "Editar conta" : "Nova conta"; }
+<link rel="stylesheet" href="~/css/data-forms.css" asp-append-version="true" />
 <div class="page-header"><div><p class="eyebrow">Configuração · Contas</p><h1>@ViewData["Title"]</h1><p class="page-subtitle">@(editing ? "Atualize a identificação, classificação e parâmetros desta conta." : "Registe uma conta e defina a respetiva classificação e saldo inicial.")</p></div></div>
 <section class="panel"><form asp-action="@(editing ? "Edit" : "Create")" asp-route-id="@(editing ? Model.Id : null)" method="post" class="form-stack">
     <div asp-validation-summary="ModelOnly" class="validation-summary"></div>

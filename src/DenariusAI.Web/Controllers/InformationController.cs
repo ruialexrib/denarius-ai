@@ -4,11 +4,12 @@ using DenariusAI.Web.Models;
 using DenariusAI.Web.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace DenariusAI.Web.Controllers;
 
 [Authorize]
-public sealed class InformationController(ApplicationInfo appInfo, IHttpClientFactory httpClientFactory) : Controller
+public sealed class InformationController(ApplicationInfo appInfo, IHttpClientFactory httpClientFactory, IMemoryCache cache) : Controller
 {
     private const string RepositoryUrl = "https://github.com/ruialexrib/denarius-ai";
 
@@ -26,27 +27,40 @@ public sealed class InformationController(ApplicationInfo appInfo, IHttpClientFa
     {
         var releases = await GetReleasesAsync(cancellationToken);
         if (releases.Count == 0) releases = LocalReleases(appInfo.Version);
+        var latest = releases.FirstOrDefault();
+        var updateAvailable = latest is not null && IsNewerVersion(latest.Version, appInfo.Version);
         return View(new WhatsNewViewModel(appInfo.Version, RuntimeInformation.FrameworkDescription,
             RuntimeInformation.OSDescription, string.Equals(Environment.GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER"), "true", StringComparison.OrdinalIgnoreCase),
-            "SQL Server 2022 Express · Online", "denarius-ai-web · Online", "denarius-ai-mcp · Perfil opcional", RepositoryUrl, releases));
+            "SQL Server 2022 Express · Online", "denarius-ai-web · Online", "denarius-ai-mcp · Perfil opcional", RepositoryUrl, releases,
+            latest?.Version, latest?.Url, updateAvailable));
     }
 
     private async Task<IReadOnlyList<ReleaseNoteViewModel>> GetReleasesAsync(CancellationToken cancellationToken)
     {
+        if (cache.TryGetValue<IReadOnlyList<ReleaseNoteViewModel>>("github-latest-release", out var cached)) return cached ?? [];
         try
         {
-            var client = httpClientFactory.CreateClient(); client.DefaultRequestHeaders.UserAgent.ParseAdd("DenariusAI/1.0");
+            var client = httpClientFactory.CreateClient();
+            client.Timeout = TimeSpan.FromSeconds(5);
+            client.DefaultRequestHeaders.UserAgent.ParseAdd("DenariusAI/1.0");
             using var response = await client.GetAsync("https://api.github.com/repos/ruialexrib/denarius-ai/releases?per_page=1", cancellationToken);
             if (!response.IsSuccessStatusCode) return [];
             using var document = JsonDocument.Parse(await response.Content.ReadAsStringAsync(cancellationToken));
-            return document.RootElement.EnumerateArray().Take(1).Select(release => new ReleaseNoteViewModel(
+            var releases = document.RootElement.EnumerateArray().Take(1).Select(release => new ReleaseNoteViewModel(
                 release.GetProperty("tag_name").GetString() ?? "Versão",
                 release.TryGetProperty("published_at", out var date) ? date.GetString()?[..10] ?? string.Empty : string.Empty,
                 release.GetProperty("html_url").GetString() ?? RepositoryUrl,
                 (release.GetProperty("body").GetString() ?? "Atualizações e melhorias.").Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).Take(8).ToList())).ToList();
+            cache.Set("github-latest-release", releases, TimeSpan.FromMinutes(15));
+            return releases;
         }
         catch (Exception exception) when (exception is HttpRequestException or JsonException or TaskCanceledException) { return []; }
     }
+
+    private static bool IsNewerVersion(string releaseVersion, string currentVersion) =>
+        Version.TryParse(releaseVersion.TrimStart('v', 'V').Split('-', '+')[0], out var latest)
+        && Version.TryParse(currentVersion.Split('-', '+')[0], out var current)
+        && latest > current;
 
     private static IReadOnlyList<ReleaseNoteViewModel> LocalReleases(string version) =>
     [

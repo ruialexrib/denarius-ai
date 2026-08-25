@@ -2,6 +2,7 @@
 @using System.Globalization
 <link rel="stylesheet" href="~/css/dashboard.css" asp-append-version="true" />
 <link rel="stylesheet" href="~/css/financial-enhancements.css" asp-append-version="true" />
+<link rel="stylesheet" href="~/css/reminders.css" asp-append-version="true" />
 @{ ViewData["Title"] = "Dashboard"; var dashboard = Model.Dashboard; var culture = CultureInfo.GetCultureInfo("pt-PT"); var periodName = new DateTime(dashboard.Year, dashboard.Month, 1).ToString("MMMM yyyy", culture); var categoryMax = Math.Max(dashboard.Categories.Select(item => Math.Max(item.Actual, item.Budgeted)).DefaultIfEmpty(0m).Max(), 1m); var evolutionMax = Math.Max(dashboard.Evolution.Select(item => Math.Max(item.Income, item.Expenses)).DefaultIfEmpty(0m).Max(), 1m); var budgetProgress = Math.Clamp(dashboard.BudgetExecution ?? 0m, 0m, 100m); }
 <div class="page-header"><div><p class="eyebrow">Visão geral</p><h1>Dashboard</h1><p class="page-subtitle">Acompanhe o desempenho financeiro, os saldos e a execução do orçamento do período.</p></div><form method="get" class="dashboard-period"><select name="year" asp-items="Model.Years" aria-label="Ano"></select><select name="month" asp-items="Model.Months" aria-label="Mês"></select><button class="button secondary" type="submit">Aplicar</button></form></div>
 <section class="dashboard-kpis" aria-label="Indicadores principais">
@@ -10,6 +11,15 @@
 <article><span>Rendimentos</span><strong class="positive">@dashboard.Income.ToString("N2") €</strong><small>Entradas no período</small></article>
 <article><span>Despesas</span><strong class="negative">@dashboard.Expenses.ToString("N2") €</strong><small>Saídas no período</small></article>
 </section>
+@if (Model.ShowDemonstrationDataNotice)
+{
+<section class="demo-data-notice" role="status"><span class="demo-data-notice-icon" aria-hidden="true">i</span><div><strong>Está a consultar dados de demonstração</strong><p>Estes dados servem para explorar o DenariusAI. Quando estiver pronto, pode eliminá-los em <a asp-controller="Settings" asp-action="ResetFinancialData">Definições</a> e começar com os seus próprios dados.</p></div><form asp-action="AcknowledgeDemonstrationData" method="post"><button class="button" type="submit">Tomei conhecimento</button></form></section>
+}
+@if (Model.ActiveReminders.Count > 0)
+{
+<section class="reminder-dashboard" role="status"><div class="reminder-dashboard-heading"><div><p class="eyebrow">Lembretes ativos</p><h2>Tem @Model.ActiveReminders.Count aviso(s) a aguardar confirmação</h2></div><a class="text-link" asp-controller="Reminders" asp-action="Index">Ver todos</a></div>@foreach(var reminder in Model.ActiveReminders){<div class="reminder-dashboard-item"><div><strong>@reminder.Text</strong><small>@reminder.EventDate.ToString("dd/MM/yyyy") · @(reminder.DaysRemaining < 0 ? $"atrasado {-reminder.DaysRemaining} dias" : reminder.DaysRemaining == 0 ? "hoje" : $"faltam {reminder.DaysRemaining} dias")</small></div><form asp-controller="Reminders" asp-action="Acknowledge" method="post"><input type="hidden" name="id" value="@reminder.Id" /><input type="hidden" name="returnUrl" value="@Context.Request.Path@Context.Request.QueryString" /><button class="button secondary" type="submit">Tomei conhecimento</button></form></div>}</section>
+}
+<section class="dashboard-welcome"><span class="dashboard-welcome-icon" aria-hidden="true">✦</span><div><p class="eyebrow">A sua visão financeira</p><h2>Bem-vindo ao DenariusAI</h2><p>@Model.WelcomeMessage</p><small>@(Model.WelcomeGeneratedByAi ? "Resumo contextual gerado por IA" : "Orientação geral do DenariusAI")</small></div></section>
 <section class="dashboard-overview">
 <article class="panel budget-overview">
 <div class="panel-title"><div><p class="eyebrow">Orçamento mensal</p><h2>@(dashboard.BudgetExecution.HasValue ? $"{dashboard.BudgetExecution:N1}% executado" : "Sem orçamento definido")</h2></div><a class="text-link" asp-controller="Budget" asp-action="Index" asp-route-year="@dashboard.Year" asp-route-month="@dashboard.Month">Ver orçamento</a></div>

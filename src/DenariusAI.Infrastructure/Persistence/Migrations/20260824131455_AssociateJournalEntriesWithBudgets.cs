@@ -18,85 +18,30 @@ namespace DenariusAI.Infrastructure.Persistence.Migrations
                 type: "uniqueidentifier",
                 nullable: true);
 
-            migrationBuilder.UpdateData(
-                schema: "denarius",
-                table: "JournalEntries",
-                keyColumn: "Id",
-                keyValue: new Guid("40000000-0000-0000-0000-000000000001"),
-                column: "BudgetId",
-                value: new Guid("60000000-0000-0000-0000-000000000001"));
-
-            migrationBuilder.UpdateData(
-                schema: "denarius",
-                table: "JournalEntries",
-                keyColumn: "Id",
-                keyValue: new Guid("40000000-0000-0000-0000-000000000002"),
-                column: "BudgetId",
-                value: new Guid("60000000-0000-0000-0000-000000000001"));
-
-            migrationBuilder.UpdateData(
-                schema: "denarius",
-                table: "JournalEntries",
-                keyColumn: "Id",
-                keyValue: new Guid("40000000-0000-0000-0000-000000000003"),
-                column: "BudgetId",
-                value: new Guid("60000000-0000-0000-0000-000000000001"));
-
-            migrationBuilder.UpdateData(
-                schema: "denarius",
-                table: "JournalEntries",
-                keyColumn: "Id",
-                keyValue: new Guid("40000000-0000-0000-0000-000000000004"),
-                column: "BudgetId",
-                value: new Guid("60000000-0000-0000-0000-000000000001"));
-
-            migrationBuilder.UpdateData(
-                schema: "denarius",
-                table: "JournalEntries",
-                keyColumn: "Id",
-                keyValue: new Guid("40000000-0000-0000-0000-000000000005"),
-                column: "BudgetId",
-                value: new Guid("60000000-0000-0000-0000-000000000001"));
-
-            migrationBuilder.UpdateData(
-                schema: "denarius",
-                table: "JournalEntries",
-                keyColumn: "Id",
-                keyValue: new Guid("40000000-0000-0000-0000-000000000006"),
-                column: "BudgetId",
-                value: new Guid("60000000-0000-0000-0000-000000000001"));
-
-            migrationBuilder.UpdateData(
-                schema: "denarius",
-                table: "JournalEntries",
-                keyColumn: "Id",
-                keyValue: new Guid("40000000-0000-0000-0000-000000000007"),
-                column: "BudgetId",
-                value: new Guid("60000000-0000-0000-0000-000000000001"));
-
-            migrationBuilder.UpdateData(
-                schema: "denarius",
-                table: "JournalEntries",
-                keyColumn: "Id",
-                keyValue: new Guid("40000000-0000-0000-0000-000000000008"),
-                column: "BudgetId",
-                value: new Guid("60000000-0000-0000-0000-000000000001"));
-
-            migrationBuilder.UpdateData(
-                schema: "denarius",
-                table: "JournalEntries",
-                keyColumn: "Id",
-                keyValue: new Guid("40000000-0000-0000-0000-000000000009"),
-                column: "BudgetId",
-                value: new Guid("60000000-0000-0000-0000-000000000001"));
-
-            migrationBuilder.UpdateData(
-                schema: "denarius",
-                table: "JournalEntries",
-                keyColumn: "Id",
-                keyValue: new Guid("40000000-0000-0000-0000-000000000010"),
-                column: "BudgetId",
-                value: new Guid("60000000-0000-0000-0000-000000000001"));
+            migrationBuilder.Sql(
+                """
+                UPDATE entries
+                SET [BudgetId] = budget.[Id]
+                FROM [denarius].[JournalEntries] entries
+                CROSS APPLY (
+                    SELECT TOP (1) [Id]
+                    FROM [denarius].[Budgets]
+                    WHERE [Year] = 2026 AND [Month] = 7
+                    ORDER BY [CreatedAt], [Id]
+                ) budget
+                WHERE entries.[Id] IN (
+                    '40000000-0000-0000-0000-000000000001',
+                    '40000000-0000-0000-0000-000000000002',
+                    '40000000-0000-0000-0000-000000000003',
+                    '40000000-0000-0000-0000-000000000004',
+                    '40000000-0000-0000-0000-000000000005',
+                    '40000000-0000-0000-0000-000000000006',
+                    '40000000-0000-0000-0000-000000000007',
+                    '40000000-0000-0000-0000-000000000008',
+                    '40000000-0000-0000-0000-000000000009',
+                    '40000000-0000-0000-0000-000000000010'
+                );
+                """);
 
             migrationBuilder.CreateIndex(
                 name: "IX_JournalEntries_BudgetId",

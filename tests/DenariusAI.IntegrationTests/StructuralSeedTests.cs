@@ -33,9 +33,10 @@ public sealed class StructuralSeedTests
         var demonstrationAccount = Assert.Single(accounts, item => (Guid)item[nameof(Account.Id)]! == Guid.Parse("30000000-0000-0000-0000-000000000001"));
         Assert.Equal("Conta à Ordem — Demonstração", demonstrationAccount[nameof(Account.Name)]);
         Assert.Equal("EUR", demonstrationAccount[nameof(Account.Currency)]);
-        Assert.Equal(0m, demonstrationAccount[nameof(Account.InitialBalance)]);
-        Assert.Equal(10, entries.Count());
-        Assert.Equal(20, entryLines.Count());
-        Assert.Equal(4, reconciliations.Count());
+        Assert.Equal(1850m, demonstrationAccount[nameof(Account.InitialBalance)]);
+        Assert.Equal(72, entries.Count());
+        Assert.Equal(144, entryLines.Count());
+        Assert.Equal(48, reconciliations.Count());
+        Assert.Equal(24, entries.Count() - reconciliations.Count());
     }
 }

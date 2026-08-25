@@ -1,0 +1,5 @@
+@using System.Security.Claims
+@using Microsoft.EntityFrameworkCore
+@inject DenariusAI.Infrastructure.Persistence.DenariusDbContext ReminderDb
+@{ var reminderUserId = User.FindFirstValue(ClaimTypes.NameIdentifier); var reminderToday = DateOnly.FromDateTime(DateTime.Today); var reminderCount = string.IsNullOrWhiteSpace(reminderUserId) ? 0 : await ReminderDb.Reminders.AsNoTracking().CountAsync(item => item.EventDate.AddDays(-item.NoticeDays) <= reminderToday && !item.Acknowledgements.Any(value => value.UserId == reminderUserId)); }
+<a class="alert-button @(reminderCount > 0 ? "has-alerts" : null)" asp-controller="Reminders" asp-action="Index" aria-label="Lembretes: @reminderCount alertas ativos" title="Lembretes"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 2.8 20h18.4L12 3Z" /><path d="M12 8v6M12 17.2v.1" /></svg>@if(reminderCount > 0){<span class="alert-count">@(reminderCount > 99 ? "99+" : reminderCount)</span>}</a>

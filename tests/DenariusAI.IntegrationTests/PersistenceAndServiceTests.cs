@@ -34,7 +34,7 @@ public sealed class PersistenceAndServiceTests
         await using var context = CreateContext();
         await context.Database.EnsureCreatedAsync();
         var expenseCategory = await context.Categories.FirstAsync(item => item.FinancialGroup.Kind == FinancialGroupKind.Expense);
-        var budget = new Budget { Id = Guid.Parse("60000000-0000-0000-0000-000000000001"), Year = 2026, Month = 7 };
+        var budget = new Budget { Year = 2026, Month = 7 };
         budget.Lines.Add(new BudgetLine { CategoryId = expenseCategory.Id, Amount = 100m });
         context.Budgets.Add(budget);
         await context.SaveChangesAsync();

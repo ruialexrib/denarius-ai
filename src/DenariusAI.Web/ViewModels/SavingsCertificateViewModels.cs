@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace DenariusAI.Web.ViewModels;
 
@@ -26,4 +27,5 @@ public sealed record SavingsCertificateRowViewModel(Guid Id, DateOnly Investment
     decimal Yield, DateOnly NextCapitalization, int DaysUntilCapitalization, decimal FutureNetInterest, decimal FutureValue);
 
 public sealed record SavingsCertificateIndexViewModel(IReadOnlyList<SavingsCertificateRowViewModel> Items,
-    decimal TotalInvestment, decimal TotalCurrentValue, decimal TotalYield, decimal TotalFutureNetInterest, decimal TotalFutureValue);
+    decimal TotalInvestment, decimal TotalCurrentValue, decimal TotalYield, decimal TotalFutureNetInterest, decimal TotalFutureValue,
+    DateOnly? From, DateOnly? To, string? Search, string Sort, IReadOnlyList<SelectListItem> SortOptions, PaginationViewModel Pagination);

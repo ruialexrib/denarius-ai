@@ -19,6 +19,8 @@ public sealed class DenariusDbContext(DbContextOptions<DenariusDbContext> option
     public DbSet<Reconciliation> Reconciliations => Set<Reconciliation>();
     public DbSet<ApplicationSetting> ApplicationSettings => Set<ApplicationSetting>();
     public DbSet<SavingsCertificate> SavingsCertificates => Set<SavingsCertificate>();
+    public DbSet<Reminder> Reminders => Set<Reminder>();
+    public DbSet<ReminderAcknowledgement> ReminderAcknowledgements => Set<ReminderAcknowledgement>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

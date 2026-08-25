@@ -13,7 +13,7 @@ using System.Text;
 namespace DenariusAI.Web.Controllers;
 
 [Authorize]
-public sealed class AnalyticsController(IAnalyticsService analyticsService, IFinancialGroupService groupService, ICategoryService categoryService, IAccountService accountService, DenariusDbContext dbContext, ILLMService llmService) : Controller
+public sealed class AnalyticsController(IAnalyticsService analyticsService, IFinancialGroupService groupService, ICategoryService categoryService, IAccountService accountService, IDashboardService dashboardService, DenariusDbContext dbContext, ILLMService llmService) : Controller
 {
     public async Task<IActionResult> Index(DateOnly? from, DateOnly? to, Guid? groupId, Guid? categoryId, Guid? accountId, CancellationToken cancellationToken)
     {
@@ -25,10 +25,12 @@ public sealed class AnalyticsController(IAnalyticsService analyticsService, IFin
         var groups = await groupService.ListAsync(true, cancellationToken);
         var categories = await categoryService.ListAsync(activeOnly: true, cancellationToken: cancellationToken);
         var accounts = await accountService.ListAsync(true, cancellationToken);
+        var annual = await dashboardService.GetAsync(DateTime.Today.Year, DateTime.Today.Month, cancellationToken);
         return View(new AnalyticsViewModel(filter, analytics,
             groups.Select(item => new SelectListItem(item.Name, item.Id.ToString(), item.Id == groupId)).Prepend(new("Todos os grupos", "")).ToList(),
             categories.Select(item => new SelectListItem(item.Name, item.Id.ToString(), item.Id == categoryId)).Prepend(new("Todas as categorias", "")).ToList(),
-            accounts.Select(item => new SelectListItem(item.Name, item.Id.ToString(), item.Id == accountId)).Prepend(new("Todas as contas", "")).ToList()));
+            accounts.Select(item => new SelectListItem(item.Name, item.Id.ToString(), item.Id == accountId)).Prepend(new("Todas as contas", "")).ToList(),
+            annual.Evolution, annual.BudgetEvolution));
     }
 
     [HttpPost, ValidateAntiForgeryToken]

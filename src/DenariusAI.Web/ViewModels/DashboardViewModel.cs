@@ -6,4 +6,8 @@ namespace DenariusAI.Web.ViewModels;
 public sealed record DashboardViewModel(
     DashboardDto Dashboard,
     IReadOnlyList<SelectListItem> Years,
-    IReadOnlyList<SelectListItem> Months);
+    IReadOnlyList<SelectListItem> Months,
+    bool ShowDemonstrationDataNotice,
+    IReadOnlyList<DashboardReminderViewModel> ActiveReminders,
+    string WelcomeMessage,
+    bool WelcomeGeneratedByAi);

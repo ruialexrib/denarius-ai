@@ -1,0 +1,6 @@
+.version-update-notice { display:grid; grid-template-columns:auto 1fr auto; align-items:center; gap:16px; margin-bottom:20px; padding:18px 20px; border:1px solid #bce8d8; border-radius:16px; background:linear-gradient(135deg,#e9faf4,#fff); box-shadow:0 10px 30px rgba(8,127,91,.08); }
+.version-update-notice > span { display:grid; width:40px; height:40px; place-items:center; border-radius:12px; background:#159a70; color:#fff; font-size:1.1rem; font-weight:900; }
+.version-update-notice strong { color:#086c4e; }
+.version-update-notice p { margin:4px 0 0; color:var(--muted); font-size:.82rem; }
+.version-update-notice .button { white-space:nowrap; }
+@media(max-width:700px) { .version-update-notice { grid-template-columns:auto 1fr; } .version-update-notice .button { grid-column:1/-1; } }

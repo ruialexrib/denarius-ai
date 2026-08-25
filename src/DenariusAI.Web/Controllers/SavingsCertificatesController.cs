@@ -5,20 +5,30 @@ using DenariusAI.Web.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace DenariusAI.Web.Controllers;
 
 [Authorize]
 public sealed class SavingsCertificatesController(DenariusDbContext dbContext) : Controller
 {
-    public async Task<IActionResult> Index(CancellationToken cancellationToken)
+    public async Task<IActionResult> Index(DateOnly? from, DateOnly? to, string? search, string sort = "date-asc", int page = 1, int pageSize = 10, CancellationToken cancellationToken = default)
     {
+        if (from > to) return BadRequest();
         var today = DateOnly.FromDateTime(DateTime.Today);
-        var certificates = await dbContext.SavingsCertificates.AsNoTracking().OrderBy(item => item.InvestmentDate).ToListAsync(cancellationToken);
-        var rows = certificates.Select(item => ToRow(item, today)).ToList();
-        return View(new SavingsCertificateIndexViewModel(rows, rows.Sum(item => item.InvestmentValue),
-            rows.Sum(item => item.CurrentValue), rows.Sum(item => item.Yield),
-            rows.Sum(item => item.FutureNetInterest), rows.Sum(item => item.FutureValue)));
+        var query = dbContext.SavingsCertificates.AsNoTracking();
+        if (from.HasValue) query = query.Where(item => item.InvestmentDate >= from.Value);
+        if (to.HasValue) query = query.Where(item => item.InvestmentDate <= to.Value);
+        if (!string.IsNullOrWhiteSpace(search)) { var term = search.Trim(); query = query.Where(item => item.SeriesNumber.Contains(term) || item.Description.Contains(term)); }
+        query = sort switch { "date-desc" => query.OrderByDescending(item => item.InvestmentDate), "value-desc" => query.OrderByDescending(item => item.CurrentValue), "yield-desc" => query.OrderByDescending(item => item.CurrentValue - item.InvestmentValue), "series" => query.OrderBy(item => item.SeriesNumber), _ => query.OrderBy(item => item.InvestmentDate) };
+        var certificates = await query.ToListAsync(cancellationToken);
+        var allRows = certificates.Select(item => ToRow(item, today)).ToList();
+        var pagination = PaginationViewModel.Create(allRows.Count, page, pageSize);
+        var rows = allRows.Skip((pagination.Page - 1) * pagination.PageSize).Take(pagination.PageSize).ToList();
+        return View(new SavingsCertificateIndexViewModel(rows, allRows.Sum(item => item.InvestmentValue),
+            allRows.Sum(item => item.CurrentValue), allRows.Sum(item => item.Yield),
+            allRows.Sum(item => item.FutureNetInterest), allRows.Sum(item => item.FutureValue), from, to, search, sort,
+            [new("Data — mais antiga", "date-asc", sort == "date-asc"), new("Data — mais recente", "date-desc", sort == "date-desc"), new("Maior valor atual", "value-desc", sort == "value-desc"), new("Maior rendimento", "yield-desc", sort == "yield-desc"), new("Série/Número", "series", sort == "series")], pagination));
     }
 
     [HttpGet]

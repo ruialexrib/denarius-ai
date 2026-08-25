@@ -12,6 +12,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllersWithViews();
 builder.Services.AddHttpClient();
 builder.Services.AddDistributedMemoryCache();
+builder.Services.AddMemoryCache();
 builder.Services.AddSession(options => { options.IdleTimeout = TimeSpan.FromMinutes(30); options.Cookie.HttpOnly = true; options.Cookie.IsEssential = true; });
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
@@ -35,6 +36,7 @@ var app = builder.Build();
 
 await ApplyDatabaseMigrationsAsync(app);
 await SeedAdministratorAsync(app);
+await SeedDemonstrationUsersAsync(app);
 
 if (!app.Environment.IsDevelopment())
 {
@@ -114,6 +116,16 @@ static async Task SeedAdministratorAsync(WebApplication application)
     await userManager.AddToRoleAsync(user, ApplicationRoles.Administrator);
 
     logger.LogInformation("Initial administrator created for {Email}.", email);
+}
+
+static async Task SeedDemonstrationUsersAsync(WebApplication application)
+{
+    await using var scope = application.Services.CreateAsyncScope();
+    var dbContext = scope.ServiceProvider.GetRequiredService<DenariusDbContext>();
+    if (!await dbContext.JournalEntries.AnyAsync(entry => entry.CreatedBy == "demo-seed")) return;
+
+    var service = scope.ServiceProvider.GetRequiredService<DenariusAI.Application.Abstractions.Services.IDemonstrationDataService>();
+    await service.EnsureUsersAsync();
 }
 
 public partial class Program;

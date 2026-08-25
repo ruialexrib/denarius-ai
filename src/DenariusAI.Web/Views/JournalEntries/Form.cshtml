@@ -1,5 +1,6 @@
 @model JournalEntryFormViewModel
 @{ var editing = Model.Id != Guid.Empty; ViewData["Title"] = editing ? "Editar movimento" : "Novo movimento"; }
+<link rel="stylesheet" href="~/css/data-forms.css" asp-append-version="true" />
 <div class="page-header"><div><p class="eyebrow">Finanças · Movimentos</p><h1>@ViewData["Title"]</h1><p class="page-subtitle">@(editing ? "Atualize os dados e as linhas contabilísticas deste movimento." : "Descreva a operação manualmente ou use a assistência em linguagem natural para preencher os campos.")</p></div></div>
 @if (!editing) {
 <section class="movement-ai"><div class="movement-ai-intro"><div class="movement-ai-card-content"><div class="movement-ai-card-top"><span class="movement-ai-icon" aria-hidden="true">✦</span><span class="movement-ai-state">Assistido por IA</span></div><span class="movement-ai-eyebrow">Registo inteligente</span><h2>Crie um movimento através de uma conversa</h2><p>Descreva a operação em linguagem natural. A IA consulta as contas, grupos, categorias e movimentos recentes, pede a informação em falta e prepara uma sugestão completa para rever.</p></div><button id="toggle-movement-ai" class="button movement-ai-action" type="button" disabled="@(!Model.AiSuggestionAvailable)"><i class="bi bi-chat-dots" aria-hidden="true"></i> Iniciar conversa</button></div>
