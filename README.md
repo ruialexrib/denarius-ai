@@ -10,8 +10,13 @@
 [![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)](https://www.docker.com/)
 [![Mistral AI](https://img.shields.io/badge/AI-Mistral-FF7000)](https://mistral.ai/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![Live Demo](https://img.shields.io/badge/Live_Demo-Open-159A70?logo=azure&logoColor=white)](https://denarius-ai.westeurope.cloudapp.azure.com)
 
 Developed by [Rui Ribeiro](https://github.com/ruialexrib)
+
+### [Open the live demonstration](https://denarius-ai.westeurope.cloudapp.azure.com)
+
+Demo access: `guest@denarius-ai.local` / `Denarius2026!`
 
 ### Application tour
 
