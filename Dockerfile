@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/dotnet/sdk:9.0 AS restore
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS restore
 WORKDIR /src
 
 COPY Directory.Build.props Directory.Packages.props DenariusAI.slnx global.json ./
@@ -19,13 +19,13 @@ RUN dotnet test DenariusAI.slnx --configuration Release --no-build
 RUN dotnet publish src/DenariusAI.Web/DenariusAI.Web.csproj --configuration Release --no-build --output /app/publish
 RUN dotnet publish src/DenariusAI.Mcp/DenariusAI.Mcp.csproj --configuration Release --no-build --output /app/mcp-publish
 
-FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS mcp-final
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS mcp-final
 WORKDIR /app
 COPY --from=build /app/mcp-publish .
 USER $APP_UID
 ENTRYPOINT ["dotnet", "DenariusAI.Mcp.dll"]
 
-FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS final
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
 WORKDIR /app
 COPY --from=build /app/publish .
 RUN apt-get update \
