@@ -15,8 +15,6 @@ Developed by [Rui Ribeiro](https://github.com/ruialexrib)
 
 ### Application tour
 
-Ten high-resolution views of the DenariusAI experience, shown for five seconds each and beginning with secure sign-in before the dashboard, daily movements, account statements, budgets, savings, analytics and help.
-
 ![DenariusAI application tour](docs/assets/denarius-ai-tour.gif)
 
 </div>
