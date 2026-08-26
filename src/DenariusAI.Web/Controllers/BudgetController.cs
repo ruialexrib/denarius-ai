@@ -12,10 +12,10 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace DenariusAI.Web.Controllers;
 
-[Authorize]
 /// <summary>
-/// Contains definitions for BudgetController.
+/// Represents the BudgetController type.
 /// </summary>
+[Authorize]
 public sealed class BudgetController(IBudgetService service, DenariusDbContext dbContext, ILogger<BudgetController> logger) : Controller
 {
     [HttpGet]

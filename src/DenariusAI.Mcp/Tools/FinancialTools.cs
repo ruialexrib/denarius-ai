@@ -6,10 +6,10 @@ using ModelContextProtocol.Server;
 
 namespace DenariusAI.Mcp.Tools;
 
-[McpServerToolType]
 /// <summary>
-/// Contains definitions for FinancialTools.
+/// Represents the FinancialTools type.
 /// </summary>
+[McpServerToolType]
 public static class FinancialTools
 {
     [McpServerTool(Name = "get_accounts"), Description("Lists financial accounts and their calculated balances.")]

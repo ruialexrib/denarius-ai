@@ -3,7 +3,7 @@ using DenariusAI.Web.Models;
 namespace DenariusAI.IntegrationTests;
 
 /// <summary>
-/// Contains definitions for MarkdownPreviewTests.
+/// Contains tests for the MarkdownPreview type.
 /// </summary>
 public sealed class MarkdownPreviewTests
 {

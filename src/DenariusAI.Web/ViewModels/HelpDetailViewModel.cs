@@ -1,7 +1,7 @@
 namespace DenariusAI.Web.ViewModels;
 
 /// <summary>
-/// Contains definitions for HelpDetailViewModel.
+/// Represents the HelpDetailViewModel type.
 /// </summary>
 public sealed record HelpSectionViewModel(string Title, string Description, IReadOnlyList<string> Items)
 {
@@ -20,5 +20,8 @@ public sealed record HelpSectionViewModel(string Title, string Description, IRea
         _ => $"Orientações práticas sobre {title.ToLowerInvariant()} nesta área."
     };
 }
+/// <summary>
+/// Represents the HelpDetailViewModel type.
+/// </summary>
 public sealed record HelpDetailViewModel(string Id, string Title, string Subtitle, string Controller, string Action,
     string ActionLabel, IReadOnlyList<HelpSectionViewModel> Sections);

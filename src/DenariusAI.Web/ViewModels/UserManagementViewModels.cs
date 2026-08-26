@@ -3,11 +3,17 @@ using System.ComponentModel.DataAnnotations;
 namespace DenariusAI.Web.ViewModels;
 
 /// <summary>
-/// Contains definitions for UserManagementViewModels.
+/// Represents the UserManagementViewModels type.
 /// </summary>
 public sealed record UserListItemViewModel(string Id, string DisplayName, string Email, string Role, bool IsCurrentUser);
+/// <summary>
+/// Represents the UserIndexViewModel type.
+/// </summary>
 public sealed record UserIndexViewModel(IReadOnlyList<UserListItemViewModel> Items);
 
+/// <summary>
+/// Represents the UserFormViewModel type.
+/// </summary>
 public sealed class UserFormViewModel
 {
     public string? Id { get; set; }

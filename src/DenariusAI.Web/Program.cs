@@ -129,6 +129,6 @@ static async Task SeedDemonstrationUsersAsync(WebApplication application)
 }
 
 /// <summary>
-/// Contains definitions for Program.
+/// Represents the Program type.
 /// </summary>
 public partial class Program;

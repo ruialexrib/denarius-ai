@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 namespace DenariusAI.Web.ViewModels;
 
 /// <summary>
-/// Contains definitions for AccountViewModels.
+/// Represents the AccountViewModels type.
 /// </summary>
 public sealed class AccountFormViewModel
 {
@@ -40,8 +40,14 @@ public sealed class AccountFormViewModel
     public IReadOnlyList<SelectListItem> Categories { get; set; } = [];
 }
 
+/// <summary>
+/// Represents the AccountListItemViewModel type.
+/// </summary>
 public sealed record AccountListItemViewModel(AccountDto Account, string CategoryName);
 
+/// <summary>
+/// Represents the AccountIndexViewModel type.
+/// </summary>
 public sealed record AccountIndexViewModel(
     IReadOnlyList<AccountListItemViewModel> Items,
     IReadOnlyList<SelectListItem> AccountTypes,
@@ -52,8 +58,14 @@ public sealed record AccountIndexViewModel(
     bool ShowInactive,
     PaginationViewModel Pagination);
 
+/// <summary>
+/// Represents the AccountDetailsViewModel type.
+/// </summary>
 public sealed record AccountDetailsViewModel(AccountDto Account, string CategoryName, string? GroupName);
 
+/// <summary>
+/// Represents the AccountStatementViewModel type.
+/// </summary>
 public sealed record AccountStatementViewModel(
     AccountDto Account,
     IReadOnlyList<AccountStatementLineDto> Items,

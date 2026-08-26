@@ -8,10 +8,10 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace DenariusAI.Web.Controllers;
 
-[Authorize]
 /// <summary>
-/// Contains definitions for FinancialGroupsController.
+/// Represents the FinancialGroupsController type.
 /// </summary>
+[Authorize]
 public sealed class FinancialGroupsController(IFinancialGroupService service) : Controller
 {
     public async Task<IActionResult> Index(string? search, bool showInactive = false, int page = 1, int pageSize = 10, CancellationToken cancellationToken = default)

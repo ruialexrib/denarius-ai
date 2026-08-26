@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 namespace DenariusAI.Web.ViewModels;
 
 /// <summary>
-/// Contains definitions for LoginViewModel.
+/// Represents the LoginViewModel type.
 /// </summary>
 public sealed class LoginViewModel
 {

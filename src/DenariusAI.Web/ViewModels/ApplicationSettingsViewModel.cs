@@ -4,7 +4,7 @@ using DenariusAI.Application.DTOs;
 namespace DenariusAI.Web.ViewModels;
 
 /// <summary>
-/// Contains definitions for ApplicationSettingsViewModel.
+/// Represents the ApplicationSettingsViewModel type.
 /// </summary>
 public sealed class ApplicationSettingsViewModel
 {

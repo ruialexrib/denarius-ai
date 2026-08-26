@@ -6,7 +6,7 @@ using DenariusAI.Domain.Enums;
 namespace DenariusAI.IntegrationTests;
 
 /// <summary>
-/// Contains definitions for JournalEntrySuggestionServiceTests.
+/// Contains tests for the JournalEntrySuggestionService type.
 /// </summary>
 public sealed class JournalEntrySuggestionServiceTests
 {
@@ -36,6 +36,9 @@ public sealed class JournalEntrySuggestionServiceTests
         Assert.Contains("conta", result.Message, StringComparison.OrdinalIgnoreCase);
     }
 
+    /// <summary>
+    /// Represents the SuggestionData type.
+    /// </summary>
     private sealed class SuggestionData : ILLMService, IAccountService, ICategoryService, IFinancialGroupService, IBudgetService, IApplicationSettingsService, IJournalEntryService
     {
         public static readonly Guid BankAccountId = Guid.NewGuid(); public static readonly Guid ExpenseAccountId = Guid.NewGuid(); public static readonly Guid CategoryId = Guid.NewGuid(); public static readonly Guid GroupId = Guid.NewGuid(); public static readonly Guid BudgetId = Guid.NewGuid();

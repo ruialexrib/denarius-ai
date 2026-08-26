@@ -12,10 +12,10 @@ using System.Text;
 
 namespace DenariusAI.Web.Controllers;
 
-[Authorize]
 /// <summary>
-/// Contains definitions for AnalyticsController.
+/// Represents the AnalyticsController type.
 /// </summary>
+[Authorize]
 public sealed class AnalyticsController(IAnalyticsService analyticsService, IFinancialGroupService groupService, ICategoryService categoryService, IAccountService accountService, IDashboardService dashboardService, DenariusDbContext dbContext, ILLMService llmService) : Controller
 {
     public async Task<IActionResult> Index(DateOnly? from, DateOnly? to, Guid? groupId, Guid? categoryId, Guid? accountId, CancellationToken cancellationToken)

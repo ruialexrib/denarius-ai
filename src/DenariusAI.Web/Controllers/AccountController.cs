@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace DenariusAI.Web.Controllers;
 
 /// <summary>
-/// Contains definitions for AccountController.
+/// Represents the AccountController type.
 /// </summary>
 public sealed class AccountController(SignInManager<ApplicationUser> signInManager, UserManager<ApplicationUser> userManager) : Controller
 {

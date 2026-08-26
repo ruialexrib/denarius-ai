@@ -13,10 +13,10 @@ using System.Text;
 
 namespace DenariusAI.Web.Controllers;
 
-[Authorize]
 /// <summary>
-/// Contains definitions for ReconciliationController.
+/// Represents the ReconciliationController type.
 /// </summary>
+[Authorize]
 public sealed class ReconciliationController(IReconciliationService service, IAccountService accountService, ILogger<ReconciliationController> logger, DenariusDbContext dbContext, ILLMService llmService, IApplicationSettingsService settingsService) : Controller
 {
     private const string ImportSessionKey = "Reconciliation.ConversationImport";
@@ -176,8 +176,17 @@ public sealed class ReconciliationController(IReconciliationService service, IAc
         var firstLine = json.IndexOf('\n'); var lastFence = json.LastIndexOf(fence, StringComparison.Ordinal);
         return firstLine >= 0 && lastFence > firstLine ? json[(firstLine + 1)..lastFence].Trim() : json;
     }
+    /// <summary>
+    /// Represents the ConversationExtraction type.
+    /// </summary>
     private sealed class ConversationExtraction { public string? Status { get; set; } public string? Message { get; set; } public List<ConversationMovement> Movements { get; set; } = []; }
+    /// <summary>
+    /// Represents the ConversationMovement type.
+    /// </summary>
     private sealed class ConversationMovement { public DateOnly Date { get; set; } public string Description { get; set; } = string.Empty; public string? Reference { get; set; } public decimal Amount { get; set; } }
+    /// <summary>
+    /// Represents the ImportSuggestion type.
+    /// </summary>
     private sealed record ImportSuggestion(int RowNumber, Guid CategoryId, Guid CounterAccountId, string Reason);
 
     private IActionResult RedirectToIndex(Guid? accountId, DateOnly? from, DateOnly? to, ReconciliationStatus? status, string? search, string sort, int page, int pageSize) =>

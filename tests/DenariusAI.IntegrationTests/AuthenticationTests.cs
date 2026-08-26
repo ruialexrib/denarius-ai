@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace DenariusAI.IntegrationTests;
 
 /// <summary>
-/// Contains definitions for AuthenticationTests.
+/// Contains tests for the Authentication type.
 /// </summary>
 public sealed class AuthenticationTests
 {

@@ -9,7 +9,7 @@ using Microsoft.EntityFrameworkCore;
 namespace DenariusAI.IntegrationTests;
 
 /// <summary>
-/// Contains definitions for AccountServiceTests.
+/// Contains tests for the AccountService type.
 /// </summary>
 public sealed class AccountServiceTests
 {

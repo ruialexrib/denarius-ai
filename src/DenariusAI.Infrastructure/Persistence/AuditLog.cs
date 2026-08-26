@@ -1,7 +1,7 @@
 namespace DenariusAI.Infrastructure.Persistence;
 
 /// <summary>
-/// Contains definitions for AuditLog.
+/// Represents the AuditLog type.
 /// </summary>
 public sealed class AuditLog
 {

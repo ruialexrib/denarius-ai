@@ -9,10 +9,10 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace DenariusAI.Web.Controllers;
 
-[Authorize]
 /// <summary>
-/// Contains definitions for JournalEntriesController.
+/// Represents the JournalEntriesController type.
 /// </summary>
+[Authorize]
 public sealed class JournalEntriesController(IJournalEntryService service, IAccountService accountService, ICategoryService categoryService, IFinancialGroupService groupService, IBudgetService budgetService, IJournalEntrySuggestionService suggestionService, ILogger<JournalEntriesController> logger) : Controller
 {
     public async Task<IActionResult> Index(DateOnly? from, DateOnly? to, JournalEntryStatus? status, string? budget, string? search, string sort = "dateDesc", int page = 1, int pageSize = 10, CancellationToken cancellationToken = default)

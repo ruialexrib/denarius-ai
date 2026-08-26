@@ -3,7 +3,7 @@ using DenariusAI.Application.DTOs;
 namespace DenariusAI.Web.ViewModels;
 
 /// <summary>
-/// Contains definitions for ClassificationStatementViewModel.
+/// Represents the ClassificationStatementViewModel type.
 /// </summary>
 public sealed record ClassificationStatementViewModel(
     string EntityType,

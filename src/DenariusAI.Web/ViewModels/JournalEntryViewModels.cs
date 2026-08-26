@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 namespace DenariusAI.Web.ViewModels;
 
 /// <summary>
-/// Contains definitions for JournalEntryViewModels.
+/// Represents the JournalEntryViewModels type.
 /// </summary>
 public sealed class JournalEntryLineFormViewModel
 {
@@ -27,6 +27,9 @@ public sealed class JournalEntryLineFormViewModel
     public string? Description { get; set; }
 }
 
+/// <summary>
+/// Represents the JournalEntryFormViewModel type.
+/// </summary>
 public sealed class JournalEntryFormViewModel : IValidatableObject
 {
     public Guid Id { get; set; }
@@ -74,6 +77,9 @@ public sealed class JournalEntryFormViewModel : IValidatableObject
     }
 }
 
+/// <summary>
+/// Represents the JournalEntrySuggestionViewModel type.
+/// </summary>
 public sealed class JournalEntrySuggestionViewModel
 {
     [Required, StringLength(1000)]
@@ -81,6 +87,9 @@ public sealed class JournalEntrySuggestionViewModel
     public IReadOnlyCollection<AssistantMessageViewModel> History { get; init; } = [];
 }
 
+/// <summary>
+/// Represents the JournalEntryIndexViewModel type.
+/// </summary>
 public sealed record JournalEntryIndexViewModel(
     IReadOnlyList<JournalEntrySummaryDto> Items,
     DateOnly? From,
@@ -94,4 +103,7 @@ public sealed record JournalEntryIndexViewModel(
     IReadOnlyList<SelectListItem> SortOptions,
     PaginationViewModel Pagination);
 
+/// <summary>
+/// Represents the JournalEntryDetailsViewModel type.
+/// </summary>
 public sealed record JournalEntryDetailsViewModel(JournalEntryDetailsDto Entry);

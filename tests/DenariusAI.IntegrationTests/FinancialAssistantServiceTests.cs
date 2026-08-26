@@ -6,7 +6,7 @@ using DenariusAI.Domain.Enums;
 namespace DenariusAI.IntegrationTests;
 
 /// <summary>
-/// Contains definitions for FinancialAssistantServiceTests.
+/// Contains tests for the FinancialAssistantService type.
 /// </summary>
 public sealed class FinancialAssistantServiceTests
 {
@@ -33,6 +33,9 @@ public sealed class FinancialAssistantServiceTests
         Assert.Empty(services.Messages);
     }
 
+    /// <summary>
+    /// Represents the AssistantServices type.
+    /// </summary>
     private sealed class AssistantServices : ILLMService, IAccountService, IJournalEntryService, IBudgetService, IReconciliationService, IDashboardService, IAnalyticsService, IApplicationSettingsService
     {
         private static readonly Guid Id = Guid.NewGuid();

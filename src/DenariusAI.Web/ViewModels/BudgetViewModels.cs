@@ -5,7 +5,7 @@ using DenariusAI.Domain.Enums;
 namespace DenariusAI.Web.ViewModels;
 
 /// <summary>
-/// Contains definitions for BudgetViewModels.
+/// Represents the BudgetViewModels type.
 /// </summary>
 public sealed class BudgetLineFormViewModel
 {
@@ -21,6 +21,9 @@ public sealed class BudgetLineFormViewModel
     public decimal? ExecutionPercentage => Amount == 0m ? null : decimal.Round(Actual / Amount * 100m, 2);
 }
 
+/// <summary>
+/// Represents the BudgetSaveViewModel type.
+/// </summary>
 public sealed class BudgetSaveViewModel
 {
     public int Year { get; set; }
@@ -33,6 +36,9 @@ public sealed class BudgetSaveViewModel
     public List<BudgetLineFormViewModel> Lines { get; set; } = [];
 }
 
+/// <summary>
+/// Represents the BudgetIndexViewModel type.
+/// </summary>
 public sealed record BudgetIndexViewModel(
     int Year, int Month, Guid? GroupId, string? Search, string Sort,
     IReadOnlyList<BudgetLineFormViewModel> Lines,
@@ -44,6 +50,9 @@ public sealed record BudgetIndexViewModel(
     public decimal? ExecutionPercentage => TotalBudgeted == 0m ? null : decimal.Round(TotalActual / TotalBudgeted * 100m, 2);
 }
 
+/// <summary>
+/// Represents the BudgetCategoryHistoryItemViewModel type.
+/// </summary>
 public sealed record BudgetCategoryHistoryItemViewModel(int Year, int Month, decimal Budgeted, decimal Actual)
 {
     public decimal Variance => Actual - Budgeted;
@@ -51,6 +60,9 @@ public sealed record BudgetCategoryHistoryItemViewModel(int Year, int Month, dec
     public string Period => $"{Month:D2}/{Year}";
 }
 
+/// <summary>
+/// Represents the BudgetCategoryDetailsViewModel type.
+/// </summary>
 public sealed record BudgetCategoryDetailsViewModel(
     Guid CategoryId, string CategoryName, string GroupName, FinancialGroupKind Kind,
     IReadOnlyList<BudgetCategoryHistoryItemViewModel> History)

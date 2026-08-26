@@ -4,7 +4,7 @@ using DenariusAI.Domain.Enums;
 namespace DenariusAI.UnitTests;
 
 /// <summary>
-/// Contains definitions for JournalEntryTests.
+/// Contains tests for the JournalEntry type.
 /// </summary>
 public sealed class JournalEntryTests
 {

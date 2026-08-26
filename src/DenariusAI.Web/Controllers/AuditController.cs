@@ -9,10 +9,10 @@ using Microsoft.EntityFrameworkCore;
 
 namespace DenariusAI.Web.Controllers;
 
-[Authorize(Roles = ApplicationRoles.Administrator)]
 /// <summary>
-/// Contains definitions for AuditController.
+/// Represents the AuditController type.
 /// </summary>
+[Authorize(Roles = ApplicationRoles.Administrator)]
 public sealed class AuditController(DenariusDbContext dbContext) : Controller
 {
     private static readonly IReadOnlyDictionary<string, string> EntityNames = new Dictionary<string, string>

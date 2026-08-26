@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 namespace DenariusAI.IntegrationTests;
 
 /// <summary>
-/// Contains definitions for FinancialDataResetTests.
+/// Contains tests for the FinancialDataReset type.
 /// </summary>
 public sealed class FinancialDataResetTests
 {

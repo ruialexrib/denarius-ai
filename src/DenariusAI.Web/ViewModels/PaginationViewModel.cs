@@ -1,7 +1,7 @@
 namespace DenariusAI.Web.ViewModels;
 
 /// <summary>
-/// Contains definitions for PaginationViewModel.
+/// Represents the PaginationViewModel type.
 /// </summary>
 public sealed record PaginationViewModel(int Page, int PageSize, int TotalItems)
 {

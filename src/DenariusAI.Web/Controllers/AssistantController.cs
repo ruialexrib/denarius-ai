@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace DenariusAI.Web.Controllers;
 
 /// <summary>
-/// Contains definitions for AssistantController.
+/// Represents the AssistantController type.
 /// </summary>
 public sealed class AssistantController(IAssistantService assistantService, IApplicationSettingsService settingsService, ILogger<AssistantController> logger) : Controller
 {

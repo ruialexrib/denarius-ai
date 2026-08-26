@@ -8,10 +8,10 @@ using Microsoft.EntityFrameworkCore;
 
 namespace DenariusAI.Web.Controllers;
 
-[Authorize]
 /// <summary>
-/// Contains definitions for RemindersController.
+/// Represents the RemindersController type.
 /// </summary>
+[Authorize]
 public sealed class RemindersController(DenariusDbContext dbContext) : Controller
 {
     public async Task<IActionResult> Index(string? search, string status = "all", DateOnly? from = null, DateOnly? to = null, CancellationToken cancellationToken = default)

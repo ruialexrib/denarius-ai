@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 namespace DenariusAI.Web.ViewModels;
 
 /// <summary>
-/// Contains definitions for DashboardViewModel.
+/// Represents the DashboardViewModel type.
 /// </summary>
 public sealed record DashboardViewModel(
     DashboardDto Dashboard,

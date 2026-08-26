@@ -5,7 +5,7 @@ using System.Text.RegularExpressions;
 namespace DenariusAI.Web.Models;
 
 /// <summary>
-/// Contains definitions for MarkdownPreview.
+/// Represents the MarkdownPreview type.
 /// </summary>
 public static class MarkdownPreview
 {

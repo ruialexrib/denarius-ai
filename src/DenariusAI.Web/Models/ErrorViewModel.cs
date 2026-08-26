@@ -1,7 +1,7 @@
 namespace DenariusAI.Web.Models;
 
 /// <summary>
-/// Contains definitions for ErrorViewModel.
+/// Represents the ErrorViewModel type.
 /// </summary>
 public sealed class ErrorViewModel
 {

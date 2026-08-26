@@ -9,7 +9,7 @@ using Microsoft.EntityFrameworkCore;
 namespace DenariusAI.IntegrationTests;
 
 /// <summary>
-/// Contains definitions for GroupAndCategoryServiceTests.
+/// Contains tests for the GroupAndCategoryService type.
 /// </summary>
 public sealed class GroupAndCategoryServiceTests
 {
