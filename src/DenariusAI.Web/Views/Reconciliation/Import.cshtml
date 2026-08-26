@@ -1,6 +1,7 @@
 @model ReconciliationPasteViewModel
 @{ ViewData["Title"] = "Analisar movimentos"; }
 <link rel="stylesheet" href="~/css/intelligent-workflows.css" asp-append-version="true" />
+<link rel="stylesheet" href="~/css/searchable-select.css" asp-append-version="true" />
 <div class="page-header">
     <div><p class="eyebrow">Reconciliação · Assistente</p><h1>Colar movimentos do extrato</h1><p class="page-subtitle">Converse com o modelo para interpretar o extrato e encontrar apenas movimentos ainda não registados.</p></div>
     <a class="button secondary" asp-action="Index">Cancelar</a>
@@ -11,9 +12,11 @@
     <form asp-action="AnalyzeConversation" method="post" class="form-stack settings-form">
         <div asp-validation-summary="ModelOnly" class="validation-summary"></div>
         <label asp-for="BankAccountId">Conta do extrato<select asp-for="BankAccountId" asp-items="Model.BankAccounts" required><option value="">Selecionar conta…</option></select><span asp-validation-for="BankAccountId" class="field-error"></span></label>
-        <label asp-for="BudgetId">Orçamento<select asp-for="BudgetId" asp-items="Model.Budgets" required><option value="">Selecionar orçamento…</option></select><small>Todos os movimentos deverão pertencer ao mês e ano deste orçamento.</small><span asp-validation-for="BudgetId" class="field-error"></span></label>
-        <label asp-for="MovementsText">Movimentos<textarea asp-for="MovementsText" rows="14" maxlength="50000" placeholder="24/08/2026 | Fatura da água | Ref. 123/2026 | -30,00&#10;21/08/2026 | Ordenado | Agosto 2026 | 1 500,00" required></textarea><span asp-validation-for="MovementsText" class="field-error"></span></label>
+        <label asp-for="BudgetId">Orçamento<select asp-for="BudgetId" asp-items="Model.Budgets" required class="searchable-select-control" data-search-placeholder="Pesquisar orçamento…" data-search-empty-text="Nenhum orçamento encontrado"><option value="">Selecionar orçamento…</option></select><small>Todos os movimentos deverão pertencer ao mês e ano deste orçamento.</small><span asp-validation-for="BudgetId" class="field-error"></span></label>
+        <label asp-for="MovementsText">Movimentos<textarea asp-for="MovementsText" rows="14" maxlength="50000" placeholder="03/08/2026 | FT123/45 | Pingo Doce | -73,26&#10;06/08/2026 | Galp | -30,00&#10;28/08/2026 | Salário março | 1 500,00" required></textarea><small>Pode misturar linhas com data, descrição e valor com linhas que incluam também uma referência após a data.</small><span asp-validation-for="MovementsText" class="field-error"></span></label>
+        <aside class="import-format-note" role="note"><span aria-hidden="true">⌘</span><div><strong>O formato do seu extrato é diferente?</strong><p>Ajuste a prompt de <em>Interpretação dos movimentos</em> para indicar a ordem e o significado das colunas que vai colar.</p><a asp-controller="Settings" asp-action="Index" asp-fragment="reconciliation-prompts">Ajustar prompt nas Definições</a></div></aside>
         <aside class="import-safety-note" role="note"><span class="import-safety-icon" aria-hidden="true">✦</span><div><strong>Análise assistida e segura</strong><p>A IA interpreta o texto, compara-o com os movimentos existentes e propõe classificações. <b>Nada é gravado nesta etapa.</b></p></div></aside>
         <div class="form-actions"><button class="button" type="submit">Enviar e analisar</button></div>
     </form>
 </section>
+@section Scripts { <script src="~/js/searchable-select.js" asp-append-version="true"></script> }

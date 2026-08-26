@@ -1,11 +1,12 @@
 @model AccountIndexViewModel
 @using DenariusAI.Web.Controllers
 @{ ViewData["Title"] = "Contas"; }
+<link rel="stylesheet" href="~/css/searchable-select.css" asp-append-version="true" />
 <div class="page-header"><div><p class="eyebrow">Configuração</p><h1>Contas financeiras</h1><p class="page-subtitle">Crie e organize as contas utilizadas para registar e acompanhar o património.</p></div><a class="button" asp-action="Create">Nova conta</a></div>
 <section class="panel entity-panel accounts-panel">
     <form id="account-filters" method="get" class="filterbar accounts">
         <select name="accountType" asp-items="Model.AccountTypes"></select>
-        <select name="categoryId" asp-items="Model.Categories"></select>
+        <select name="categoryId" asp-items="Model.Categories" aria-label="Categoria" class="searchable-select-control" data-search-placeholder="Pesquisar categoria…" data-search-empty-text="Nenhuma categoria encontrada" data-search-include-empty="true"></select>
         <input type="search" name="search" value="@Model.Search" placeholder="Pesquisar contas..." />
         <label class="check-row"><input type="checkbox" name="showInactive" value="true" checked="@Model.ShowInactive" /> Mostrar inativas</label>
         <label class="page-size">Por página <select name="pageSize">@foreach (var size in PaginationViewModel.AllowedPageSizes) { <option value="@size" selected="@(size == Model.Pagination.PageSize)">@size</option> }</select></label>
@@ -20,3 +21,4 @@
     </tbody></table></div>
     <nav class="pagination" aria-label="Paginação"><span>@Model.Pagination.FirstItem–@Model.Pagination.LastItem de @Model.Pagination.TotalItems</span><div><button class="pager-link" type="submit" form="account-filters" name="page" value="@(Model.Pagination.Page - 1)" disabled="@(!Model.Pagination.HasPreviousPage)">Anterior</button><span>Página @Model.Pagination.Page de @Model.Pagination.TotalPages</span><button class="pager-link" type="submit" form="account-filters" name="page" value="@(Model.Pagination.Page + 1)" disabled="@(!Model.Pagination.HasNextPage)">Seguinte</button></div></nav>
 </section>
+@section Scripts { <script src="~/js/searchable-select.js" asp-append-version="true"></script> }

@@ -77,7 +77,7 @@ public sealed class FinancialAssistantService(
         var messages = new List<LlmMessageDto>
         {
             new("system", settings.AssistantSystemPrompt),
-            new("system", $"Contexto financeiro estruturado:\n{context}")
+            new("user", $"FINANCIAL_CONTEXT_JSON:\n{context}")
         };
         messages.AddRange(request.History.TakeLast(settings.AssistantHistoryMessages)
             .Where(item => item.Role is "user" or "assistant" && !string.IsNullOrWhiteSpace(item.Content))

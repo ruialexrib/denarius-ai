@@ -17,7 +17,8 @@ public sealed class FinancialAssistantServiceTests
 
         Assert.Equal("Resposta fundamentada", result.Answer);
         Assert.Equal(1, result.TransactionCount);
-        Assert.Contains(services.Messages, message => message.Role == "system" && message.Content.Contains("recentTransactions"));
+        Assert.Contains(services.Messages, message => message.Role == "system" && message.Content == "Prompt configurado");
+        Assert.Contains(services.Messages, message => message.Role == "user" && message.Content.StartsWith("FINANCIAL_CONTEXT_JSON:") && message.Content.Contains("recentTransactions"));
         Assert.Equal("Quanto gastei?", services.Messages.Last().Content);
     }
 

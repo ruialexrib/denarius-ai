@@ -33,12 +33,13 @@ public sealed class ApplicationSettingsService(DenariusDbContext dbContext, IOpt
             GetInt(values, "Assistant.ContextMonths", 12),
             GetInt(values, "Assistant.MaxTransactions", 200),
             GetInt(values, "Assistant.HistoryMessages", 10),
-            Get(values, "Prompts.JournalSuggestion", ApplicationSettingsDefaults.JournalSuggestionPrompt),
+            UpgradeDefault(Get(values, "Prompts.JournalSuggestion", ApplicationSettingsDefaults.JournalSuggestionPrompt), ApplicationSettingsDefaults.LegacyJournalSuggestionPrompt, ApplicationSettingsDefaults.JournalSuggestionPrompt),
             GetInt(values, "JournalSuggestion.HistoryMessages", 10),
-            Get(values, "Prompts.ReconciliationExtraction", ApplicationSettingsDefaults.ReconciliationExtractionPrompt),
-            Get(values, "Prompts.ReconciliationClassification", ApplicationSettingsDefaults.ReconciliationClassificationPrompt),
-            Get(values, "Prompts.DashboardWelcome", ApplicationSettingsDefaults.DashboardWelcomePrompt),
-            Get(values, "Prompts.FinancialAnalysis", ApplicationSettingsDefaults.FinancialAnalysisPrompt));
+            UpgradeDefault(Get(values, "Prompts.ReconciliationExtraction", ApplicationSettingsDefaults.ReconciliationExtractionPrompt), ApplicationSettingsDefaults.LegacyReconciliationExtractionPrompt, ApplicationSettingsDefaults.ReconciliationExtractionPrompt),
+            UpgradeDefault(Get(values, "Prompts.ReconciliationClassification", ApplicationSettingsDefaults.ReconciliationClassificationPrompt), ApplicationSettingsDefaults.LegacyReconciliationClassificationPrompt, ApplicationSettingsDefaults.ReconciliationClassificationPrompt),
+            UpgradeDefault(Get(values, "Prompts.DashboardWelcome", ApplicationSettingsDefaults.DashboardWelcomePrompt), ApplicationSettingsDefaults.LegacyDashboardWelcomePrompt, ApplicationSettingsDefaults.DashboardWelcomePrompt),
+            Get(values, "Prompts.FinancialAnalysis", ApplicationSettingsDefaults.FinancialAnalysisPrompt),
+            Get(values, "Prompts.ConnectionTest", ApplicationSettingsDefaults.ConnectionTestPrompt));
     }
 
     /// <summary>
@@ -60,7 +61,8 @@ public sealed class ApplicationSettingsService(DenariusDbContext dbContext, IOpt
             ["Prompts.JournalSuggestion"] = settings.JournalSuggestionSystemPrompt.Trim(), ["JournalSuggestion.HistoryMessages"] = settings.JournalSuggestionHistoryMessages.ToString(CultureInfo.InvariantCulture),
             ["Prompts.ReconciliationExtraction"] = settings.ReconciliationExtractionPrompt.Trim(), ["Prompts.ReconciliationClassification"] = settings.ReconciliationClassificationPrompt.Trim(),
             ["Prompts.DashboardWelcome"] = settings.DashboardWelcomePrompt.Trim(),
-            ["Prompts.FinancialAnalysis"] = settings.FinancialAnalysisPrompt.Trim()
+            ["Prompts.FinancialAnalysis"] = settings.FinancialAnalysisPrompt.Trim(),
+            ["Prompts.ConnectionTest"] = settings.ConnectionTestPrompt.Trim()
         };
         var existing = await dbContext.ApplicationSettings.ToDictionaryAsync(item => item.Key, cancellationToken);
         foreach (var pair in values)
@@ -78,7 +80,7 @@ public sealed class ApplicationSettingsService(DenariusDbContext dbContext, IOpt
     /// <exception cref="ArgumentException">Thrown when validation fails.</exception>
     private static void Validate(ApplicationSettingsDto value)
     {
-        if (string.IsNullOrWhiteSpace(value.MistralModel) || string.IsNullOrWhiteSpace(value.AssistantSystemPrompt) || string.IsNullOrWhiteSpace(value.JournalSuggestionSystemPrompt) || string.IsNullOrWhiteSpace(value.ReconciliationExtractionPrompt) || string.IsNullOrWhiteSpace(value.ReconciliationClassificationPrompt) || string.IsNullOrWhiteSpace(value.DashboardWelcomePrompt) || string.IsNullOrWhiteSpace(value.FinancialAnalysisPrompt)) throw new ArgumentException("Modelo e prompts são obrigatórios.");
+        if (string.IsNullOrWhiteSpace(value.MistralModel) || string.IsNullOrWhiteSpace(value.AssistantSystemPrompt) || string.IsNullOrWhiteSpace(value.JournalSuggestionSystemPrompt) || string.IsNullOrWhiteSpace(value.ReconciliationExtractionPrompt) || string.IsNullOrWhiteSpace(value.ReconciliationClassificationPrompt) || string.IsNullOrWhiteSpace(value.DashboardWelcomePrompt) || string.IsNullOrWhiteSpace(value.FinancialAnalysisPrompt) || string.IsNullOrWhiteSpace(value.ConnectionTestPrompt)) throw new ArgumentException("Modelo e prompts são obrigatórios.");
         if (!Uri.TryCreate(value.MistralBaseUrl, UriKind.Absolute, out var uri) || uri.Scheme != Uri.UriSchemeHttps) throw new ArgumentException("O endereço da Mistral deve ser um URL HTTPS válido.");
         if (value.MistralMaxTokens is < 64 or > 8192 || value.MistralTemperature is < 0 or > 1) throw new ArgumentException("Os parâmetros do modelo estão fora dos limites permitidos.");
         if (value.AssistantContextMonths is < 1 or > 60 || value.AssistantMaxTransactions is < 10 or > 1000 || value.AssistantHistoryMessages is < 0 or > 50 || value.JournalSuggestionHistoryMessages is < 0 or > 50) throw new ArgumentException("Os limites da aplicação estão fora dos intervalos permitidos.");
@@ -92,6 +94,9 @@ public sealed class ApplicationSettingsService(DenariusDbContext dbContext, IOpt
     /// <param name="fallback">The fallback value to return if the key is not found.</param>
     /// <returns>The value from the dictionary or the fallback value.</returns>
     private static string Get(IReadOnlyDictionary<string, string> values, string key, string fallback) => values.GetValueOrDefault(key, fallback);
+
+    private static string UpgradeDefault(string value, string legacyDefault, string currentDefault) =>
+        string.Equals(value.Trim(), legacyDefault, StringComparison.Ordinal) ? currentDefault : value;
     
     /// <summary>
     /// Gets an integer value from the dictionary or returns the fallback value if not found or parsing fails.

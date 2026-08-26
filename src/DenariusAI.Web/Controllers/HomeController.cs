@@ -91,8 +91,7 @@ public sealed class HomeController(
         {
             var settings = await settingsService.GetAsync(cancellationToken);
             var context = JsonSerializer.Serialize(new { user = user.DisplayName, period = $"{dashboard.Month:D2}/{dashboard.Year}", dashboard.LiquidBalance, dashboard.TotalAssets, dashboard.Income, dashboard.Expenses, result = dashboard.MonthlyResult, budgetedExpenses = dashboard.Budgeted, executedBudgetExpenses = dashboard.BudgetActual, remainingBudgetedExpenses, projectedClosingBalance, budgetIsCovered, projectedShortfall = Math.Max(-projectedClosingBalance, 0m), dashboard.UnreconciledMovements, dashboard.SavingsCertificatesValue });
-            var projectionInstruction = "Organiza obrigatoriamente a resposta em quatro blocos curtos, separados por uma linha em branco: Situação atual; Previsão; Na aplicação; Dica financeira. O saldo atual já considera as despesas executadas: usa projectedClosingBalance e não voltes a subtrair o executado. Na previsão indica se o saldo cobre as despesas ainda por executar e, se não cobrir, refere projectedShortfall. Se não houver orçamento, explica que não é possível fazer uma projeção útil. Usa valores em euros, não uses listas nem Markdown e mantém a resposta prudente.";
-            var completion = await llmService.CompleteAsync([new("system", settings.DashboardWelcomePrompt), new("system", projectionInstruction), new("user", context)], cancellationToken);
+            var completion = await llmService.CompleteAsync([new("system", settings.DashboardWelcomePrompt), new("user", context)], cancellationToken);
             var message = completion.Content.Trim();
             if (string.IsNullOrWhiteSpace(message)) return (fallback, false);
             cache.Set(key, message, TimeSpan.FromMinutes(30));

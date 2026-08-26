@@ -69,14 +69,14 @@ public sealed class InformationController(ApplicationInfo appInfo, IHttpClientFa
     [
         new($"v{version}", DateTime.Today.ToString("yyyy-MM-dd"), RepositoryUrl,
         [
-            "Primeira versão do DenariusAI.",
-            "Gestão financeira pessoal e familiar com contabilidade por partidas dobradas, orçamentos e reconciliação.",
-            "Colagem conversacional de extratos com identificação e classificação assistida de novos movimentos.",
-            "Dashboard e análise financeira com comparações, projeções e relatórios inteligentes exportáveis em Markdown.",
-            "Carteira de Certificados de Aforro integrada no Dashboard, na análise e no assistente.",
-            "Assistente Mistral e preenchimento de movimentos através de linguagem natural.",
-            "Gestão de utilizadores, permissões, preferências e definições globais da aplicação.",
-            "Centro de ajuda detalhado para as principais operações."
+            "Todas as prompts de IA estão agora visíveis e editáveis nas Definições da aplicação.",
+            "A reconciliação interpreta extratos com três ou quatro colunas, incluindo referências, mesmo quando os formatos são misturados.",
+            "Na revisão da importação pode alterar descrição, referência e categoria antes de criar os movimentos.",
+            "As sugestões de categoria apresentam o grau de confiança atribuído pelo modelo.",
+            "Categorias e orçamentos podem ser encontrados através de seletores pesquisáveis nos principais formulários e filtros.",
+            "As listas pesquisáveis mostram todos os resultados correspondentes, com navegação por teclado e scroll.",
+            "O dashboard usa uma prompt integralmente configurável para o resumo e a projeção financeira.",
+            "Melhorias de consistência visual e de largura nas páginas de contas, análise e importação de extratos."
         ])
     ];
 

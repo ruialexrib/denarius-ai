@@ -27,7 +27,7 @@ public sealed class SettingsController(IApplicationSettingsService settingsServi
     public async Task<IActionResult> TestAiConnection(CancellationToken cancellationToken)
     {
         if (!llmService.IsConfigured) TempData["ErrorMessage"] = "Configure MISTRAL_API_KEY antes de testar a ligação.";
-        else try { var response = await llmService.CompleteAsync([new("user", "Responde apenas com: Ligação confirmada")], cancellationToken); TempData["SuccessMessage"] = $"Ligação confirmada com {response.Model}."; }
+        else try { var settings = await settingsService.GetAsync(cancellationToken); var response = await llmService.CompleteAsync([new("user", settings.ConnectionTestPrompt)], cancellationToken); TempData["SuccessMessage"] = $"Ligação confirmada com {response.Model}."; }
         catch (Exception exception) when (exception is HttpRequestException or InvalidOperationException or TaskCanceledException) { logger.LogWarning(exception, "AI connection test failed."); TempData["ErrorMessage"] = "Não foi possível confirmar a ligação à Mistral."; }
         return RedirectToAction(nameof(Index));
     }

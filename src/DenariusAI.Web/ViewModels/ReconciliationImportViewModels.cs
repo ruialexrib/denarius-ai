@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace DenariusAI.Web.ViewModels;
@@ -6,12 +7,13 @@ public sealed class ReconciliationImportRowViewModel
 {
     public int RowNumber { get; set; }
     public DateOnly Date { get; set; }
-    public string Description { get; set; } = string.Empty;
-    public string? Reference { get; set; }
+    [Required, StringLength(240)] public string Description { get; set; } = string.Empty;
+    [StringLength(120)] public string? Reference { get; set; }
     public decimal Amount { get; set; }
     public Guid? CategoryId { get; set; }
     public Guid? CounterAccountId { get; set; }
     public string? SuggestionReason { get; set; }
+    public string SuggestionConfidence { get; set; } = "none";
     public bool Selected { get; set; } = true;
     public bool IsEligible { get; set; } = true;
     public string? EligibilityMessage { get; set; }
