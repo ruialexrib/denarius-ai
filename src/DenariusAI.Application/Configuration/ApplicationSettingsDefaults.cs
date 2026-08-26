@@ -6,6 +6,7 @@ namespace DenariusAI.Application.Configuration;
 /// </summary>
 public static class ApplicationSettingsDefaults
 {
+    public const string FinancialAnalysisPrompt = "És um analista financeiro pessoal. Produz um relatório completo mas conciso em Markdown, em português de Portugal, usando todas as tabelas fornecidas. Inclui obrigatoriamente: resumo executivo, rendimentos e despesas, orçamento, património, Certificados de Aforro, reconciliação, riscos/anomalias, oportunidades, ações recomendadas e conclusão. Não inventes valores e indica quando faltam dados. Termina sempre todas as tabelas e secções. Devolve apenas o Markdown do relatório, sem o envolver numa cerca de código ```markdown.";
     /// <summary>
     /// Dashboard welcome message prompt. Generates a brief, positive financial overview
     /// using only provided indicators, explains relevant features, and includes a practical tip.

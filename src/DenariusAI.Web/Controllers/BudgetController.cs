@@ -86,9 +86,44 @@ public sealed class BudgetController(IBudgetService service, DenariusDbContext d
         return RedirectToIndex(model);
     }
 
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> CopyLineForward(BudgetSaveViewModel model, Guid categoryId, CancellationToken cancellationToken)
+    {
+        var line = model.Lines.SingleOrDefault(item => item.CategoryId == categoryId);
+        if (line is null || line.Amount < 0m) { TempData["ErrorMessage"] = "Não foi possível identificar a linha a copiar."; return RedirectToIndex(model); }
+        try
+        {
+            for (var month = model.Month; month <= 12; month++)
+                await service.SaveAsync(model.Year, month, [new SaveBudgetLineDto(categoryId, line.Amount)], UserId(), cancellationToken);
+            TempData["SuccessMessage"] = $"O valor de {line.CategoryName} foi aplicado de {MonthName(model.Month)} até dezembro.";
+        }
+        catch (Exception exception) when (exception is ArgumentException or InvalidOperationException) { TempData["ErrorMessage"] = exception.Message; }
+        return RedirectToIndex(model);
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> CopyToNextMonth(BudgetSaveViewModel model, CancellationToken cancellationToken)
+    {
+        try
+        {
+            if (model.Lines.Count > 0)
+                await service.SaveAsync(model.Year, model.Month, model.Lines.Select(line => new SaveBudgetLineDto(line.CategoryId, line.Amount)).ToList(), UserId(), cancellationToken);
+            var source = await dbContext.BudgetLines.AsNoTracking()
+                .Where(line => line.Budget.Year == model.Year && line.Budget.Month == model.Month)
+                .Select(line => new SaveBudgetLineDto(line.CategoryId, line.Amount)).ToListAsync(cancellationToken);
+            if (source.Count == 0) throw new InvalidOperationException("O orçamento selecionado não tem valores para copiar.");
+            var next = new DateTime(model.Year, model.Month, 1).AddMonths(1);
+            await service.SaveAsync(next.Year, next.Month, source, UserId(), cancellationToken);
+            TempData["SuccessMessage"] = $"Orçamento copiado para {MonthName(next.Month)} de {next.Year}.";
+        }
+        catch (Exception exception) when (exception is ArgumentException or InvalidOperationException) { TempData["ErrorMessage"] = exception.Message; }
+        return RedirectToIndex(model);
+    }
+
     private IActionResult RedirectToIndex(BudgetSaveViewModel model) => RedirectToAction(nameof(Index), new { year = model.Year, month = model.Month, groupId = model.GroupId, search = model.Search, sort = model.Sort, page = model.Page, pageSize = model.PageSize });
     private static IReadOnlyList<SelectListItem> YearItems(int selected) => Enumerable.Range(DateTime.Today.Year - 5, 11).Reverse().Select(year => new SelectListItem(year.ToString(), year.ToString(), year == selected)).ToList();
     private static IReadOnlyList<SelectListItem> MonthItems(int selected) => Enumerable.Range(1, 12).Select(month => new SelectListItem(CultureInfo.GetCultureInfo("pt-PT").DateTimeFormat.GetMonthName(month), month.ToString(), month == selected)).ToList();
+    private static string MonthName(int month) => CultureInfo.GetCultureInfo("pt-PT").DateTimeFormat.GetMonthName(month);
     private static IReadOnlyList<SelectListItem> SortItems(string selected) => [new("Grupo e categoria", "group", selected == "group"), new("Categoria", "category", selected == "category"), new("Maior orçamento", "budgetDesc", selected == "budgetDesc"), new("Maior realizado", "actualDesc", selected == "actualDesc"), new("Maior desvio", "varianceDesc", selected == "varianceDesc")];
     private string UserId() => User.FindFirstValue(ClaimTypes.NameIdentifier) ?? throw new InvalidOperationException("Utilizador não identificado.");
 }

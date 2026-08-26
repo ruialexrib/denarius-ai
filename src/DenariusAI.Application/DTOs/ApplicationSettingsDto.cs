@@ -16,6 +16,7 @@ namespace DenariusAI.Application.DTOs;
 /// <param name="ReconciliationExtractionPrompt">The prompt used for extracting data during reconciliation.</param>
 /// <param name="ReconciliationClassificationPrompt">The prompt used for classifying transactions during reconciliation.</param>
 /// <param name="DashboardWelcomePrompt">The welcome prompt displayed on the dashboard.</param>
+/// <param name="FinancialAnalysisPrompt">The prompt used to generate the consolidated financial analysis.</param>
 public sealed record ApplicationSettingsDto(
     string MistralModel,
     string MistralBaseUrl,
@@ -29,4 +30,5 @@ public sealed record ApplicationSettingsDto(
     int JournalSuggestionHistoryMessages,
     string ReconciliationExtractionPrompt,
     string ReconciliationClassificationPrompt,
-    string DashboardWelcomePrompt = Application.Configuration.ApplicationSettingsDefaults.DashboardWelcomePrompt);
+    string DashboardWelcomePrompt = Application.Configuration.ApplicationSettingsDefaults.DashboardWelcomePrompt,
+    string FinancialAnalysisPrompt = Application.Configuration.ApplicationSettingsDefaults.FinancialAnalysisPrompt);
