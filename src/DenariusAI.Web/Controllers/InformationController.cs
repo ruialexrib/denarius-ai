@@ -16,8 +16,17 @@ public sealed class InformationController(ApplicationInfo appInfo, IHttpClientFa
 {
     private const string RepositoryUrl = "https://github.com/ruialexrib/denarius-ai";
 
+    /// <summary>
+    /// Displays the main help page with an overview of available topics.
+    /// </summary>
+    /// <returns>The help view.</returns>
     [HttpGet] public IActionResult Help() => View();
 
+    /// <summary>
+    /// Displays detailed help content for a specific topic identified by its ID.
+    /// </summary>
+    /// <param name="id">The unique identifier of the help topic.</param>
+    /// <returns>The help detail view if the topic exists; otherwise, a 404 Not Found result.</returns>
     [HttpGet]
     public IActionResult HelpDetail(string id)
     {
@@ -25,6 +34,11 @@ public sealed class InformationController(ApplicationInfo appInfo, IHttpClientFa
         return pages.TryGetValue(id ?? string.Empty, out var page) ? View(page) : NotFound();
     }
 
+    /// <summary>
+    /// Displays the "What's New" page showing recent releases and version information.
+    /// </summary>
+    /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
+    /// <returns>The What's New view with release notes and system information.</returns>
     [HttpGet]
     public async Task<IActionResult> WhatsNew(CancellationToken cancellationToken)
     {
@@ -38,6 +52,11 @@ public sealed class InformationController(ApplicationInfo appInfo, IHttpClientFa
             latest?.Version, latest?.Url, updateAvailable));
     }
 
+    /// <summary>
+    /// Retrieves the latest releases from the GitHub API, using cache when available.
+    /// </summary>
+    /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
+    /// <returns>A read-only list of release notes, or an empty list if the request fails.</returns>
     private async Task<IReadOnlyList<ReleaseNoteViewModel>> GetReleasesAsync(CancellationToken cancellationToken)
     {
         if (cache.TryGetValue<IReadOnlyList<ReleaseNoteViewModel>>("github-latest-releases", out var cached)) return cached ?? [];
@@ -60,11 +79,22 @@ public sealed class InformationController(ApplicationInfo appInfo, IHttpClientFa
         catch (Exception exception) when (exception is HttpRequestException or JsonException or TaskCanceledException) { return []; }
     }
 
+    /// <summary>
+    /// Determines whether the release version is newer than the current application version.
+    /// </summary>
+    /// <param name="releaseVersion">The release version string to compare.</param>
+    /// <param name="currentVersion">The current application version string.</param>
+    /// <returns>True if the release version is newer; otherwise, false.</returns>
     private static bool IsNewerVersion(string releaseVersion, string currentVersion) =>
         Version.TryParse(releaseVersion.TrimStart('v', 'V').Split('-', '+')[0], out var latest)
         && Version.TryParse(currentVersion.Split('-', '+')[0], out var current)
         && latest > current;
 
+    /// <summary>
+    /// Generates a fallback list of release notes when GitHub API is unavailable.
+    /// </summary>
+    /// <param name="version">The current application version.</param>
+    /// <returns>A read-only list containing a single local release note.</returns>
     private static IReadOnlyList<ReleaseNoteViewModel> LocalReleases(string version) =>
     [
         new($"v{version}", DateTime.Today.ToString("yyyy-MM-dd"), RepositoryUrl,
@@ -80,6 +110,10 @@ public sealed class InformationController(ApplicationInfo appInfo, IHttpClientFa
         ])
     ];
 
+    /// <summary>
+    /// Provides a dictionary of all available help pages with their detailed content.
+    /// </summary>
+    /// <returns>A read-only dictionary mapping help page IDs to their corresponding view models.</returns>
     private static IReadOnlyDictionary<string, HelpDetailViewModel> HelpPages() =>
         new Dictionary<string, HelpDetailViewModel>(StringComparer.OrdinalIgnoreCase)
         {
@@ -127,6 +161,17 @@ public sealed class InformationController(ApplicationInfo appInfo, IHttpClientFa
                 ("Dados", ["Carregar demonstração adiciona exemplos.", "Reiniciar dados é destrutivo e exige confirmação.", "Faça cópia de segurança antes."]))
         };
 
+    /// <summary>
+    /// Creates a help detail view model with the specified properties and sections.
+    /// </summary>
+    /// <param name="id">The unique identifier of the help page.</param>
+    /// <param name="title">The title of the help page.</param>
+    /// <param name="subtitle">The subtitle or brief description of the help page.</param>
+    /// <param name="controller">The name of the controller for the action link.</param>
+    /// <param name="action">The name of the action for the action link.</param>
+    /// <param name="actionLabel">The label text for the action button.</param>
+    /// <param name="sections">A collection of sections with titles and content items.</param>
+    /// <returns>A configured <see cref="HelpDetailViewModel"/> instance.</returns>
     private static HelpDetailViewModel Page(string id, string title, string subtitle, string controller, string action,
         string actionLabel, params (string Title, string[] Items)[] sections) =>
         new(id, title, subtitle, controller, action, actionLabel,

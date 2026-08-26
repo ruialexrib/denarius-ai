@@ -16,12 +16,41 @@ namespace DenariusAI.Web.Controllers;
 /// <summary>
 /// Handles bank statement import and transaction reconciliation workflows.
 /// </summary>
+/// <remarks>
+/// Initializes a new instance of the <see cref="ReconciliationController"/> class.
+/// </remarks>
+/// <param name="service">The reconciliation service.</param>
+/// <param name="accountService">The account service.</param>
+/// <param name="logger">The logger instance.</param>
+/// <param name="dbContext">The database context.</param>
+/// <param name="llmService">The LLM service for AI-powered suggestions.</param>
+/// <param name="settingsService">The application settings service.</param>
 [Authorize]
 public sealed class ReconciliationController(IReconciliationService service, IAccountService accountService, ILogger<ReconciliationController> logger, DenariusDbContext dbContext, ILLMService llmService, IApplicationSettingsService settingsService) : Controller
 {
+    /// <summary>
+    /// Session key for storing import conversation data.
+    /// </summary>
     private const string ImportSessionKey = "Reconciliation.ConversationImport";
+    
+    /// <summary>
+    /// Account types that represent banking accounts.
+    /// </summary>
     private static readonly AccountType[] BankingAccountTypes = [AccountType.BankAccount, AccountType.Savings, AccountType.TermDeposit];
 
+    /// <summary>
+    /// Displays the reconciliation index page with filterable and sortable transaction list.
+    /// </summary>
+    /// <param name="accountId">Optional account ID filter.</param>
+    /// <param name="from">Optional start date filter.</param>
+    /// <param name="to">Optional end date filter.</param>
+    /// <param name="status">Optional reconciliation status filter.</param>
+    /// <param name="search">Optional search term.</param>
+    /// <param name="sort">Sort order (default: dateDesc).</param>
+    /// <param name="page">Current page number (default: 1).</param>
+    /// <param name="pageSize">Items per page (default: 10).</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The index view with reconciliation items.</returns>
     [HttpGet]
     public async Task<IActionResult> Index(Guid? accountId, DateOnly? from, DateOnly? to, ReconciliationStatus? status, string? search, string sort = "dateDesc", int page = 1, int pageSize = 10, CancellationToken cancellationToken = default)
     {

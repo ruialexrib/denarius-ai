@@ -18,6 +18,18 @@ namespace DenariusAI.Web.Controllers;
 [Authorize]
 public sealed class BudgetController(IBudgetService service, DenariusDbContext dbContext, ILogger<BudgetController> logger) : Controller
 {
+    /// <summary>
+    /// Displays the budget execution index page with filtering, sorting, and pagination capabilities.
+    /// </summary>
+    /// <param name="year">The year to display the budget for. Defaults to current year.</param>
+    /// <param name="month">The month to display the budget for. Defaults to current month.</param>
+    /// <param name="groupId">Optional financial group filter.</param>
+    /// <param name="search">Optional search term to filter categories by name.</param>
+    /// <param name="sort">Sort order for the results. Default is "group".</param>
+    /// <param name="page">Current page number for pagination. Default is 1.</param>
+    /// <param name="pageSize">Number of items per page. Default is 10.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The budget index view with execution data.</returns>
     [HttpGet]
     public async Task<IActionResult> Index(int? year, int? month, Guid? groupId, string? search, string sort = "group", int page = 1, int pageSize = 10, CancellationToken cancellationToken = default)
     {
@@ -49,6 +61,12 @@ public sealed class BudgetController(IBudgetService service, DenariusDbContext d
             groups.Select(group => new SelectListItem(group.Key.FinancialGroupName, group.Key.FinancialGroupId.ToString(), group.Key.FinancialGroupId == groupId)).Prepend(new SelectListItem("Todos os grupos", string.Empty, groupId is null)).ToList(), SortItems(sort), totalBudgeted, totalActual, pagination));
     }
 
+    /// <summary>
+    /// Displays the historical budget and actual data for a specific category.
+    /// </summary>
+    /// <param name="id">The unique identifier of the category.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The category details view with historical data, or NotFound if category doesn't exist.</returns>
     [HttpGet]
     public async Task<IActionResult> Category(Guid id, CancellationToken cancellationToken = default)
     {
@@ -71,6 +89,13 @@ public sealed class BudgetController(IBudgetService service, DenariusDbContext d
 
         return View("Category", new BudgetCategoryDetailsViewModel(category.Id, category.Name, category.GroupName, category.Kind, history));
     }
+
+    /// <summary>
+    /// Saves budget line items for a specific year and month.
+    /// </summary>
+    /// <param name="model">The budget save view model containing the lines to save.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Redirects to the index page with success or error message.</returns>
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> Save(BudgetSaveViewModel model, CancellationToken cancellationToken)
     {
@@ -86,6 +111,13 @@ public sealed class BudgetController(IBudgetService service, DenariusDbContext d
         return RedirectToIndex(model);
     }
 
+    /// <summary>
+    /// Copies a specific budget line amount forward from the current month to December of the same year.
+    /// </summary>
+    /// <param name="model">The budget save view model containing the current budget state.</param>
+    /// <param name="categoryId">The identifier of the category to copy forward.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Redirects to the index page with success or error message.</returns>
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> CopyLineForward(BudgetSaveViewModel model, Guid categoryId, CancellationToken cancellationToken)
     {
@@ -101,6 +133,12 @@ public sealed class BudgetController(IBudgetService service, DenariusDbContext d
         return RedirectToIndex(model);
     }
 
+    /// <summary>
+    /// Copies the entire budget from the selected month to the next month.
+    /// </summary>
+    /// <param name="model">The budget save view model containing the source budget.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Redirects to the index page with success or error message.</returns>
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> CopyToNextMonth(BudgetSaveViewModel model, CancellationToken cancellationToken)
     {
@@ -120,10 +158,45 @@ public sealed class BudgetController(IBudgetService service, DenariusDbContext d
         return RedirectToIndex(model);
     }
 
+    /// <summary>
+    /// Redirects to the index action with the specified model parameters.
+    /// </summary>
+    /// <param name="model">The budget save view model containing the navigation state.</param>
+    /// <returns>A redirect result to the index action.</returns>
     private IActionResult RedirectToIndex(BudgetSaveViewModel model) => RedirectToAction(nameof(Index), new { year = model.Year, month = model.Month, groupId = model.GroupId, search = model.Search, sort = model.Sort, page = model.Page, pageSize = model.PageSize });
+
+    /// <summary>
+    /// Generates a list of year select items for the dropdown, centered around the current year.
+    /// </summary>
+    /// <param name="selected">The currently selected year.</param>
+    /// <returns>A list of select items for years.</returns>
     private static IReadOnlyList<SelectListItem> YearItems(int selected) => Enumerable.Range(DateTime.Today.Year - 5, 11).Reverse().Select(year => new SelectListItem(year.ToString(), year.ToString(), year == selected)).ToList();
+
+    /// <summary>
+    /// Generates a list of month select items for the dropdown.
+    /// </summary>
+    /// <param name="selected">The currently selected month.</param>
+    /// <returns>A list of select items for months.</returns>
     private static IReadOnlyList<SelectListItem> MonthItems(int selected) => Enumerable.Range(1, 12).Select(month => new SelectListItem(CultureInfo.GetCultureInfo("pt-PT").DateTimeFormat.GetMonthName(month), month.ToString(), month == selected)).ToList();
+
+    /// <summary>
+    /// Gets the localized name of a month.
+    /// </summary>
+    /// <param name="month">The month number (1-12).</param>
+    /// <returns>The localized month name.</returns>
     private static string MonthName(int month) => CultureInfo.GetCultureInfo("pt-PT").DateTimeFormat.GetMonthName(month);
+
+    /// <summary>
+    /// Generates a list of sort option select items for the dropdown.
+    /// </summary>
+    /// <param name="selected">The currently selected sort option.</param>
+    /// <returns>A list of select items for sort options.</returns>
     private static IReadOnlyList<SelectListItem> SortItems(string selected) => [new("Grupo e categoria", "group", selected == "group"), new("Categoria", "category", selected == "category"), new("Maior orçamento", "budgetDesc", selected == "budgetDesc"), new("Maior realizado", "actualDesc", selected == "actualDesc"), new("Maior desvio", "varianceDesc", selected == "varianceDesc")];
+
+    /// <summary>
+    /// Retrieves the current user's identifier from the claims.
+    /// </summary>
+    /// <returns>The user identifier.</returns>
+    /// <exception cref="InvalidOperationException">Thrown when the user is not identified.</exception>
     private string UserId() => User.FindFirstValue(ClaimTypes.NameIdentifier) ?? throw new InvalidOperationException("Utilizador não identificado.");
 }

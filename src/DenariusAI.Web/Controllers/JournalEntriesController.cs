@@ -15,6 +15,19 @@ namespace DenariusAI.Web.Controllers;
 [Authorize]
 public sealed class JournalEntriesController(IJournalEntryService service, IAccountService accountService, ICategoryService categoryService, IFinancialGroupService groupService, IBudgetService budgetService, IJournalEntrySuggestionService suggestionService, ILogger<JournalEntriesController> logger) : Controller
 {
+    /// <summary>
+    /// Displays a paginated list of journal entries with optional filtering and sorting.
+    /// </summary>
+    /// <param name="from">Start date filter (inclusive).</param>
+    /// <param name="to">End date filter (inclusive).</param>
+    /// <param name="status">Status filter for journal entries.</param>
+    /// <param name="budget">Budget filter - can be a GUID, "none", or empty for all.</param>
+    /// <param name="search">Search term to filter by description or reference.</param>
+    /// <param name="sort">Sort order: "dateDesc", "dateAsc", "description", or "amountDesc".</param>
+    /// <param name="page">Current page number (default: 1).</param>
+    /// <param name="pageSize">Number of items per page (default: 10).</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>View with filtered and paginated journal entries.</returns>
     public async Task<IActionResult> Index(DateOnly? from, DateOnly? to, JournalEntryStatus? status, string? budget, string? search, string sort = "dateDesc", int page = 1, int pageSize = 10, CancellationToken cancellationToken = default)
     {
         var entries = await service.ListAsync(cancellationToken);
@@ -40,6 +53,12 @@ public sealed class JournalEntriesController(IJournalEntryService service, IAcco
         return View(new JournalEntryIndexViewModel(entries, from, to, status, budget, search, sort, StatusItems(status), budgetOptions, SortItems(sort), pagination));
     }
 
+    /// <summary>
+    /// Displays detailed information about a specific journal entry.
+    /// </summary>
+    /// <param name="id">The unique identifier of the journal entry.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>View with journal entry details or NotFound if entry doesn't exist.</returns>
     [HttpGet]
     public async Task<IActionResult> Details(Guid id, CancellationToken cancellationToken)
     {
@@ -47,6 +66,11 @@ public sealed class JournalEntriesController(IJournalEntryService service, IAcco
         return entry is null ? NotFound() : View(new JournalEntryDetailsViewModel(entry));
     }
 
+    /// <summary>
+    /// Displays the form to create a new journal entry.
+    /// </summary>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>View with empty form for creating a new journal entry.</returns>
     [HttpGet]
     public async Task<IActionResult> Create(CancellationToken cancellationToken)
     {
@@ -55,6 +79,12 @@ public sealed class JournalEntriesController(IJournalEntryService service, IAcco
         return View("Form", model);
     }
 
+    /// <summary>
+    /// Processes the creation of a new journal entry.
+    /// </summary>
+    /// <param name="model">The form data for the new journal entry.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Redirects to Details on success, or returns to form with validation errors.</returns>
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(JournalEntryFormViewModel model, CancellationToken cancellationToken)
     {
@@ -71,6 +101,12 @@ public sealed class JournalEntriesController(IJournalEntryService service, IAcco
         return View("Form", model);
     }
 
+    /// <summary>
+    /// Provides AI-powered suggestions for journal entry classification based on user messages.
+    /// </summary>
+    /// <param name="model">The suggestion request containing message and conversation history.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>JSON with suggestion data, or error response if service unavailable or request fails.</returns>
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> Suggest([FromBody] JournalEntrySuggestionViewModel model, CancellationToken cancellationToken)
     {
@@ -89,6 +125,12 @@ public sealed class JournalEntriesController(IJournalEntryService service, IAcco
         }
     }
 
+    /// <summary>
+    /// Displays the form to edit an existing journal entry.
+    /// </summary>
+    /// <param name="id">The unique identifier of the journal entry to edit.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>View with populated form, or NotFound/redirect if entry doesn't exist or cannot be edited.</returns>
     [HttpGet]
     public async Task<IActionResult> Edit(Guid id, CancellationToken cancellationToken)
     {
@@ -113,6 +155,13 @@ public sealed class JournalEntriesController(IJournalEntryService service, IAcco
         return View("Form", model);
     }
 
+    /// <summary>
+    /// Processes the update of an existing journal entry.
+    /// </summary>
+    /// <param name="id">The unique identifier of the journal entry to update.</param>
+    /// <param name="model">The form data with updated journal entry information.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Redirects to Details on success, or returns to form with validation errors.</returns>
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit(Guid id, JournalEntryFormViewModel model, CancellationToken cancellationToken)
     {
@@ -131,6 +180,12 @@ public sealed class JournalEntriesController(IJournalEntryService service, IAcco
         return View("Form", model);
     }
 
+    /// <summary>
+    /// Cancels a journal entry, changing its status to Cancelled.
+    /// </summary>
+    /// <param name="id">The unique identifier of the journal entry to cancel.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Redirects to Details with success or error message.</returns>
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> Cancel(Guid id, CancellationToken cancellationToken)
     {
@@ -140,6 +195,11 @@ public sealed class JournalEntriesController(IJournalEntryService service, IAcco
         return RedirectToAction(nameof(Details), new { id });
     }
 
+    /// <summary>
+    /// Populates dropdown options for accounts, categories, and budgets in the form.
+    /// </summary>
+    /// <param name="model">The form view model to populate with options.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
     private async Task PopulateOptionsAsync(JournalEntryFormViewModel model, CancellationToken cancellationToken)
     {
         model.AiSuggestionAvailable = suggestionService.IsAvailable;
@@ -165,6 +225,11 @@ public sealed class JournalEntriesController(IJournalEntryService service, IAcco
             .Append(new SelectListItem("Sem orçamento", string.Empty, !model.BudgetId.HasValue)).ToList();
     }
 
+    /// <summary>
+    /// Creates a list of select items for journal entry status filtering.
+    /// </summary>
+    /// <param name="selected">The currently selected status.</param>
+    /// <returns>List of select items for status options.</returns>
     private static IReadOnlyList<SelectListItem> StatusItems(JournalEntryStatus? selected) =>
     [
         new("Todos os estados", string.Empty, selected is null),
@@ -172,6 +237,11 @@ public sealed class JournalEntriesController(IJournalEntryService service, IAcco
         new("Anulado", ((int)JournalEntryStatus.Cancelled).ToString(), selected == JournalEntryStatus.Cancelled)
     ];
 
+    /// <summary>
+    /// Creates a list of select items for sorting options.
+    /// </summary>
+    /// <param name="selected">The currently selected sort option.</param>
+    /// <returns>List of select items for sort options.</returns>
     private static IReadOnlyList<SelectListItem> SortItems(string selected) =>
     [
         new("Data mais recente", "dateDesc", selected == "dateDesc"),
@@ -180,8 +250,31 @@ public sealed class JournalEntriesController(IJournalEntryService service, IAcco
         new("Maior valor", "amountDesc", selected == "amountDesc")
     ];
 
+    /// <summary>
+    /// Converts a journal entry status enum to a display name.
+    /// </summary>
+    /// <param name="status">The journal entry status.</param>
+    /// <returns>The localized status name.</returns>
     public static string StatusName(JournalEntryStatus status) => status == JournalEntryStatus.Active ? "Ativo" : "Anulado";
+
+    /// <summary>
+    /// Converts a reconciliation status enum to a display name.
+    /// </summary>
+    /// <param name="status">The reconciliation status.</param>
+    /// <returns>The localized reconciliation status name.</returns>
     public static string ReconciliationName(ReconciliationStatus status) => status == ReconciliationStatus.Reconciled ? "Reconciliado" : "Não reconciliado";
+
+    /// <summary>
+    /// Retrieves the current user's identifier from claims.
+    /// </summary>
+    /// <returns>The user's unique identifier.</returns>
+    /// <exception cref="InvalidOperationException">Thrown when user is not identified.</exception>
     private string UserId() => User.FindFirstValue(ClaimTypes.NameIdentifier) ?? throw new InvalidOperationException("Utilizador não identificado.");
+
+    /// <summary>
+    /// Converts a form view model to a create journal entry request DTO.
+    /// </summary>
+    /// <param name="model">The form view model.</param>
+    /// <returns>A create journal entry request DTO.</returns>
     private static CreateJournalEntryRequest ToRequest(JournalEntryFormViewModel model) => new(model.Date, model.Description, model.Reference, model.Notes, model.Lines.Select(line => new JournalEntryLineInput(line.AccountId, line.Debit, line.Credit, line.Description, line.CategoryId)).ToList(), model.BudgetId);
 }

@@ -15,6 +15,17 @@ namespace DenariusAI.Web.Controllers;
 [Authorize]
 public sealed class AccountsController(IAccountService service, ICategoryService categoryService, IFinancialGroupService groupService) : Controller
 {
+    /// <summary>
+    /// Displays a paginated list of accounts with optional filtering by account type, category, search term, and active status.
+    /// </summary>
+    /// <param name="accountType">Optional account type filter.</param>
+    /// <param name="categoryId">Optional category identifier filter.</param>
+    /// <param name="search">Optional search term for account names.</param>
+    /// <param name="showInactive">Indicates whether to include inactive accounts.</param>
+    /// <param name="page">Current page number for pagination.</param>
+    /// <param name="pageSize">Number of items per page.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>View with paginated and filtered account list.</returns>
     public async Task<IActionResult> Index(AccountType? accountType, Guid? categoryId, string? search, bool showInactive = false, int page = 1, int pageSize = 10, CancellationToken cancellationToken = default)
     {
         var accounts = await service.ListAsync(!showInactive, cancellationToken);
@@ -33,6 +44,12 @@ public sealed class AccountsController(IAccountService service, ICategoryService
         return View(new AccountIndexViewModel(items, AccountTypeItems(true, accountType), CategoryItems(categories, groupNames, true, categoryId), accountType, categoryId, search, showInactive, pagination));
     }
 
+    /// <summary>
+    /// Displays detailed information about a specific account.
+    /// </summary>
+    /// <param name="id">Account identifier.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>View with account details or NotFound if account doesn't exist.</returns>
     [HttpGet]
     public async Task<IActionResult> Details(Guid id, CancellationToken cancellationToken)
     {
@@ -44,6 +61,17 @@ public sealed class AccountsController(IAccountService service, ICategoryService
         return View(new AccountDetailsViewModel(account, category?.Name ?? "Sem categoria", group?.Name));
     }
 
+    /// <summary>
+    /// Displays a paginated account statement with optional filtering by date range and search term.
+    /// </summary>
+    /// <param name="id">Account identifier.</param>
+    /// <param name="from">Optional start date filter.</param>
+    /// <param name="to">Optional end date filter.</param>
+    /// <param name="search">Optional search term for transaction descriptions, references, or categories.</param>
+    /// <param name="page">Current page number for pagination.</param>
+    /// <param name="pageSize">Number of items per page.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>View with paginated and filtered statement or NotFound if account doesn't exist.</returns>
     [HttpGet]
     public async Task<IActionResult> Statement(Guid id, DateOnly? from, DateOnly? to, string? search, int page = 1, int pageSize = 10, CancellationToken cancellationToken = default)
     {
@@ -68,6 +96,11 @@ public sealed class AccountsController(IAccountService service, ICategoryService
         return View(new AccountStatementViewModel(account, items, from, to, search, pagination));
     }
 
+    /// <summary>
+    /// Displays the form to create a new account.
+    /// </summary>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>View with account creation form.</returns>
     [HttpGet]
     public async Task<IActionResult> Create(CancellationToken cancellationToken)
     {
@@ -76,6 +109,12 @@ public sealed class AccountsController(IAccountService service, ICategoryService
         return View("Form", model);
     }
 
+    /// <summary>
+    /// Processes the account creation form submission.
+    /// </summary>
+    /// <param name="model">Account form data.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Redirect to Details on success or form view with validation errors.</returns>
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(AccountFormViewModel model, CancellationToken cancellationToken)
     {
@@ -92,6 +131,12 @@ public sealed class AccountsController(IAccountService service, ICategoryService
         return View("Form", model);
     }
 
+    /// <summary>
+    /// Displays the form to edit an existing account.
+    /// </summary>
+    /// <param name="id">Account identifier.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>View with account edit form or NotFound if account doesn't exist.</returns>
     [HttpGet]
     public async Task<IActionResult> Edit(Guid id, CancellationToken cancellationToken)
     {
@@ -102,6 +147,13 @@ public sealed class AccountsController(IAccountService service, ICategoryService
         return View("Form", model);
     }
 
+    /// <summary>
+    /// Processes the account edit form submission.
+    /// </summary>
+    /// <param name="id">Account identifier.</param>
+    /// <param name="model">Account form data.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Redirect to Details on success, BadRequest if ID mismatch, NotFound if account doesn't exist, or form view with validation errors.</returns>
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit(Guid id, AccountFormViewModel model, CancellationToken cancellationToken)
     {
@@ -120,6 +172,19 @@ public sealed class AccountsController(IAccountService service, ICategoryService
         return View("Form", model);
     }
 
+    /// <summary>
+    /// Activates or deactivates an account.
+    /// </summary>
+    /// <param name="id">Account identifier.</param>
+    /// <param name="isActive">Desired active status.</param>
+    /// <param name="accountType">Optional account type filter for redirect.</param>
+    /// <param name="categoryId">Optional category identifier filter for redirect.</param>
+    /// <param name="search">Optional search term for redirect.</param>
+    /// <param name="showInactive">Show inactive accounts flag for redirect.</param>
+    /// <param name="page">Current page number for redirect.</param>
+    /// <param name="pageSize">Number of items per page for redirect.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Redirect to Index with filters or NotFound if account doesn't exist.</returns>
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> SetActive(Guid id, bool isActive, AccountType? accountType, Guid? categoryId, string? search, bool showInactive, int page = 1, int pageSize = 10, CancellationToken cancellationToken = default)
     {
@@ -129,6 +194,11 @@ public sealed class AccountsController(IAccountService service, ICategoryService
         return RedirectToAction(nameof(Index), new { accountType, categoryId, search, showInactive, page, pageSize });
     }
 
+    /// <summary>
+    /// Populates the dropdown options for the account form.
+    /// </summary>
+    /// <param name="model">Account form view model.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
     private async Task PopulateOptionsAsync(AccountFormViewModel model, CancellationToken cancellationToken)
     {
         var categories = await categoryService.ListAsync(activeOnly: false, cancellationToken: cancellationToken);
@@ -137,6 +207,12 @@ public sealed class AccountsController(IAccountService service, ICategoryService
         model.Categories = CategoryItems(categories, groups.ToDictionary(item => item.Id, item => item.Name), true, model.CategoryId);
     }
 
+    /// <summary>
+    /// Creates a list of select items for account types.
+    /// </summary>
+    /// <param name="includeAll">Indicates whether to include an "All types" option.</param>
+    /// <param name="selected">The currently selected account type.</param>
+    /// <returns>List of select items for account types.</returns>
     private static IReadOnlyList<SelectListItem> AccountTypeItems(bool includeAll, AccountType? selected)
     {
         var items = Enum.GetValues<AccountType>().Select(type => new SelectListItem(AccountTypeName(type), ((int)type).ToString(), type == selected)).ToList();
@@ -144,6 +220,14 @@ public sealed class AccountsController(IAccountService service, ICategoryService
         return items;
     }
 
+    /// <summary>
+    /// Creates a list of select items for categories grouped by financial group.
+    /// </summary>
+    /// <param name="categories">List of categories.</param>
+    /// <param name="groupNames">Dictionary mapping group IDs to group names.</param>
+    /// <param name="includeNone">Indicates whether to include a "No category" option.</param>
+    /// <param name="selected">The currently selected category identifier.</param>
+    /// <returns>List of select items for categories.</returns>
     private static IReadOnlyList<SelectListItem> CategoryItems(IReadOnlyList<CategoryDto> categories, IReadOnlyDictionary<Guid, string> groupNames, bool includeNone, Guid? selected)
     {
         var items = categories.OrderBy(item => groupNames.GetValueOrDefault(item.FinancialGroupId)).ThenBy(item => item.SortOrder)
@@ -152,6 +236,11 @@ public sealed class AccountsController(IAccountService service, ICategoryService
         return items;
     }
 
+    /// <summary>
+    /// Gets the localized display name for an account type.
+    /// </summary>
+    /// <param name="type">The account type.</param>
+    /// <returns>Localized display name.</returns>
     public static string AccountTypeName(AccountType type) => type switch
     {
         AccountType.BankAccount => "Conta bancária",
@@ -165,6 +254,17 @@ public sealed class AccountsController(IAccountService service, ICategoryService
         _ => type.ToString()
     };
 
+    /// <summary>
+    /// Retrieves the current user's identifier from claims.
+    /// </summary>
+    /// <returns>User identifier.</returns>
+    /// <exception cref="InvalidOperationException">Thrown when user is not identified.</exception>
     private string UserId() => User.FindFirstValue(ClaimTypes.NameIdentifier) ?? throw new InvalidOperationException("Utilizador não identificado.");
+    
+    /// <summary>
+    /// Converts the account form view model to a DTO for persistence.
+    /// </summary>
+    /// <param name="model">Account form view model.</param>
+    /// <returns>Save account DTO.</returns>
     private static SaveAccountDto ToDto(AccountFormViewModel model) => new(model.Name, model.Description, model.AccountType, model.InitialBalance, model.Currency, model.CategoryId);
 }

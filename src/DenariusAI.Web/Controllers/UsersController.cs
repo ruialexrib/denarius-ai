@@ -11,9 +11,19 @@ namespace DenariusAI.Web.Controllers;
 /// <summary>
 /// Provides administrative user provisioning, editing, and role management actions.
 /// </summary>
+/// <remarks>
+/// This controller handles all user management operations including creating, editing, and deleting users,
+/// as well as viewing login history. Access is restricted to users in the Administrator role.
+/// </remarks>
+/// <param name="userManager">The user manager for handling user operations.</param>
+/// <param name="dbContext">The database context for accessing login history.</param>
 [Authorize(Roles = ApplicationRoles.Administrator)]
 public sealed class UsersController(UserManager<ApplicationUser> userManager, DenariusDbContext dbContext) : Controller
 {
+    /// <summary>
+    /// Displays a list of all users in the system with their roles.
+    /// </summary>
+    /// <returns>A view containing the list of users.</returns>
     public async Task<IActionResult> Index()
     {
         var currentId = userManager.GetUserId(User); var rows = new List<UserListItemViewModel>();
@@ -22,6 +32,16 @@ public sealed class UsersController(UserManager<ApplicationUser> userManager, De
         return View(new UserIndexViewModel(rows));
     }
 
+    /// <summary>
+    /// Displays the login history with optional filtering and pagination.
+    /// </summary>
+    /// <param name="from">Optional start date filter.</param>
+    /// <param name="to">Optional end date filter.</param>
+    /// <param name="search">Optional search term for user name, email, or IP address.</param>
+    /// <param name="page">The page number (default is 1).</param>
+    /// <param name="pageSize">The number of items per page (default is 10).</param>
+    /// <param name="cancellationToken">Cancellation token for the async operation.</param>
+    /// <returns>A view containing the filtered login history.</returns>
     [HttpGet]
     public async Task<IActionResult> LoginHistory(DateOnly? from, DateOnly? to, string? search, int page = 1, int pageSize = 10, CancellationToken cancellationToken = default)
     {
@@ -40,7 +60,17 @@ public sealed class UsersController(UserManager<ApplicationUser> userManager, De
         return View(new UserLoginHistoryViewModel(items, from, to, search, pagination));
     }
 
+    /// <summary>
+    /// Displays the form for creating a new user.
+    /// </summary>
+    /// <returns>A view containing the user creation form.</returns>
     [HttpGet] public IActionResult Create() => View("Form", new UserFormViewModel());
+    
+    /// <summary>
+    /// Processes the creation of a new user.
+    /// </summary>
+    /// <param name="model">The user form data.</param>
+    /// <returns>Redirects to the user list if successful, otherwise returns to the form with errors.</returns>
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(UserFormViewModel model)
     {
@@ -52,6 +82,11 @@ public sealed class UsersController(UserManager<ApplicationUser> userManager, De
         TempData["SuccessMessage"] = "Utilizador criado."; return RedirectToAction(nameof(Index));
     }
 
+    /// <summary>
+    /// Displays the form for editing an existing user.
+    /// </summary>
+    /// <param name="id">The user ID.</param>
+    /// <returns>A view containing the user edit form, or NotFound if the user doesn't exist.</returns>
     [HttpGet]
     public async Task<IActionResult> Edit(string id)
     {
@@ -59,6 +94,12 @@ public sealed class UsersController(UserManager<ApplicationUser> userManager, De
         return View("Form", new UserFormViewModel { Id = user.Id, DisplayName = user.DisplayName, Email = user.Email ?? string.Empty, Role = roles.FirstOrDefault() ?? ApplicationRoles.User });
     }
 
+    /// <summary>
+    /// Processes the update of an existing user.
+    /// </summary>
+    /// <param name="id">The user ID.</param>
+    /// <param name="model">The updated user form data.</param>
+    /// <returns>Redirects to the user list if successful, otherwise returns to the form with errors.</returns>
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit(string id, UserFormViewModel model)
     {
@@ -72,6 +113,11 @@ public sealed class UsersController(UserManager<ApplicationUser> userManager, De
         TempData["SuccessMessage"] = "Utilizador atualizado."; return RedirectToAction(nameof(Index));
     }
 
+    /// <summary>
+    /// Deletes a user from the system.
+    /// </summary>
+    /// <param name="id">The user ID to delete.</param>
+    /// <returns>Redirects to the user list with a success or error message.</returns>
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> Delete(string id)
     {
@@ -81,7 +127,21 @@ public sealed class UsersController(UserManager<ApplicationUser> userManager, De
         var result = await userManager.DeleteAsync(user); TempData[result.Succeeded ? "SuccessMessage" : "ErrorMessage"] = result.Succeeded ? "Utilizador eliminado." : "Não foi possível eliminar o utilizador."; return RedirectToAction(nameof(Index));
     }
 
+    /// <summary>
+    /// Validates that the specified role is a valid application role.
+    /// </summary>
+    /// <param name="model">The user form model containing the role to validate.</param>
     private void ValidateRole(UserFormViewModel model) { if (!ApplicationRoles.All.Contains(model.Role)) ModelState.AddModelError(nameof(model.Role), "Selecione uma permissão válida."); }
+    
+    /// <summary>
+    /// Gets the count of users in the Administrator role.
+    /// </summary>
+    /// <returns>The number of administrators.</returns>
     private async Task<int> AdministratorCountAsync() => (await userManager.GetUsersInRoleAsync(ApplicationRoles.Administrator)).Count;
+    
+    /// <summary>
+    /// Adds Identity errors to the ModelState.
+    /// </summary>
+    /// <param name="result">The Identity result containing errors.</param>
     private void AddErrors(IdentityResult result) { foreach (var error in result.Errors) ModelState.AddModelError(string.Empty, error.Description); }
 }

@@ -14,6 +14,15 @@ namespace DenariusAI.Web.Controllers;
 [Authorize]
 public sealed class RemindersController(DenariusDbContext dbContext) : Controller
 {
+    /// <summary>
+    /// Displays a list of reminders with optional filtering by search term, status, and date range.
+    /// </summary>
+    /// <param name="search">Optional search term to filter reminders by text.</param>
+    /// <param name="status">Filter by status: "all", "active", "scheduled", or "acknowledged". Default is "all".</param>
+    /// <param name="from">Optional start date for filtering reminders.</param>
+    /// <param name="to">Optional end date for filtering reminders.</param>
+    /// <param name="cancellationToken">Cancellation token for async operations.</param>
+    /// <returns>The index view with filtered reminders and summary statistics.</returns>
     public async Task<IActionResult> Index(string? search, string status = "all", DateOnly? from = null, DateOnly? to = null, CancellationToken cancellationToken = default)
     {
         var today = DateOnly.FromDateTime(DateTime.Today); var userId = UserId();
@@ -42,7 +51,18 @@ public sealed class RemindersController(DenariusDbContext dbContext) : Controlle
             search?.Trim(), normalizedStatus, from, to));
     }
 
+    /// <summary>
+    /// Displays the form to create a new reminder.
+    /// </summary>
+    /// <returns>The reminder creation form view.</returns>
     [HttpGet] public IActionResult Create() => View("Form", new ReminderFormViewModel());
+    
+    /// <summary>
+    /// Processes the creation of a new reminder.
+    /// </summary>
+    /// <param name="model">The reminder form data submitted by the user.</param>
+    /// <param name="cancellationToken">Cancellation token for async operations.</param>
+    /// <returns>Redirects to the index on success, or returns the form with validation errors.</returns>
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(ReminderFormViewModel model, CancellationToken cancellationToken)
     {
@@ -51,6 +71,12 @@ public sealed class RemindersController(DenariusDbContext dbContext) : Controlle
         dbContext.Add(item); await dbContext.SaveChangesAsync(cancellationToken); TempData["SuccessMessage"] = "Lembrete criado."; return RedirectToAction(nameof(Index));
     }
 
+    /// <summary>
+    /// Displays the form to edit an existing reminder.
+    /// </summary>
+    /// <param name="id">The unique identifier of the reminder to edit.</param>
+    /// <param name="cancellationToken">Cancellation token for async operations.</param>
+    /// <returns>The reminder edit form view, or NotFound if the reminder doesn't exist.</returns>
     [HttpGet]
     public async Task<IActionResult> Edit(Guid id, CancellationToken cancellationToken)
     {
@@ -58,6 +84,13 @@ public sealed class RemindersController(DenariusDbContext dbContext) : Controlle
         return View("Form", new ReminderFormViewModel { Id = item.Id, Text = item.Text, EventDate = item.EventDate, NoticeDays = item.NoticeDays });
     }
 
+    /// <summary>
+    /// Processes the update of an existing reminder and resets all user acknowledgements.
+    /// </summary>
+    /// <param name="id">The unique identifier of the reminder to update.</param>
+    /// <param name="model">The reminder form data submitted by the user.</param>
+    /// <param name="cancellationToken">Cancellation token for async operations.</param>
+    /// <returns>Redirects to the index on success, or returns the form with validation errors.</returns>
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit(Guid id, ReminderFormViewModel model, CancellationToken cancellationToken)
     {
@@ -68,6 +101,13 @@ public sealed class RemindersController(DenariusDbContext dbContext) : Controlle
         await dbContext.SaveChangesAsync(cancellationToken); TempData["SuccessMessage"] = "Lembrete atualizado e reativado para todos os utilizadores."; return RedirectToAction(nameof(Index));
     }
 
+    /// <summary>
+    /// Records that the current user has acknowledged a specific reminder.
+    /// </summary>
+    /// <param name="id">The unique identifier of the reminder to acknowledge.</param>
+    /// <param name="returnUrl">Optional URL to redirect to after acknowledgement.</param>
+    /// <param name="cancellationToken">Cancellation token for async operations.</param>
+    /// <returns>Redirects to the return URL or index page.</returns>
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> Acknowledge(Guid id, string? returnUrl, CancellationToken cancellationToken)
     {
@@ -77,9 +117,20 @@ public sealed class RemindersController(DenariusDbContext dbContext) : Controlle
         return LocalRedirect(string.IsNullOrWhiteSpace(returnUrl) || !Url.IsLocalUrl(returnUrl) ? Url.Action(nameof(Index))! : returnUrl);
     }
 
+    /// <summary>
+    /// Deletes a reminder and all associated acknowledgements.
+    /// </summary>
+    /// <param name="id">The unique identifier of the reminder to delete.</param>
+    /// <param name="cancellationToken">Cancellation token for async operations.</param>
+    /// <returns>Redirects to the index page after successful deletion.</returns>
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken)
     { var item = await dbContext.Reminders.FindAsync([id], cancellationToken); if (item is null) return NotFound(); dbContext.Remove(item); await dbContext.SaveChangesAsync(cancellationToken); TempData["SuccessMessage"] = "Lembrete removido."; return RedirectToAction(nameof(Index)); }
 
+    /// <summary>
+    /// Retrieves the current authenticated user's identifier.
+    /// </summary>
+    /// <returns>The user's unique identifier.</returns>
+    /// <exception cref="InvalidOperationException">Thrown when the user is not authenticated.</exception>
     private string UserId() => User.FindFirstValue(ClaimTypes.NameIdentifier) ?? throw new InvalidOperationException("Utilizador não identificado.");
 }

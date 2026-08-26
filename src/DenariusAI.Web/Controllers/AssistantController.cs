@@ -10,9 +10,20 @@ namespace DenariusAI.Web.Controllers;
 /// </summary>
 public sealed class AssistantController(IAssistantService assistantService, IApplicationSettingsService settingsService, ILogger<AssistantController> logger) : Controller
 {
+    /// <summary>
+    /// Displays the assistant page with availability status and model information.
+    /// </summary>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>The assistant view.</returns>
     [HttpGet]
     public async Task<IActionResult> Index(CancellationToken cancellationToken) => View(new AssistantPageViewModel { IsAvailable = assistantService.IsAvailable, Model = (await settingsService.GetAsync(cancellationToken)).MistralModel });
 
+    /// <summary>
+    /// Processes a question submitted to the AI assistant and returns the response.
+    /// </summary>
+    /// <param name="model">The question and conversation history.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>A JSON response containing the assistant's answer and metadata.</returns>
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> Ask([FromBody] AssistantQuestionViewModel model, CancellationToken cancellationToken)
     {

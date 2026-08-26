@@ -15,9 +15,27 @@ namespace DenariusAI.Web.Controllers;
 /// <summary>
 /// Provides expense and income analytics views for configurable date ranges.
 /// </summary>
+/// <param name="analyticsService">Service for retrieving analytics data.</param>
+/// <param name="groupService">Service for managing financial groups.</param>
+/// <param name="categoryService">Service for managing categories.</param>
+/// <param name="accountService">Service for managing accounts.</param>
+/// <param name="dashboardService">Service for retrieving dashboard data.</param>
+/// <param name="dbContext">Database context for direct data access.</param>
+/// <param name="llmService">Service for LLM-based intelligent report generation.</param>
+/// <param name="settingsService">Service for retrieving application settings.</param>
 [Authorize]
 public sealed class AnalyticsController(IAnalyticsService analyticsService, IFinancialGroupService groupService, ICategoryService categoryService, IAccountService accountService, IDashboardService dashboardService, DenariusDbContext dbContext, ILLMService llmService, IApplicationSettingsService settingsService) : Controller
 {
+    /// <summary>
+    /// Displays the analytics dashboard with filtering options.
+    /// </summary>
+    /// <param name="from">Start date for the analytics period.</param>
+    /// <param name="to">End date for the analytics period.</param>
+    /// <param name="groupId">Optional financial group ID filter.</param>
+    /// <param name="categoryId">Optional category ID filter.</param>
+    /// <param name="accountId">Optional account ID filter.</param>
+    /// <param name="cancellationToken">Cancellation token for async operations.</param>
+    /// <returns>The analytics view with filtered data.</returns>
     public async Task<IActionResult> Index(DateOnly? from, DateOnly? to, Guid? groupId, Guid? categoryId, Guid? accountId, CancellationToken cancellationToken)
     {
         var selectedTo = to ?? DateOnly.FromDateTime(DateTime.Today);
@@ -36,6 +54,13 @@ public sealed class AnalyticsController(IAnalyticsService analyticsService, IFin
             annual.Evolution, annual.BudgetEvolution));
     }
 
+    /// <summary>
+    /// Generates an intelligent financial report using LLM analysis for the specified date range.
+    /// </summary>
+    /// <param name="from">Start date of the report period.</param>
+    /// <param name="to">End date of the report period.</param>
+    /// <param name="cancellationToken">Cancellation token for async operations.</param>
+    /// <returns>The intelligent report view or redirects with error message if generation fails.</returns>
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> GenerateIntelligentReport(DateOnly from, DateOnly to, CancellationToken cancellationToken)
     {
@@ -58,10 +83,24 @@ public sealed class AnalyticsController(IAnalyticsService analyticsService, IFin
         return View("IntelligentReport", new IntelligentReportViewModel(from, to, DateTimeOffset.Now.ToString("dd/MM/yyyy HH:mm"), completion.Model, MarkdownPreview.Normalize(completion.Content)));
     }
 
+    /// <summary>
+    /// Exports the generated intelligent report as a Markdown file.
+    /// </summary>
+    /// <param name="markdown">The markdown content of the report.</param>
+    /// <param name="from">Start date of the report period.</param>
+    /// <param name="to">End date of the report period.</param>
+    /// <returns>A file download result with the Markdown content.</returns>
     [HttpPost, ValidateAntiForgeryToken]
     public IActionResult ExportMarkdown(string markdown, DateOnly from, DateOnly to) =>
         File(Encoding.UTF8.GetBytes(markdown ?? string.Empty), "text/markdown; charset=utf-8", $"relatorio-financeiro-{from:yyyyMMdd}-{to:yyyyMMdd}.md");
 
+    /// <summary>
+    /// Exports the generated intelligent report as a PDF file.
+    /// </summary>
+    /// <param name="markdown">The markdown content of the report.</param>
+    /// <param name="from">Start date of the report period.</param>
+    /// <param name="to">End date of the report period.</param>
+    /// <returns>A file download result with the PDF content.</returns>
     [HttpPost, ValidateAntiForgeryToken]
     public IActionResult ExportPdf(string markdown, DateOnly from, DateOnly to) =>
         File(FinancialReportPdf.Generate(markdown, from, to), "application/pdf", $"relatorio-financeiro-{from:yyyyMMdd}-{to:yyyyMMdd}.pdf");
