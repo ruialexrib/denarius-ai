@@ -10,9 +10,11 @@ public sealed class ProfileViewModel
     public string DisplayName { get; set; } = string.Empty;
 
     [Display(Name = "Email")]
-    public string Email { get; init; } = string.Empty;
-
+    public string Email { get; set; } = string.Empty;
+    public IReadOnlyList<LoginHistoryItemViewModel> LoginHistory { get; set; } = [];
 }
+
+public sealed record LoginHistoryItemViewModel(DateTimeOffset LoggedInAt, string IpAddress);
 
 public sealed class ResetFinancialDataViewModel
 {

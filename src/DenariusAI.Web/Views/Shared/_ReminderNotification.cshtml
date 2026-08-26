@@ -4,5 +4,5 @@
 @{ var reminderUserId = User.FindFirstValue(ClaimTypes.NameIdentifier); var reminderToday = DateOnly.FromDateTime(DateTime.Today); var reminderCount = string.IsNullOrWhiteSpace(reminderUserId) ? 0 : await ReminderDb.Reminders.AsNoTracking().CountAsync(item => item.EventDate.AddDays(-item.NoticeDays) <= reminderToday && !item.Acknowledgements.Any(value => value.UserId == reminderUserId)); }
 @if (reminderCount > 0)
 {
-<a class="alert-button has-alerts" asp-controller="Reminders" asp-action="Index" aria-label="Lembretes: @reminderCount alertas ativos" title="Lembretes"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 2.8 20h18.4L12 3Z" /><path d="M12 8v6M12 17.2v.1" /></svg><span class="alert-count">@(reminderCount > 99 ? "99+" : reminderCount)</span></a>
+<a class="alert-button has-alerts top-with-tooltip" asp-controller="Reminders" asp-action="Index" aria-label="Lembretes: @reminderCount alertas ativos"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 2.8 20h18.4L12 3Z" /><path d="M12 8v6M12 17.2v.1" /></svg><span class="alert-count">@(reminderCount > 99 ? "99+" : reminderCount)</span><span class="top-tooltip" role="tooltip"><strong>Lembretes</strong><small>@reminderCount @(reminderCount == 1 ? "aviso ativo" : "avisos ativos") para consultar</small></span></a>
 }

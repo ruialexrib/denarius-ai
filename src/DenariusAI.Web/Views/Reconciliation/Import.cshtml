@@ -11,8 +11,9 @@
     <form asp-action="AnalyzeConversation" method="post" class="form-stack settings-form">
         <div asp-validation-summary="ModelOnly" class="validation-summary"></div>
         <label asp-for="BankAccountId">Conta do extrato<select asp-for="BankAccountId" asp-items="Model.BankAccounts" required><option value="">Selecionar conta…</option></select><span asp-validation-for="BankAccountId" class="field-error"></span></label>
+        <label asp-for="BudgetId">Orçamento<select asp-for="BudgetId" asp-items="Model.Budgets" required><option value="">Selecionar orçamento…</option></select><small>Todos os movimentos deverão pertencer ao mês e ano deste orçamento.</small><span asp-validation-for="BudgetId" class="field-error"></span></label>
         <label asp-for="MovementsText">Movimentos<textarea asp-for="MovementsText" rows="14" maxlength="50000" placeholder="24/08/2026 | Fatura da água | Ref. 123/2026 | -30,00&#10;21/08/2026 | Ordenado | Agosto 2026 | 1 500,00" required></textarea><span asp-validation-for="MovementsText" class="field-error"></span></label>
-        <p class="muted">A IA interpreta o texto, compara-o com os movimentos existentes e propõe classificações. Nada é gravado nesta etapa.</p>
+        <aside class="import-safety-note" role="note"><span class="import-safety-icon" aria-hidden="true">✦</span><div><strong>Análise assistida e segura</strong><p>A IA interpreta o texto, compara-o com os movimentos existentes e propõe classificações. <b>Nada é gravado nesta etapa.</b></p></div></aside>
         <div class="form-actions"><button class="button" type="submit">Enviar e analisar</button></div>
     </form>
 </section>

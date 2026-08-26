@@ -4,6 +4,13 @@ namespace DenariusAI.Web.ViewModels;
 
 public sealed record UserListItemViewModel(string Id, string DisplayName, string Email, string Role, bool IsCurrentUser);
 public sealed record UserIndexViewModel(IReadOnlyList<UserListItemViewModel> Items);
+public sealed record UserLoginHistoryItemViewModel(string DisplayName, string Email, DateTimeOffset LoggedInAt, string IpAddress);
+public sealed record UserLoginHistoryViewModel(
+    IReadOnlyList<UserLoginHistoryItemViewModel> Items,
+    DateOnly? From,
+    DateOnly? To,
+    string? Search,
+    PaginationViewModel Pagination);
 
 public sealed class UserFormViewModel
 {

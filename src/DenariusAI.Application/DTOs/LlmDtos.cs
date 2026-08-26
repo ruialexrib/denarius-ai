@@ -14,4 +14,4 @@ public sealed record LlmMessageDto(string Role, string Content);
 /// <param name="Model">The name or identifier of the LLM model used.</param>
 /// <param name="PromptTokens">The number of tokens used in the prompt, if available.</param>
 /// <param name="CompletionTokens">The number of tokens generated in the completion, if available.</param>
-public sealed record LlmCompletionDto(string Content, string Model, int? PromptTokens, int? CompletionTokens);
+public sealed record LlmCompletionDto(string Content, string Model, int? PromptTokens, int? CompletionTokens, string? FinishReason = null);

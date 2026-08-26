@@ -3,27 +3,22 @@
 <link rel="stylesheet" href="~/css/intelligent-workflows.css" asp-append-version="true" />
 
 <div class="page-header">
-    <div><p class="eyebrow">Reconciliação · Revisão</p><h1>Novos movimentos encontrados</h1><p class="page-subtitle">Reveja as sugestões para <strong>@Model.BankAccountName</strong>. Nada será gravado até confirmar.</p></div>
+    <div><p class="eyebrow">Reconciliação · Revisão</p><h1>Novos movimentos encontrados</h1><p class="page-subtitle">Reveja as sugestões para <strong>@Model.BankAccountName</strong>, associadas ao orçamento de <strong>@Model.BudgetName</strong>. Nada será gravado até confirmar.</p></div>
     <a class="button secondary" asp-action="Import">Cancelar</a>
 </div>
 <form asp-action="ConfirmImport" method="post">
-    <input asp-for="BankAccountId" type="hidden" /><input asp-for="BankAccountName" type="hidden" />
+    <input asp-for="BankAccountId" type="hidden" /><input asp-for="BankAccountName" type="hidden" /><input asp-for="BudgetId" type="hidden" /><input asp-for="BudgetName" type="hidden" /><input asp-for="BudgetYear" type="hidden" /><input asp-for="BudgetMonth" type="hidden" />
     <div asp-validation-summary="ModelOnly" class="validation-summary"></div>
-    <section class="panel import-review">
-        <div class="table-wrap"><table class="import-review-table"><thead><tr><th>Importar</th><th>Data</th><th>Movimento</th><th>Valor</th><th>Categoria</th><th>Contrapartida</th><th>Sugestão</th></tr></thead><tbody>
+    <section class="panel import-review import-simple-list">
         @for (var i = 0; i < Model.Rows.Count; i++) {
-            <tr>
-                <td><input asp-for="Rows[i].Selected" /><input asp-for="Rows[i].RowNumber" type="hidden" /><input asp-for="Rows[i].Date" type="hidden" /><input asp-for="Rows[i].Description" type="hidden" /><input asp-for="Rows[i].Reference" type="hidden" /><input asp-for="Rows[i].Amount" type="hidden" /><input asp-for="Rows[i].SuggestionReason" type="hidden" /></td>
-                <td class="nowrap">@Model.Rows[i].Date.ToString("dd/MM/yyyy")</td>
-                <td><strong>@Model.Rows[i].Description</strong>@if (!string.IsNullOrWhiteSpace(Model.Rows[i].Reference)) { <small>Ref. @Model.Rows[i].Reference</small> }</td>
-                <td class="amount @(Model.Rows[i].Amount >= 0 ? "positive" : "negative")">@Model.Rows[i].Amount.ToString("N2")</td>
-                <td><select asp-for="Rows[i].CategoryId"><option value="">Selecionar…</option>@foreach (var option in Model.Categories) { <option value="@option.Value" selected="@(option.Value == Model.Rows[i].CategoryId?.ToString())">@option.Text</option> }</select></td>
-                <td><select asp-for="Rows[i].CounterAccountId"><option value="">Selecionar…</option>@foreach (var option in Model.CounterAccounts) { <option value="@option.Value" selected="@(option.Value == Model.Rows[i].CounterAccountId?.ToString())">@option.Text</option> }</select></td>
-                <td><small class="ai-suggestion">@(Model.Rows[i].SuggestionReason ?? "Sem sugestão automática")</small></td>
-            </tr>
+            <article class="import-simple-row @(Model.Rows[i].Amount >= 0 ? "income" : "expense") @(!Model.Rows[i].IsEligible ? "ineligible" : string.Empty)">
+                <div class="import-simple-check"><input asp-for="Rows[i].Selected" disabled="@(!Model.Rows[i].IsEligible)" aria-label="Importar @Model.Rows[i].Description" /><input asp-for="Rows[i].RowNumber" type="hidden" /><input asp-for="Rows[i].Date" type="hidden" /><input asp-for="Rows[i].Description" type="hidden" /><input asp-for="Rows[i].Reference" type="hidden" /><input asp-for="Rows[i].Amount" type="hidden" /><input asp-for="Rows[i].SuggestionReason" type="hidden" /><input asp-for="Rows[i].IsEligible" type="hidden" /><input asp-for="Rows[i].EligibilityMessage" type="hidden" /></div>
+                <div class="import-simple-main"><div class="import-simple-heading"><span class="movement-kind">@(Model.Rows[i].Amount >= 0 ? "Entrada" : "Saída")</span><time>@Model.Rows[i].Date.ToString("dd/MM/yyyy")</time></div><strong>@Model.Rows[i].Description</strong>@if (!string.IsNullOrWhiteSpace(Model.Rows[i].Reference)) { <small>Referência @Model.Rows[i].Reference</small> }<small>Conta: @Model.BankAccountName · Orçamento: @Model.BudgetName</small>@if (!Model.Rows[i].IsEligible) { <span class="import-eligibility-error">@Model.Rows[i].EligibilityMessage</span> }</div>
+                <div class="import-simple-category"><label asp-for="Rows[i].CategoryId">Categoria</label><select asp-for="Rows[i].CategoryId" disabled="@(!Model.Rows[i].IsEligible)"><option value="">Selecionar…</option>@foreach (var option in Model.Categories) { <option value="@option.Value" selected="@(option.Value == Model.Rows[i].CategoryId?.ToString())">@option.Text</option> }</select><small class="ai-suggestion">@(Model.Rows[i].SuggestionReason ?? "Escolha a categoria adequada")</small></div>
+                <strong class="import-simple-amount @(Model.Rows[i].Amount >= 0 ? "positive" : "negative")">@(Model.Rows[i].Amount >= 0 ? "+" : "−")@Math.Abs(Model.Rows[i].Amount).ToString("N2") €</strong>
+            </article>
         }
-        @if (Model.Rows.Count == 0) { <tr><td colspan="7" class="empty-row">Todos os movimentos colados já se encontram registados.</td></tr> }
-        </tbody></table></div>
+        @if (Model.Rows.Count == 0) { <div class="empty-row">Todos os movimentos colados já se encontram registados.</div> }
     </section>
     <div class="form-actions sticky-actions"><a class="button secondary" asp-action="Import">Voltar</a><button class="button" type="submit" disabled="@(Model.Rows.Count == 0)">Criar movimentos selecionados</button></div>
 </form>

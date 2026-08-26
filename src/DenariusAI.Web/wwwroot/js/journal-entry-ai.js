@@ -8,6 +8,7 @@
   const history = [];
   const token = document.querySelector('#journal-entry-form input[name="__RequestVerificationToken"]')?.value;
   toggle.addEventListener('click', () => { chat.hidden = !chat.hidden; toggle.textContent = chat.hidden ? 'Iniciar conversa' : 'Fechar conversa'; if (!chat.hidden) input.focus(); });
+  document.querySelectorAll('[data-ai-example]').forEach(button => button.addEventListener('click', () => { input.value = button.dataset.aiExample; input.focus(); }));
   const add = (role, text) => { const bubble = document.createElement('div'); bubble.className = `movement-ai-message ${role}`; bubble.textContent = text; messages.appendChild(bubble); messages.scrollTop = messages.scrollHeight; return bubble; };
   const setValue = (selector, value) => { const field = document.querySelector(selector); if (!field) return; field.value = value ?? ''; field.dispatchEvent(new Event('change', { bubbles: true })); field.dispatchEvent(new Event('input', { bubbles: true })); };
   const applySuggestion = suggestion => {
@@ -18,6 +19,7 @@
       row.querySelector('.line-account').value = line.accountId; row.querySelector('[name$=".CategoryId"]').value = line.categoryId ?? ''; row.querySelector('[name$=".Description"]').value = line.description ?? ''; row.querySelector('.line-debit').value = line.debit; row.querySelector('.line-credit').value = line.credit;
     });
     body.dispatchEvent(new Event('change', { bubbles: true })); body.querySelector('.line-debit')?.dispatchEvent(new Event('input', { bubbles: true }));
+    window.applySimpleJournalSuggestion?.(suggestion);
     document.getElementById('journal-entry-form').scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
   chatForm.addEventListener('submit', async event => {
@@ -26,7 +28,7 @@
       const response = await fetch('/JournalEntries/Suggest', { method: 'POST', headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': token }, body: JSON.stringify({ message: text, history: history.slice(-10) }) });
       const result = await response.json(); pending.remove(); if (!response.ok) throw new Error(result.error || 'Não foi possível criar a sugestão.');
       add('assistant', result.message); history.push({ role: 'user', content: text }, { role: 'assistant', content: result.message });
-      if (result.isComplete && result.suggestion) { applySuggestion(result.suggestion); if (result.classificationExplanation) add('assistant rationale', 'Critérios de classificação: ' + result.classificationExplanation); add('assistant success', 'Os campos foram preenchidos. Reveja as contas, categorias e valores antes de guardar.'); }
+      if (result.isComplete && result.suggestion) { applySuggestion(result.suggestion); if (result.classificationExplanation) add('assistant rationale', 'Critérios de classificação: ' + result.classificationExplanation); add('assistant success', 'O modo simplificado foi preenchido. Confirme o tipo, o valor, a conta e a categoria antes de guardar.'); }
     } catch (error) { pending.remove(); add('assistant error', error.message); }
     finally { button.disabled = false; input.disabled = false; input.focus(); }
   });

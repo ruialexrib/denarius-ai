@@ -34,7 +34,7 @@ services:
       InitialAdmin__DisplayName: ${DENARIUS_AI_ADMIN_DISPLAY_NAME:-Administrador}
       DataProtection__KeyPath: /app/keys
       Mistral__ApiKey: ${MISTRAL_API_KEY:-}
-      Mistral__Model: mistral-small-latest
+      Mistral__Model: mistral-small-2603
     ports:
       - "${DENARIUS_AI_HTTP_PORT:-8080}:8080"
     volumes:

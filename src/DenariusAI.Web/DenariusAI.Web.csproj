@@ -14,5 +14,6 @@
     </PackageReference>
     <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" />
     <PackageReference Include="ClosedXML" />
+    <PackageReference Include="QuestPDF" />
   </ItemGroup>
 </Project>

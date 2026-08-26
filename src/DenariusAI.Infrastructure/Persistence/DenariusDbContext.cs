@@ -77,6 +77,7 @@ public sealed class DenariusDbContext(DbContextOptions<DenariusDbContext> option
     public DbSet<ReminderAcknowledgement> ReminderAcknowledgements => Set<ReminderAcknowledgement>();
 
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
+    public DbSet<LoginHistory> LoginHistory => Set<LoginHistory>();
 
     /// <summary>
     /// Configures the model and entity relationships.

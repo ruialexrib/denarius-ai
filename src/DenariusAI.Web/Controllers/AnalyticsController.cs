@@ -52,12 +52,17 @@ public sealed class AnalyticsController(IAnalyticsService analyticsService, IFin
             reconciliations = await dbContext.Reconciliations.AsNoTracking().Select(x => new { x.Status, x.ReconciledAt }).ToListAsync(cancellationToken),
             savingsCertificates = await dbContext.SavingsCertificates.AsNoTracking().Select(x => new { x.InvestmentDate, x.SeriesNumber, x.Description, x.InvestmentValue, x.Rate, x.CurrentValue, x.NextCapitalization }).ToListAsync(cancellationToken)
         };
-        var prompt = "És um analista financeiro pessoal. Produz um relatório completo em Markdown, em português de Portugal, usando todas as tabelas fornecidas. Inclui: resumo executivo, rendimentos e despesas, orçamento, património, Certificados de Aforro, reconciliação, riscos/anomalias, oportunidades e ações recomendadas. Não inventes valores e indica quando faltam dados. Devolve apenas o Markdown do relatório, sem o envolver numa cerca de código ```markdown.";
-        var completion = await llmService.CompleteAsync([new("system", prompt), new("user", JsonSerializer.Serialize(data))], cancellationToken);
+        var prompt = "És um analista financeiro pessoal. Produz um relatório completo mas conciso em Markdown, em português de Portugal, usando todas as tabelas fornecidas. Inclui obrigatoriamente: resumo executivo, rendimentos e despesas, orçamento, património, Certificados de Aforro, reconciliação, riscos/anomalias, oportunidades, ações recomendadas e conclusão. Não inventes valores e indica quando faltam dados. Termina sempre todas as tabelas e secções. Devolve apenas o Markdown do relatório, sem o envolver numa cerca de código ```markdown.";
+        var completion = await llmService.CompleteAsync([new("system", prompt), new("user", JsonSerializer.Serialize(data))], 8192, cancellationToken);
+        if (string.Equals(completion.FinishReason, "length", StringComparison.OrdinalIgnoreCase)) { TempData["ErrorMessage"] = "O modelo atingiu o limite antes de concluir o relatório. Reduza o período analisado e tente novamente."; return RedirectToAction(nameof(Index), new { from, to }); }
         return View("IntelligentReport", new IntelligentReportViewModel(from, to, DateTimeOffset.Now.ToString("dd/MM/yyyy HH:mm"), completion.Model, MarkdownPreview.Normalize(completion.Content)));
     }
 
     [HttpPost, ValidateAntiForgeryToken]
     public IActionResult ExportMarkdown(string markdown, DateOnly from, DateOnly to) =>
         File(Encoding.UTF8.GetBytes(markdown ?? string.Empty), "text/markdown; charset=utf-8", $"relatorio-financeiro-{from:yyyyMMdd}-{to:yyyyMMdd}.md");
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public IActionResult ExportPdf(string markdown, DateOnly from, DateOnly to) =>
+        File(FinancialReportPdf.Generate(markdown, from, to), "application/pdf", $"relatorio-financeiro-{from:yyyyMMdd}-{to:yyyyMMdd}.pdf");
 }

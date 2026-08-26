@@ -1,8 +1,10 @@
 using DenariusAI.Infrastructure.Identity;
+using DenariusAI.Infrastructure.Persistence;
 using DenariusAI.Web.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace DenariusAI.Web.Controllers;
 
@@ -10,7 +12,7 @@ namespace DenariusAI.Web.Controllers;
 /// Provides administrative user provisioning, editing, and role management actions.
 /// </summary>
 [Authorize(Roles = ApplicationRoles.Administrator)]
-public sealed class UsersController(UserManager<ApplicationUser> userManager) : Controller
+public sealed class UsersController(UserManager<ApplicationUser> userManager, DenariusDbContext dbContext) : Controller
 {
     public async Task<IActionResult> Index()
     {
@@ -18,6 +20,24 @@ public sealed class UsersController(UserManager<ApplicationUser> userManager) : 
         foreach (var user in userManager.Users.OrderBy(item => item.DisplayName))
         { var roles = await userManager.GetRolesAsync(user); rows.Add(new(user.Id, user.DisplayName, user.Email ?? string.Empty, roles.FirstOrDefault() ?? ApplicationRoles.User, user.Id == currentId)); }
         return View(new UserIndexViewModel(rows));
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> LoginHistory(DateOnly? from, DateOnly? to, string? search, int page = 1, int pageSize = 10, CancellationToken cancellationToken = default)
+    {
+        var query = dbContext.LoginHistory.AsNoTracking().AsQueryable();
+        if (from.HasValue) query = query.Where(item => item.LoggedInAt >= new DateTimeOffset(from.Value.ToDateTime(TimeOnly.MinValue), TimeSpan.Zero));
+        if (to.HasValue) query = query.Where(item => item.LoggedInAt < new DateTimeOffset(to.Value.AddDays(1).ToDateTime(TimeOnly.MinValue), TimeSpan.Zero));
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var term = search.Trim();
+            query = query.Where(item => item.User.DisplayName.Contains(term) || (item.User.Email != null && item.User.Email.Contains(term)) || item.IpAddress.Contains(term));
+        }
+        var total = await query.CountAsync(cancellationToken);
+        var pagination = PaginationViewModel.Create(total, page, pageSize);
+        var items = await query.OrderByDescending(item => item.LoggedInAt).Skip((pagination.Page - 1) * pagination.PageSize).Take(pagination.PageSize)
+            .Select(item => new UserLoginHistoryItemViewModel(item.User.DisplayName, item.User.Email ?? string.Empty, item.LoggedInAt, item.IpAddress)).ToListAsync(cancellationToken);
+        return View(new UserLoginHistoryViewModel(items, from, to, search, pagination));
     }
 
     [HttpGet] public IActionResult Create() => View("Form", new UserFormViewModel());

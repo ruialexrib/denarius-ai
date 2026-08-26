@@ -45,15 +45,23 @@ public sealed class MistralLLMService(HttpClient httpClient, IOptions<MistralOpt
     /// <exception cref="ArgumentException">Thrown when the messages collection is empty or contains invalid content.</exception>
     /// <exception cref="HttpRequestException">Thrown when the API request fails.</exception>
     public async Task<LlmCompletionDto> CompleteAsync(IReadOnlyCollection<LlmMessageDto> messages, CancellationToken cancellationToken = default)
+        => await CompleteAsync(messages, null, cancellationToken);
+
+    public async Task<LlmCompletionDto> CompleteAsync(IReadOnlyCollection<LlmMessageDto> messages, int maxTokens, CancellationToken cancellationToken = default)
+        => await CompleteAsync(messages, (int?)maxTokens, cancellationToken);
+
+    private async Task<LlmCompletionDto> CompleteAsync(IReadOnlyCollection<LlmMessageDto> messages, int? maxTokens, CancellationToken cancellationToken)
     {
         if (!IsConfigured) throw new InvalidOperationException("A API key da Mistral não está configurada.");
         if (messages.Count == 0 || messages.Any(message => string.IsNullOrWhiteSpace(message.Content)))
             throw new ArgumentException("É necessária pelo menos uma mensagem com conteúdo.", nameof(messages));
         var settings = await settingsService.GetAsync(cancellationToken);
+        var effectiveMaxTokens = maxTokens ?? settings.MistralMaxTokens;
+        if (effectiveMaxTokens is < 64 or > 8192) throw new ArgumentOutOfRangeException(nameof(maxTokens), "O limite deve estar entre 64 e 8192 tokens.");
 
         var request = new HttpRequestMessage(HttpMethod.Post, new Uri(new Uri(settings.MistralBaseUrl), "chat/completions"))
         {
-            Content = JsonContent.Create(new MistralRequest(settings.MistralModel, messages.Select(message => new MistralMessage(message.Role, message.Content)).ToArray(), settings.MistralTemperature, settings.MistralMaxTokens))
+            Content = JsonContent.Create(new MistralRequest(settings.MistralModel, messages.Select(message => new MistralMessage(message.Role, message.Content)).ToArray(), settings.MistralTemperature, effectiveMaxTokens))
         };
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _options.ApiKey);
 
@@ -70,7 +78,7 @@ public sealed class MistralLLMService(HttpClient httpClient, IOptions<MistralOpt
         var content = payload.Choices.FirstOrDefault()?.Message.Content;
         if (string.IsNullOrWhiteSpace(content)) throw new InvalidOperationException("A Mistral não devolveu conteúdo textual.");
 
-        return new LlmCompletionDto(content, payload.Model ?? settings.MistralModel, payload.Usage?.PromptTokens, payload.Usage?.CompletionTokens);
+        return new LlmCompletionDto(content, payload.Model ?? settings.MistralModel, payload.Usage?.PromptTokens, payload.Usage?.CompletionTokens, payload.Choices.FirstOrDefault()?.FinishReason);
     }
 
     /// <summary>
@@ -91,7 +99,7 @@ public sealed class MistralLLMService(HttpClient httpClient, IOptions<MistralOpt
     /// <summary>
     /// Represents a choice in the API response containing the generated message.
     /// </summary>
-    private sealed record MistralChoice(MistralMessage Message);
+    private sealed record MistralChoice(MistralMessage Message, [property: JsonPropertyName("finish_reason")] string? FinishReason);
 
     /// <summary>
     /// Represents token usage statistics from the API response.

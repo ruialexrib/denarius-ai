@@ -75,15 +75,25 @@ public sealed class HomeController(
 
     private async Task<(string Message, bool GeneratedByAi)> GetWelcomeMessageAsync(ApplicationUser? user, DenariusAI.Application.DTOs.DashboardDto dashboard, CancellationToken cancellationToken)
     {
-        const string fallback = "Bem-vindo ao DenariusAI. Consulte os indicadores, organize o orçamento, reconcilie os movimentos e use a análise financeira para acompanhar a evolução. Reserve regularmente uma parte dos rendimentos e reveja as despesas recorrentes antes de assumir novos compromissos.";
+        var remainingBudgetedExpenses = Math.Max(dashboard.Budgeted - dashboard.BudgetActual, 0m);
+        var projectedClosingBalance = dashboard.LiquidBalance - remainingBudgetedExpenses;
+        var budgetIsCovered = projectedClosingBalance >= 0m;
+        var culture = System.Globalization.CultureInfo.GetCultureInfo("pt-PT");
+        var coverageMessage = budgetIsCovered
+            ? "O saldo atual permite cobrir as despesas previstas."
+            : $"Existe um défice potencial de {Math.Abs(projectedClosingBalance).ToString("N2", culture)} €; reveja as despesas previstas e ajuste o orçamento.";
+        var fallback = dashboard.Budgeted > 0m
+            ? $"Situação atual: o saldo disponível é {dashboard.LiquidBalance.ToString("N2", culture)} €, com {dashboard.Income.ToString("N2", culture)} € de rendimentos e {dashboard.Expenses.ToString("N2", culture)} € de despesas no período.\n\nPrevisão: depois de considerar {remainingBudgetedExpenses.ToString("N2", culture)} € de despesas ainda por executar, o saldo projetado no fim do orçamento é {projectedClosingBalance.ToString("N2", culture)} €. {coverageMessage}\n\nNa aplicação: acompanhe a execução do orçamento, reconcilie os movimentos pendentes e consulte a análise financeira para identificar desvios.\n\nDica financeira: reveja regularmente as despesas recorrentes e preserve uma margem para imprevistos."
+            : $"Situação atual: o saldo disponível é {dashboard.LiquidBalance.ToString("N2", culture)} €, com {dashboard.Income.ToString("N2", culture)} € de rendimentos e {dashboard.Expenses.ToString("N2", culture)} € de despesas no período.\n\nPrevisão: ainda não existe um orçamento com despesas previstas, pelo que não é possível estimar de forma útil o saldo final.\n\nNa aplicação: defina o orçamento, classifique os movimentos e utilize a análise financeira para acompanhar a evolução.\n\nDica financeira: planeie primeiro as despesas essenciais e mantenha uma reserva para acontecimentos inesperados.";
         if (user is null || !llmService.IsConfigured) return (fallback, false);
-        var key = $"dashboard-welcome:{user.Id}:{dashboard.Year}:{dashboard.Month}";
+        var key = $"dashboard-welcome:{user.Id}:{dashboard.Year}:{dashboard.Month}:{dashboard.LiquidBalance}:{dashboard.Budgeted}:{dashboard.BudgetActual}";
         if (cache.TryGetValue<string>(key, out var cached) && !string.IsNullOrWhiteSpace(cached)) return (cached, true);
         try
         {
             var settings = await settingsService.GetAsync(cancellationToken);
-            var context = JsonSerializer.Serialize(new { user = user.DisplayName, period = $"{dashboard.Month:D2}/{dashboard.Year}", dashboard.LiquidBalance, dashboard.TotalAssets, dashboard.Income, dashboard.Expenses, result = dashboard.MonthlyResult, dashboard.Budgeted, executed = dashboard.BudgetActual, dashboard.UnreconciledMovements, dashboard.SavingsCertificatesValue });
-            var completion = await llmService.CompleteAsync([new("system", settings.DashboardWelcomePrompt), new("user", context)], cancellationToken);
+            var context = JsonSerializer.Serialize(new { user = user.DisplayName, period = $"{dashboard.Month:D2}/{dashboard.Year}", dashboard.LiquidBalance, dashboard.TotalAssets, dashboard.Income, dashboard.Expenses, result = dashboard.MonthlyResult, budgetedExpenses = dashboard.Budgeted, executedBudgetExpenses = dashboard.BudgetActual, remainingBudgetedExpenses, projectedClosingBalance, budgetIsCovered, projectedShortfall = Math.Max(-projectedClosingBalance, 0m), dashboard.UnreconciledMovements, dashboard.SavingsCertificatesValue });
+            var projectionInstruction = "Organiza obrigatoriamente a resposta em quatro blocos curtos, separados por uma linha em branco: Situação atual; Previsão; Na aplicação; Dica financeira. O saldo atual já considera as despesas executadas: usa projectedClosingBalance e não voltes a subtrair o executado. Na previsão indica se o saldo cobre as despesas ainda por executar e, se não cobrir, refere projectedShortfall. Se não houver orçamento, explica que não é possível fazer uma projeção útil. Usa valores em euros, não uses listas nem Markdown e mantém a resposta prudente.";
+            var completion = await llmService.CompleteAsync([new("system", settings.DashboardWelcomePrompt), new("system", projectionInstruction), new("user", context)], cancellationToken);
             var message = completion.Content.Trim();
             if (string.IsNullOrWhiteSpace(message)) return (fallback, false);
             cache.Set(key, message, TimeSpan.FromMinutes(30));

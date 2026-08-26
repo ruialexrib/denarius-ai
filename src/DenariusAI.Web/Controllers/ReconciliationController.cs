@@ -77,18 +77,23 @@ public sealed class ReconciliationController(IReconciliationService service, IAc
     }
 
     [HttpGet]
-    public async Task<IActionResult> Import(CancellationToken cancellationToken) => View(new ReconciliationPasteViewModel { BankAccounts = await BankAccountItemsAsync(cancellationToken) });
+    public async Task<IActionResult> Import(CancellationToken cancellationToken) => View(new ReconciliationPasteViewModel { BankAccounts = await BankAccountItemsAsync(cancellationToken), Budgets = await BudgetItemsAsync(cancellationToken) });
 
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> AnalyzeConversation(ReconciliationPasteViewModel model, CancellationToken cancellationToken)
     {
         model.BankAccounts = await BankAccountItemsAsync(cancellationToken);
+        model.Budgets = await BudgetItemsAsync(cancellationToken);
         var bank = await dbContext.Accounts.AsNoTracking().FirstOrDefaultAsync(x => x.Id == model.BankAccountId && BankingAccountTypes.Contains(x.AccountType), cancellationToken);
+        var budget = await dbContext.Budgets.AsNoTracking().FirstOrDefaultAsync(x => x.Id == model.BudgetId, cancellationToken);
         if (bank is null) ModelState.AddModelError(nameof(model.BankAccountId), "Selecione uma conta bancária válida.");
+        if (budget is null) ModelState.AddModelError(nameof(model.BudgetId), "Selecione um orçamento válido.");
         if (string.IsNullOrWhiteSpace(model.MovementsText) || model.MovementsText.Trim().Length < 5) ModelState.AddModelError(nameof(model.MovementsText), "Cole os movimentos que pretende analisar.");
         if (model.MovementsText?.Length > 50000) ModelState.AddModelError(nameof(model.MovementsText), "O texto não pode exceder 50 000 caracteres.");
         if (!llmService.IsConfigured) ModelState.AddModelError(string.Empty, "Configure a integração Mistral antes de analisar os movimentos.");
         if (!ModelState.IsValid) return View("Import", model);
+        var selectedBank = bank!;
+        var selectedBudget = budget!;
 
         ConversationExtraction parsed;
         try
@@ -118,8 +123,14 @@ public sealed class ReconciliationController(IReconciliationService service, IAc
         var minDate = imported.Min(x => x.Date); var maxDate = imported.Max(x => x.Date);
         var existing = await dbContext.JournalEntries.AsNoTracking().Include(x => x.Lines).Where(x => x.Date >= minDate && x.Date <= maxDate).ToListAsync(cancellationToken);
         imported = imported.Where(row => !existing.Any(entry => EntryMatches(entry, row))).ToList();
+        foreach (var row in imported.Where(row => row.Date.Year != selectedBudget.Year || row.Date.Month != selectedBudget.Month))
+        {
+            row.Selected = false;
+            row.IsEligible = false;
+            row.EligibilityMessage = $"A data {row.Date:dd/MM/yyyy} não pertence ao orçamento de {BudgetName(selectedBudget.Year, selectedBudget.Month)}. Este movimento não pode ser processado.";
+        }
         await ApplySuggestionsAsync(imported, cancellationToken);
-        var review = new ReconciliationImportReviewViewModel { BankAccountId = bank!.Id, BankAccountName = bank.Name, Rows = imported };
+        var review = new ReconciliationImportReviewViewModel { BankAccountId = selectedBank.Id, BankAccountName = selectedBank.Name, BudgetId = selectedBudget.Id, BudgetName = BudgetName(selectedBudget.Year, selectedBudget.Month), BudgetYear = selectedBudget.Year, BudgetMonth = selectedBudget.Month, Rows = imported };
         HttpContext.Session.SetString(ImportSessionKey, JsonSerializer.Serialize(review));
         return RedirectToAction(nameof(ReviewImport));
     }
@@ -134,11 +145,29 @@ public sealed class ReconciliationController(IReconciliationService service, IAc
     public async Task<IActionResult> ConfirmImport(ReconciliationImportReviewViewModel model, CancellationToken cancellationToken)
     {
         var bank = await dbContext.Accounts.FindAsync([model.BankAccountId], cancellationToken); if (bank is null) return BadRequest();
+        var budget = await dbContext.Budgets.AsNoTracking().FirstOrDefaultAsync(x => x.Id == model.BudgetId, cancellationToken); if (budget is null) return BadRequest();
         var selected = model.Rows.Where(x => x.Selected).ToList();
-        if (selected.Any(x => !x.CounterAccountId.HasValue || !x.CategoryId.HasValue)) { ModelState.AddModelError(string.Empty, "Classifique a conta e a categoria de todas as linhas selecionadas."); await PopulateReviewOptionsAsync(model, cancellationToken); return View("ReviewImport", model); }
+        if (selected.Any(x => x.Date.Year != budget.Year || x.Date.Month != budget.Month)) { ModelState.AddModelError(string.Empty, $"Existem movimentos fora do período do orçamento de {BudgetName(budget.Year, budget.Month)}."); await PopulateReviewOptionsAsync(model, cancellationToken); return View("ReviewImport", model); }
+        if (selected.Count == 0) { ModelState.AddModelError(string.Empty, "Selecione pelo menos um movimento válido para processar."); await PopulateReviewOptionsAsync(model, cancellationToken); return View("ReviewImport", model); }
+        if (selected.Any(x => !x.CategoryId.HasValue)) { ModelState.AddModelError(string.Empty, "Escolha a categoria de todas as linhas selecionadas."); await PopulateReviewOptionsAsync(model, cancellationToken); return View("ReviewImport", model); }
+        var categoryIds = selected.Select(x => x.CategoryId!.Value).Distinct().ToList();
+        var categoryKinds = await dbContext.Categories.AsNoTracking().Where(x => categoryIds.Contains(x.Id))
+            .Select(x => new { x.Id, Kind = x.FinancialGroup.Kind })
+            .ToDictionaryAsync(x => x.Id, x => x.Kind, cancellationToken);
+        var counterAccounts = await dbContext.Accounts.AsNoTracking().Where(x => x.IsActive && (x.AccountType == AccountType.Income || x.AccountType == AccountType.Expense)).ToListAsync(cancellationToken);
+        foreach (var row in selected)
+        {
+            var expectedKind = row.Amount >= 0 ? FinancialGroupKind.Income : FinancialGroupKind.Expense;
+            if (!categoryKinds.TryGetValue(row.CategoryId!.Value, out var categoryKind) || categoryKind != expectedKind)
+                ModelState.AddModelError(string.Empty, $"A categoria de «{row.Description}» deve ser de {(expectedKind == FinancialGroupKind.Income ? "rendimento" : "despesa")}.");
+            row.CounterAccountId = counterAccounts.FirstOrDefault(x => x.AccountType == (row.Amount >= 0 ? AccountType.Income : AccountType.Expense))?.Id;
+            if (!row.CounterAccountId.HasValue) ModelState.AddModelError(string.Empty, $"Não existe uma conta técnica de {(row.Amount >= 0 ? "rendimentos" : "despesas")} ativa.");
+        }
+        if (!ModelState.IsValid) { await PopulateReviewOptionsAsync(model, cancellationToken); return View("ReviewImport", model); }
         foreach (var row in selected)
         {
             var entry = new JournalEntry(row.Date, row.Description, row.Reference, "Criado através da conversa de reconciliação") { CreatedBy = UserId() };
+            entry.AssignBudget(budget.Id);
             if (row.Amount >= 0) { entry.AddLine(bank.Id, row.Amount, 0m); entry.AddLine(row.CounterAccountId!.Value, 0m, row.Amount, categoryId: row.CategoryId); }
             else { var amount = Math.Abs(row.Amount); entry.AddLine(row.CounterAccountId!.Value, amount, 0m, categoryId: row.CategoryId); entry.AddLine(bank.Id, 0m, amount); }
             entry.EnsureBalanced(); dbContext.JournalEntries.Add(entry);
@@ -167,6 +196,12 @@ public sealed class ReconciliationController(IReconciliationService service, IAc
     }
 
     private async Task<IReadOnlyList<SelectListItem>> BankAccountItemsAsync(CancellationToken cancellationToken) => (await accountService.ListAsync(cancellationToken: cancellationToken)).Where(x => BankingAccountTypes.Contains(x.AccountType)).Select(x => new SelectListItem(x.Name, x.Id.ToString())).ToList();
+    private async Task<IReadOnlyList<SelectListItem>> BudgetItemsAsync(CancellationToken cancellationToken)
+    {
+        var budgets = await dbContext.Budgets.AsNoTracking().OrderByDescending(x => x.Year).ThenByDescending(x => x.Month).Select(x => new { x.Id, x.Year, x.Month }).ToListAsync(cancellationToken);
+        return budgets.Select(x => new SelectListItem(BudgetName(x.Year, x.Month), x.Id.ToString())).ToList();
+    }
+    private static string BudgetName(int year, int month) => $"{new DateTime(year, month, 1).ToString("MMMM", System.Globalization.CultureInfo.GetCultureInfo("pt-PT"))} de {year}";
     private static bool EntryMatches(JournalEntry entry, ReconciliationImportRowViewModel row) => entry.Date == row.Date && entry.Lines.Any(x => Math.Max(x.Debit, x.Credit) == Math.Abs(row.Amount)) && (!string.IsNullOrWhiteSpace(row.Reference) ? string.Equals(entry.Reference, row.Reference, StringComparison.OrdinalIgnoreCase) : Normalize(entry.Description) == Normalize(row.Description));
     private static string Normalize(string value) => new(value.Normalize(NormalizationForm.FormD).Where(c => System.Globalization.CharUnicodeInfo.GetUnicodeCategory(c) != System.Globalization.UnicodeCategory.NonSpacingMark && char.IsLetterOrDigit(c)).Select(char.ToLowerInvariant).ToArray());
     private static string StripJsonFence(string content)

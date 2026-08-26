@@ -29,4 +29,6 @@ public interface ILLMService
     /// <param name="cancellationToken">A cancellation token to cancel the operation if needed.</param>
     /// <returns>A task that represents the asynchronous operation, containing the LLM completion response.</returns>
     Task<LlmCompletionDto> CompleteAsync(IReadOnlyCollection<LlmMessageDto> messages, CancellationToken cancellationToken = default);
+
+    Task<LlmCompletionDto> CompleteAsync(IReadOnlyCollection<LlmMessageDto> messages, int maxTokens, CancellationToken cancellationToken = default) => CompleteAsync(messages, cancellationToken);
 }

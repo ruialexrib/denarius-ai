@@ -13,12 +13,18 @@ public sealed class ReconciliationImportRowViewModel
     public Guid? CounterAccountId { get; set; }
     public string? SuggestionReason { get; set; }
     public bool Selected { get; set; } = true;
+    public bool IsEligible { get; set; } = true;
+    public string? EligibilityMessage { get; set; }
 }
 
 public sealed class ReconciliationImportReviewViewModel
 {
     public Guid BankAccountId { get; set; }
     public string BankAccountName { get; set; } = string.Empty;
+    public Guid BudgetId { get; set; }
+    public string BudgetName { get; set; } = string.Empty;
+    public int BudgetYear { get; set; }
+    public int BudgetMonth { get; set; }
     public List<ReconciliationImportRowViewModel> Rows { get; set; } = [];
     public IReadOnlyList<SelectListItem> Categories { get; set; } = [];
     public IReadOnlyList<SelectListItem> CounterAccounts { get; set; } = [];
@@ -27,7 +33,9 @@ public sealed class ReconciliationImportReviewViewModel
 public sealed class ReconciliationPasteViewModel
 {
     public Guid BankAccountId { get; set; }
+    public Guid BudgetId { get; set; }
     public string MovementsText { get; set; } = string.Empty;
     public string? AssistantMessage { get; set; }
     public IReadOnlyList<SelectListItem> BankAccounts { get; set; } = [];
+    public IReadOnlyList<SelectListItem> Budgets { get; set; } = [];
 }

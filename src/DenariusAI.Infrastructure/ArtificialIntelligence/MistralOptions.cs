@@ -23,7 +23,7 @@ public sealed class MistralOptions
     /// <summary>
     /// Gets or sets the model to use for AI operations.
     /// </summary>
-    public string Model { get; set; } = "mistral-small-latest";
+    public string Model { get; set; } = "mistral-small-2603";
 
     /// <summary>
     /// Gets or sets the maximum number of tokens to generate in the response.

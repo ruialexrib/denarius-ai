@@ -1,15 +1,18 @@
 using DenariusAI.Infrastructure.Identity;
+using DenariusAI.Infrastructure.Persistence;
 using DenariusAI.Web.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using System.Net;
 
 namespace DenariusAI.Web.Controllers;
 
 /// <summary>
 /// Handles authentication, session/profile, and cookie-consent workflows, including anonymous sign-in entry points.
 /// </summary>
-public sealed class AccountController(SignInManager<ApplicationUser> signInManager, UserManager<ApplicationUser> userManager) : Controller
+public sealed class AccountController(SignInManager<ApplicationUser> signInManager, UserManager<ApplicationUser> userManager, DenariusDbContext dbContext) : Controller
 {
     [AllowAnonymous, HttpGet]
     public IActionResult Login(string? returnUrl = null) => User.Identity?.IsAuthenticated == true ? RedirectToAction("Index", "Home") : View(new LoginViewModel { ReturnUrl = returnUrl });
@@ -22,6 +25,12 @@ public sealed class AccountController(SignInManager<ApplicationUser> signInManag
         if (user is null) { ModelState.AddModelError(string.Empty, "Email ou palavra-passe inválidos."); return View(model); }
         var result = await signInManager.PasswordSignInAsync(user, model.Password, model.RememberMe, true);
         if (!result.Succeeded) { ModelState.AddModelError(string.Empty, result.IsLockedOut ? "Conta temporariamente bloqueada." : "Email ou palavra-passe inválidos."); return View(model); }
+        var previousLogin = await dbContext.LoginHistory.AsNoTracking().Where(item => item.UserId == user.Id).OrderByDescending(item => item.LoggedInAt).FirstOrDefaultAsync();
+        dbContext.LoginHistory.Add(new LoginHistory { UserId = user.Id, IpAddress = ClientIp() });
+        await dbContext.SaveChangesAsync();
+        TempData["SuccessMessage"] = previousLogin is null
+            ? "Bem-vindo. Este é o seu primeiro acesso registado."
+            : $"Bem-vindo. O seu acesso anterior foi em {FormatLogin(previousLogin.LoggedInAt)}, a partir do IP {previousLogin.IpAddress}.";
         return Url.IsLocalUrl(model.ReturnUrl) ? LocalRedirect(model.ReturnUrl) : RedirectToAction("Index", "Home");
     }
 
@@ -44,14 +53,14 @@ public sealed class AccountController(SignInManager<ApplicationUser> signInManag
     public async Task<IActionResult> Profile()
     {
         var user = await userManager.GetUserAsync(User); if (user is null) return Challenge();
-        return View(new ProfileViewModel { DisplayName = user.DisplayName, Email = user.Email ?? string.Empty });
+        return View(await ProfileModelAsync(user));
     }
 
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> Profile(ProfileViewModel model)
     {
         var user = await userManager.GetUserAsync(User); if (user is null) return Challenge();
-        if (!ModelState.IsValid) { model = new ProfileViewModel { DisplayName = model.DisplayName, Email = user.Email ?? string.Empty }; return View(model); }
+        if (!ModelState.IsValid) { model.Email = user.Email ?? string.Empty; model.LoginHistory = (await ProfileModelAsync(user)).LoginHistory; return View(model); }
         user.DisplayName = model.DisplayName.Trim(); var result = await userManager.UpdateAsync(user);
         if (!result.Succeeded) { ModelState.AddModelError(string.Empty, "Não foi possível atualizar o perfil."); return View(model); }
         await signInManager.RefreshSignInAsync(user); TempData["SuccessMessage"] = "Preferências atualizadas."; return RedirectToAction(nameof(Profile));
@@ -68,4 +77,22 @@ public sealed class AccountController(SignInManager<ApplicationUser> signInManag
     }
 
     private static string PasswordError(string code) => code switch { "PasswordMismatch" => "A palavra-passe atual está incorreta.", "PasswordTooShort" => "A nova palavra-passe deve ter pelo menos 12 caracteres.", _ => "A nova palavra-passe não cumpre os requisitos de segurança." };
+    private async Task<ProfileViewModel> ProfileModelAsync(ApplicationUser user) => new()
+    {
+        DisplayName = user.DisplayName,
+        Email = user.Email ?? string.Empty,
+        LoginHistory = await dbContext.LoginHistory.AsNoTracking().Where(item => item.UserId == user.Id).OrderByDescending(item => item.LoggedInAt).Take(10).Select(item => new LoginHistoryItemViewModel(item.LoggedInAt, item.IpAddress)).ToListAsync()
+    };
+    private string ClientIp()
+    {
+        var address = HttpContext.Connection.RemoteIpAddress;
+        if (address is null) return "Desconhecido";
+        if (IPAddress.IsLoopback(address)) return "127.0.0.1";
+        return address.IsIPv4MappedToIPv6 ? address.MapToIPv4().ToString() : address.ToString();
+    }
+    private static string FormatLogin(DateTimeOffset value)
+    {
+        var zone = TimeZoneInfo.FindSystemTimeZoneById("Europe/Lisbon");
+        return TimeZoneInfo.ConvertTime(value, zone).ToString("dd/MM/yyyy 'às' HH:mm");
+    }
 }

@@ -11,7 +11,7 @@ public static class ApplicationSettingsDefaults
     /// using only provided indicators, explains relevant features, and includes a practical tip.
     /// Output: 3-5 sentences in European Portuguese, no Markdown, no professional financial advice.
     /// </summary>
-    public const string DashboardWelcomePrompt = "És o anfitrião financeiro do DenariusAI. Escreve em português de Portugal uma mensagem curta de boas-vindas, com 3 a 5 frases. Resume objetivamente a situação atual usando apenas os indicadores fornecidos, explica uma ou duas funcionalidades relevantes da aplicação e termina com uma dica prática de finanças pessoais. Mantém um tom positivo, prudente e não paternalista. Não inventes valores, não uses Markdown e não dês aconselhamento financeiro profissional.";
+    public const string DashboardWelcomePrompt = "És o anfitrião financeiro do DenariusAI. Escreve em português de Portugal quatro blocos curtos separados por uma linha em branco: situação atual, previsão do saldo no fim do orçamento, funcionalidades úteis da aplicação e uma dica geral de finanças pessoais. Usa apenas os indicadores fornecidos. Na previsão considera que o saldo atual já inclui o executado e que apenas falta descontar as despesas orçamentadas ainda por executar. Explica se o saldo permite cobrir essas despesas e assinala uma eventual insuficiência. Mantém um tom positivo, prudente e não paternalista. Não inventes valores, não uses Markdown e não dês aconselhamento financeiro profissional.";
     
     /// <summary>
     /// Financial assistant chat prompt. Responds using only provided financial context data.

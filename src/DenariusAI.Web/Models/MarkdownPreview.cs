@@ -26,9 +26,30 @@ public static class MarkdownPreview
         if (markdown.Length == 0) return "<p>O relatório não contém conteúdo.</p>";
         var html = new StringBuilder();
         string? list = null;
-        foreach (var rawLine in markdown.Replace("\r", string.Empty).Split('\n'))
+        var lines = markdown.Replace("\r", string.Empty).Split('\n');
+        for (var index = 0; index < lines.Length; index++)
         {
-            var line = rawLine.Trim();
+            var line = lines[index].Trim();
+            if (index + 1 < lines.Length && IsTableRow(line) && IsTableSeparator(lines[index + 1]))
+            {
+                if (list is not null) { html.Append("</").Append(list).Append('>'); list = null; }
+                var headers = TableCells(line);
+                html.Append("<div class=\"markdown-table-wrap\"><table><thead><tr>");
+                foreach (var cell in headers) html.Append("<th>").Append(Inline(cell)).Append("</th>");
+                html.Append("</tr></thead><tbody>");
+                index += 2;
+                while (index < lines.Length && IsTableRow(lines[index]))
+                {
+                    html.Append("<tr>");
+                    var cells = TableCells(lines[index]);
+                    for (var column = 0; column < headers.Length; column++) html.Append("<td>").Append(Inline(column < cells.Length ? cells[column] : string.Empty)).Append("</td>");
+                    html.Append("</tr>");
+                    index++;
+                }
+                html.Append("</tbody></table></div>");
+                index--;
+                continue;
+            }
             var unordered = line.StartsWith("- ") || line.StartsWith("* ");
             var ordered = Regex.IsMatch(line, @"^\d+\.\s+");
             var wantedList = unordered ? "ul" : ordered ? "ol" : null;
@@ -54,6 +75,16 @@ public static class MarkdownPreview
         if (list is not null) html.Append("</").Append(list).Append('>');
         return html.ToString();
     }
+
+    private static bool IsTableRow(string value) => value.Trim().Trim('|').Contains('|');
+
+    private static bool IsTableSeparator(string value)
+    {
+        var cells = TableCells(value);
+        return cells.Length > 0 && cells.All(cell => Regex.IsMatch(cell, @"^:?-{3,}:?$"));
+    }
+
+    private static string[] TableCells(string value) => value.Trim().Trim('|').Split('|').Select(cell => cell.Trim()).ToArray();
 
     private static string Inline(string value)
     {

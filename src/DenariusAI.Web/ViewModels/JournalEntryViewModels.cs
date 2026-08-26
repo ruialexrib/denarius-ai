@@ -52,6 +52,11 @@ public sealed class JournalEntryFormViewModel : IValidatableObject
     public List<JournalEntryLineFormViewModel> Lines { get; set; } = [new(), new()];
     public IReadOnlyList<SelectListItem> Accounts { get; set; } = [];
     public IReadOnlyList<SelectListItem> Categories { get; set; } = [];
+    public IReadOnlyList<SelectListItem> TransactionAccounts { get; set; } = [];
+    public IReadOnlyList<SelectListItem> ExpenseCategories { get; set; } = [];
+    public IReadOnlyList<SelectListItem> IncomeCategories { get; set; } = [];
+    public Guid? ExpenseAccountId { get; set; }
+    public Guid? IncomeAccountId { get; set; }
     public IReadOnlyList<SelectListItem> Budgets { get; set; } = [];
     public bool AiSuggestionAvailable { get; set; }
 

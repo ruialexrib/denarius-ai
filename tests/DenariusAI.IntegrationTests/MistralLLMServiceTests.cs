@@ -12,7 +12,7 @@ public sealed class MistralLLMServiceTests
     [Fact]
     public async Task CompleteAsyncUsesConfiguredModelAndParsesUsage()
     {
-        var handler = new RecordingHandler("""{"choices":[{"message":{"role":"assistant","content":"Ligação confirmada"}}],"model":"mistral-small-latest","usage":{"prompt_tokens":8,"completion_tokens":3}}""");
+        var handler = new RecordingHandler("""{"choices":[{"message":{"role":"assistant","content":"Ligação confirmada"},"finish_reason":"stop"}],"model":"mistral-small-latest","usage":{"prompt_tokens":8,"completion_tokens":3}}""");
         var service = CreateService(handler);
 
         var result = await service.CompleteAsync([new LlmMessageDto("user", "Teste")]);
@@ -20,8 +20,20 @@ public sealed class MistralLLMServiceTests
         Assert.Equal("Ligação confirmada", result.Content);
         Assert.Equal("mistral-small-latest", result.Model);
         Assert.Equal(8, result.PromptTokens);
+        Assert.Equal("stop", result.FinishReason);
         Assert.Equal("Bearer", handler.Request?.Headers.Authorization?.Scheme);
         Assert.Contains("mistral-small-latest", handler.Body);
+    }
+
+    [Fact]
+    public async Task CompleteAsyncSupportsALargerLimitForReports()
+    {
+        var handler = new RecordingHandler("""{"choices":[{"message":{"role":"assistant","content":"Relatório completo"},"finish_reason":"stop"}],"model":"mistral-small-latest"}""");
+        var service = CreateService(handler);
+
+        await service.CompleteAsync([new LlmMessageDto("user", "Teste")], 8192);
+
+        Assert.Contains("\"max_tokens\":8192", handler.Body);
     }
 
     [Fact]
