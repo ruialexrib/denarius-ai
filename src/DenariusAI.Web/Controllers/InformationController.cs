@@ -37,21 +37,21 @@ public sealed class InformationController(ApplicationInfo appInfo, IHttpClientFa
 
     private async Task<IReadOnlyList<ReleaseNoteViewModel>> GetReleasesAsync(CancellationToken cancellationToken)
     {
-        if (cache.TryGetValue<IReadOnlyList<ReleaseNoteViewModel>>("github-latest-release", out var cached)) return cached ?? [];
+        if (cache.TryGetValue<IReadOnlyList<ReleaseNoteViewModel>>("github-latest-releases", out var cached)) return cached ?? [];
         try
         {
             var client = httpClientFactory.CreateClient();
             client.Timeout = TimeSpan.FromSeconds(5);
             client.DefaultRequestHeaders.UserAgent.ParseAdd("DenariusAI/1.0");
-            using var response = await client.GetAsync("https://api.github.com/repos/ruialexrib/denarius-ai/releases?per_page=1", cancellationToken);
+            using var response = await client.GetAsync("https://api.github.com/repos/ruialexrib/denarius-ai/releases?per_page=3", cancellationToken);
             if (!response.IsSuccessStatusCode) return [];
             using var document = JsonDocument.Parse(await response.Content.ReadAsStringAsync(cancellationToken));
-            var releases = document.RootElement.EnumerateArray().Take(1).Select(release => new ReleaseNoteViewModel(
+            var releases = document.RootElement.EnumerateArray().Take(3).Select(release => new ReleaseNoteViewModel(
                 release.GetProperty("tag_name").GetString() ?? "Versão",
                 release.TryGetProperty("published_at", out var date) ? date.GetString()?[..10] ?? string.Empty : string.Empty,
                 release.GetProperty("html_url").GetString() ?? RepositoryUrl,
                 (release.GetProperty("body").GetString() ?? "Atualizações e melhorias.").Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).Take(8).ToList())).ToList();
-            cache.Set("github-latest-release", releases, TimeSpan.FromMinutes(15));
+            cache.Set("github-latest-releases", releases, TimeSpan.FromMinutes(15));
             return releases;
         }
         catch (Exception exception) when (exception is HttpRequestException or JsonException or TaskCanceledException) { return []; }

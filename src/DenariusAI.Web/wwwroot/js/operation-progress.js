@@ -14,7 +14,9 @@
     if (!(link instanceof HTMLAnchorElement) || link.target === '_blank' || link.hasAttribute('download') || link.dataset.noProgress === 'true') return;
     const destination = new URL(link.href, window.location.href);
     if (destination.origin !== window.location.origin || (destination.pathname === window.location.pathname && destination.search === window.location.search && destination.hash)) return;
-    const label = link.textContent.replace(/\s+/g, ' ').trim();
+    const labelSource = link.cloneNode(true);
+    labelSource.querySelectorAll('span, svg, small').forEach(element => element.remove());
+    const label = labelSource.textContent.replace(/\s+/g, ' ').trim();
     showProgress(label ? `A abrir ${label}…` : 'A carregar a página…');
   });
 
