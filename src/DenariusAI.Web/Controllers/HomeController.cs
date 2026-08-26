@@ -31,9 +31,8 @@ public sealed class HomeController(
     public async Task<IActionResult> Index(int? year, int? month, CancellationToken cancellationToken)
     {
         var budgets = await budgetService.ListPeriodsAsync(cancellationToken);
-        var latest = budgets.FirstOrDefault();
-        var selectedYear = year ?? latest?.Year ?? DateTime.Today.Year;
-        var selectedMonth = month ?? latest?.Month ?? DateTime.Today.Month;
+        var selectedYear = year ?? DateTime.Today.Year;
+        var selectedMonth = month ?? DateTime.Today.Month;
         if (selectedYear is < 2000 or > 9999 || selectedMonth is < 1 or > 12) return BadRequest();
         var dashboard = await dashboardService.GetAsync(selectedYear, selectedMonth, cancellationToken);
         var years = budgets.Select(item => item.Year).Append(DateTime.Today.Year).Distinct().OrderByDescending(item => item)

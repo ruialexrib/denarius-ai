@@ -77,7 +77,13 @@ public sealed class ReconciliationController(IReconciliationService service, IAc
     }
 
     [HttpGet]
-    public async Task<IActionResult> Import(CancellationToken cancellationToken) => View(new ReconciliationPasteViewModel { BankAccounts = await BankAccountItemsAsync(cancellationToken), Budgets = await BudgetItemsAsync(cancellationToken) });
+    public async Task<IActionResult> Import(CancellationToken cancellationToken)
+    {
+        var currentBudget = await dbContext.Budgets.AsNoTracking()
+            .Where(item => item.Year == DateTime.Today.Year && item.Month == DateTime.Today.Month)
+            .Select(item => (Guid?)item.Id).SingleOrDefaultAsync(cancellationToken);
+        return View(new ReconciliationPasteViewModel { BudgetId = currentBudget ?? Guid.Empty, BankAccounts = await BankAccountItemsAsync(cancellationToken), Budgets = await BudgetItemsAsync(cancellationToken) });
+    }
 
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> AnalyzeConversation(ReconciliationPasteViewModel model, CancellationToken cancellationToken)

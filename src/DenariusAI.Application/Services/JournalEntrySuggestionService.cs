@@ -89,7 +89,7 @@ public sealed class JournalEntrySuggestionService(
         var validation = Validate(parsed.Suggestion, accounts, categories, budgets);
         if (validation is not null) return new(false, validation, parsed.ClassificationExplanation, null);
         var suggestion = parsed.Suggestion;
-        var budgetId = suggestion.BudgetId ?? budgets.FirstOrDefault()?.Id;
+        var budgetId = suggestion.BudgetId ?? budgets.FirstOrDefault(item => item.Year == suggestion.Date!.Value.Year && item.Month == suggestion.Date.Value.Month)?.Id;
         return new(true, string.IsNullOrWhiteSpace(parsed.Message) ? "Sugestão pronta para revisão." : parsed.Message,
             string.IsNullOrWhiteSpace(parsed.ClassificationExplanation) ? "A classificação foi baseada nos catálogos disponíveis e em movimentos recentes semelhantes; confirme a proposta antes de guardar." : parsed.ClassificationExplanation.Trim(),
             new(suggestion.Date!.Value, suggestion.Description!.Trim(), suggestion.Reference, suggestion.Notes, budgetId,

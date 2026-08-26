@@ -159,7 +159,8 @@ public sealed class JournalEntriesController(IJournalEntryService service, IAcco
         model.IncomeCategories = categories.Where(item => groupKinds.GetValueOrDefault(item.FinancialGroupId) == FinancialGroupKind.Income).OrderBy(item => groupNames.GetValueOrDefault(item.FinancialGroupId)).ThenBy(item => item.SortOrder)
             .Select(item => new SelectListItem($"{groupNames.GetValueOrDefault(item.FinancialGroupId, "—")} — {item.Name}", item.Id.ToString())).Prepend(new SelectListItem("Selecionar categoria", string.Empty)).ToList();
         var budgets = await budgetService.ListPeriodsAsync(cancellationToken);
-        if (!model.BudgetId.HasValue) model.BudgetId = budgets.FirstOrDefault()?.Id;
+        if (!model.BudgetId.HasValue)
+            model.BudgetId = budgets.FirstOrDefault(item => item.Year == model.Date.Year && item.Month == model.Date.Month)?.Id;
         model.Budgets = budgets.Select(item => new SelectListItem(item.Name, item.Id.ToString(), item.Id == model.BudgetId))
             .Append(new SelectListItem("Sem orçamento", string.Empty, !model.BudgetId.HasValue)).ToList();
     }
