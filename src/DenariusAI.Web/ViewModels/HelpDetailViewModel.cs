@@ -1,5 +1,8 @@
 namespace DenariusAI.Web.ViewModels;
 
+/// <summary>
+/// Contains definitions for HelpDetailViewModel.
+/// </summary>
 public sealed record HelpSectionViewModel(string Title, string Description, IReadOnlyList<string> Items)
 {
     public HelpSectionViewModel(string title, IReadOnlyList<string> items)

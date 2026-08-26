@@ -9,6 +9,9 @@ using Microsoft.Extensions.Caching.Memory;
 namespace DenariusAI.Web.Controllers;
 
 [Authorize]
+/// <summary>
+/// Contains definitions for InformationController.
+/// </summary>
 public sealed class InformationController(ApplicationInfo appInfo, IHttpClientFactory httpClientFactory, IMemoryCache cache) : Controller
 {
     private const string RepositoryUrl = "https://github.com/ruialexrib/denarius-ai";

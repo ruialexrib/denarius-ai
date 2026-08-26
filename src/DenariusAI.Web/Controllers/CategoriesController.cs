@@ -9,6 +9,9 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 namespace DenariusAI.Web.Controllers;
 
 [Authorize]
+/// <summary>
+/// Contains definitions for CategoriesController.
+/// </summary>
 public sealed class CategoriesController(ICategoryService service, IFinancialGroupService groupService) : Controller
 {
     public async Task<IActionResult> Index(Guid? groupId, string? search, bool showInactive = false, int page = 1, int pageSize = 10, CancellationToken cancellationToken = default)

@@ -5,6 +5,9 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace DenariusAI.Web.ViewModels;
 
+/// <summary>
+/// Contains definitions for AccountViewModels.
+/// </summary>
 public sealed class AccountFormViewModel
 {
     public Guid Id { get; set; }

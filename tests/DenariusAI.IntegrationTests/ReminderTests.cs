@@ -4,6 +4,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace DenariusAI.IntegrationTests;
 
+/// <summary>
+/// Contains definitions for ReminderTests.
+/// </summary>
 public sealed class ReminderTests
 {
     [Fact]

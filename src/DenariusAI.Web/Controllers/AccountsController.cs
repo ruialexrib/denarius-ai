@@ -10,6 +10,9 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 namespace DenariusAI.Web.Controllers;
 
 [Authorize]
+/// <summary>
+/// Contains definitions for AccountsController.
+/// </summary>
 public sealed class AccountsController(IAccountService service, ICategoryService categoryService, IFinancialGroupService groupService) : Controller
 {
     public async Task<IActionResult> Index(AccountType? accountType, Guid? categoryId, string? search, bool showInactive = false, int page = 1, int pageSize = 10, CancellationToken cancellationToken = default)

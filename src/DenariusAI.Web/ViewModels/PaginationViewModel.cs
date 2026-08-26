@@ -1,5 +1,8 @@
 namespace DenariusAI.Web.ViewModels;
 
+/// <summary>
+/// Contains definitions for PaginationViewModel.
+/// </summary>
 public sealed record PaginationViewModel(int Page, int PageSize, int TotalItems)
 {
     public static readonly int[] AllowedPageSizes = [10, 25, 50, 100];

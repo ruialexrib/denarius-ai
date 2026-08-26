@@ -10,6 +10,9 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 namespace DenariusAI.Web.Controllers;
 
 [Authorize]
+/// <summary>
+/// Contains definitions for SavingsCertificatesController.
+/// </summary>
 public sealed class SavingsCertificatesController(DenariusDbContext dbContext) : Controller
 {
     public async Task<IActionResult> Index(DateOnly? from, DateOnly? to, string? search, string sort = "date-asc", int page = 1, int pageSize = 10, CancellationToken cancellationToken = default)

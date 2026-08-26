@@ -2,6 +2,9 @@ using System.ComponentModel.DataAnnotations;
 
 namespace DenariusAI.Web.ViewModels;
 
+/// <summary>
+/// Contains definitions for ReminderViewModels.
+/// </summary>
 public sealed class ReminderFormViewModel
 {
     public Guid Id { get; set; }

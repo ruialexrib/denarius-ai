@@ -4,6 +4,9 @@ using DenariusAI.Domain.Enums;
 
 namespace DenariusAI.Web.ViewModels;
 
+/// <summary>
+/// Contains definitions for BudgetViewModels.
+/// </summary>
 public sealed class BudgetLineFormViewModel
 {
     public Guid? AuditId { get; set; }

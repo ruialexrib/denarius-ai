@@ -3,6 +3,9 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace DenariusAI.Web.ViewModels;
 
+/// <summary>
+/// Contains definitions for SavingsCertificateViewModels.
+/// </summary>
 public sealed class SavingsCertificateFormViewModel
 {
     public Guid Id { get; set; }

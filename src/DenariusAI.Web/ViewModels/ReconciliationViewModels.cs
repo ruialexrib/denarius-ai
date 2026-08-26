@@ -4,6 +4,9 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace DenariusAI.Web.ViewModels;
 
+/// <summary>
+/// Contains definitions for ReconciliationViewModels.
+/// </summary>
 public sealed record ReconciliationIndexViewModel(
     IReadOnlyList<ReconciliationItemDto> Items,
     Guid? AccountId,

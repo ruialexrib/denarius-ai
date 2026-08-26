@@ -2,6 +2,9 @@ using DenariusAI.Web.Models;
 
 namespace DenariusAI.IntegrationTests;
 
+/// <summary>
+/// Contains definitions for MarkdownPreviewTests.
+/// </summary>
 public sealed class MarkdownPreviewTests
 {
     [Theory]

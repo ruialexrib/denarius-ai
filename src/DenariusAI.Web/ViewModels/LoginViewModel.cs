@@ -2,6 +2,9 @@ using System.ComponentModel.DataAnnotations;
 
 namespace DenariusAI.Web.ViewModels;
 
+/// <summary>
+/// Contains definitions for LoginViewModel.
+/// </summary>
 public sealed class LoginViewModel
 {
     [Required(ErrorMessage = "Introduza o endereço de email.")]

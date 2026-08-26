@@ -2,6 +2,9 @@ using System.ComponentModel.DataAnnotations;
 
 namespace DenariusAI.Web.ViewModels;
 
+/// <summary>
+/// Contains definitions for AssistantViewModels.
+/// </summary>
 public sealed class AssistantPageViewModel
 {
     public bool IsAvailable { get; init; }

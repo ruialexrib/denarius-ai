@@ -4,6 +4,9 @@ using System.Text.RegularExpressions;
 
 namespace DenariusAI.Web.Models;
 
+/// <summary>
+/// Contains definitions for MarkdownPreview.
+/// </summary>
 public static class MarkdownPreview
 {
     public static string Normalize(string? markdown)

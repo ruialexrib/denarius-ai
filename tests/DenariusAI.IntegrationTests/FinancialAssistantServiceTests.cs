@@ -5,6 +5,9 @@ using DenariusAI.Domain.Enums;
 
 namespace DenariusAI.IntegrationTests;
 
+/// <summary>
+/// Contains definitions for FinancialAssistantServiceTests.
+/// </summary>
 public sealed class FinancialAssistantServiceTests
 {
     [Fact]

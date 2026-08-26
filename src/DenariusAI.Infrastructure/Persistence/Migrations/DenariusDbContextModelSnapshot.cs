@@ -4264,3 +4264,8 @@ namespace DenariusAI.Infrastructure.Persistence.Migrations
         }
     }
 }
+/// <summary>
+/// Contains file-level declarations.
+/// </summary>
+internal static class FileDocumentationMarker { }
+

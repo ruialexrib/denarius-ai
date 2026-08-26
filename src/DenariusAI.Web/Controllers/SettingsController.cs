@@ -9,6 +9,9 @@ using DenariusAI.Infrastructure.Identity;
 namespace DenariusAI.Web.Controllers;
 
 [Authorize(Roles = ApplicationRoles.Administrator)]
+/// <summary>
+/// Contains definitions for SettingsController.
+/// </summary>
 public sealed class SettingsController(IApplicationSettingsService settingsService, ILLMService llmService, IFinancialDataResetService resetService, IDemonstrationDataService demonstrationDataService, UserManager<ApplicationUser> userManager, ILogger<SettingsController> logger) : Controller
 {
     [HttpGet] public async Task<IActionResult> Index(CancellationToken cancellationToken) => View(ApplicationSettingsViewModel.From(await settingsService.GetAsync(cancellationToken), llmService.IsConfigured));

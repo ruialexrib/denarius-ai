@@ -2,6 +2,9 @@ using System.ComponentModel.DataAnnotations;
 
 namespace DenariusAI.Web.ViewModels;
 
+/// <summary>
+/// Contains definitions for UserManagementViewModels.
+/// </summary>
 public sealed record UserListItemViewModel(string Id, string DisplayName, string Email, string Role, bool IsCurrentUser);
 public sealed record UserIndexViewModel(IReadOnlyList<UserListItemViewModel> Items);
 

@@ -1,5 +1,8 @@
 namespace DenariusAI.IntegrationTests;
 
+/// <summary>
+/// Contains definitions for FoundationTests.
+/// </summary>
 public sealed class FoundationTests
 {
     [Fact]

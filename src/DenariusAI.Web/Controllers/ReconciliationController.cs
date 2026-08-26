@@ -14,6 +14,9 @@ using System.Text;
 namespace DenariusAI.Web.Controllers;
 
 [Authorize]
+/// <summary>
+/// Contains definitions for ReconciliationController.
+/// </summary>
 public sealed class ReconciliationController(IReconciliationService service, IAccountService accountService, ILogger<ReconciliationController> logger, DenariusDbContext dbContext, ILLMService llmService, IApplicationSettingsService settingsService) : Controller
 {
     private const string ImportSessionKey = "Reconciliation.ConversationImport";

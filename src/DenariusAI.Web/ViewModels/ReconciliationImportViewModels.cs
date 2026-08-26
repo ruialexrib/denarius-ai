@@ -2,6 +2,9 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace DenariusAI.Web.ViewModels;
 
+/// <summary>
+/// Contains definitions for ReconciliationImportViewModels.
+/// </summary>
 public sealed class ReconciliationImportRowViewModel
 {
     public int RowNumber { get; set; }

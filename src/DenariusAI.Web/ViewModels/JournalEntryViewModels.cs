@@ -5,6 +5,9 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace DenariusAI.Web.ViewModels;
 
+/// <summary>
+/// Contains definitions for JournalEntryViewModels.
+/// </summary>
 public sealed class JournalEntryLineFormViewModel
 {
     [Display(Name = "Conta")]

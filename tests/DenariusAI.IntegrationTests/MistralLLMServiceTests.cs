@@ -7,6 +7,9 @@ using Microsoft.Extensions.Options;
 
 namespace DenariusAI.IntegrationTests;
 
+/// <summary>
+/// Contains definitions for MistralLLMServiceTests.
+/// </summary>
 public sealed class MistralLLMServiceTests
 {
     [Fact]

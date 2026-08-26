@@ -3,6 +3,9 @@ using DenariusAI.Application.DTOs;
 
 namespace DenariusAI.Web.ViewModels;
 
+/// <summary>
+/// Contains definitions for ApplicationSettingsViewModel.
+/// </summary>
 public sealed class ApplicationSettingsViewModel
 {
     [Required, StringLength(100)] public string MistralModel { get; set; } = string.Empty;

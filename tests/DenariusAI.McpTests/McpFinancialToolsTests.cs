@@ -6,6 +6,9 @@ using Xunit;
 
 namespace DenariusAI.McpTests;
 
+/// <summary>
+/// Contains definitions for McpFinancialToolsTests.
+/// </summary>
 public sealed class McpFinancialToolsTests
 {
     private readonly ToolServices _services = new();

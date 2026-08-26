@@ -128,4 +128,7 @@ static async Task SeedDemonstrationUsersAsync(WebApplication application)
     await service.EnsureUsersAsync();
 }
 
+/// <summary>
+/// Contains definitions for Program.
+/// </summary>
 public partial class Program;

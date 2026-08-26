@@ -3,6 +3,9 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace DenariusAI.Infrastructure.Persistence.Configurations;
 
+/// <summary>
+/// Contains definitions for AuditLogConfiguration.
+/// </summary>
 public sealed class AuditLogConfiguration : IEntityTypeConfiguration<AuditLog>
 {
     public void Configure(EntityTypeBuilder<AuditLog> builder)

@@ -9,6 +9,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace DenariusAI.IntegrationTests;
 
+/// <summary>
+/// Contains definitions for PersistenceAndServiceTests.
+/// </summary>
 public sealed class PersistenceAndServiceTests
 {
     [Fact]

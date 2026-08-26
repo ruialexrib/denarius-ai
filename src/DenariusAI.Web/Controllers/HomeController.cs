@@ -15,6 +15,9 @@ using System.Text.Json;
 namespace DenariusAI.Web.Controllers;
 
 [Authorize]
+/// <summary>
+/// Contains definitions for HomeController.
+/// </summary>
 public sealed class HomeController(
     IDashboardService dashboardService,
     IBudgetService budgetService,

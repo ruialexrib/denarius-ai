@@ -2,6 +2,9 @@ using System.ComponentModel.DataAnnotations;
 
 namespace DenariusAI.Web.ViewModels;
 
+/// <summary>
+/// Contains definitions for ProfileViewModel.
+/// </summary>
 public sealed class ProfileViewModel
 {
     [Required(ErrorMessage = "Introduza o nome a apresentar.")]

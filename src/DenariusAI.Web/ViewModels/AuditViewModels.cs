@@ -2,6 +2,9 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace DenariusAI.Web.ViewModels;
 
+/// <summary>
+/// Contains definitions for AuditViewModels.
+/// </summary>
 public sealed record AuditLinkViewModel(string EntityType, string EntityId);
 
 public sealed record AuditLogRowViewModel(Guid Id, string EntityType, string EntityName, string EntityId, string RecordLabel,

@@ -4,6 +4,9 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace DenariusAI.Web.ViewModels;
 
+/// <summary>
+/// Contains definitions for CategoryViewModels.
+/// </summary>
 public sealed class CategoryFormViewModel
 {
     public Guid Id { get; set; }

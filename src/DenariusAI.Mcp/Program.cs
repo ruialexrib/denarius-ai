@@ -13,3 +13,8 @@ builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddMcpServer().WithStdioServerTransport().WithToolsFromAssembly();
 await builder.Build().RunAsync();
+/// <summary>
+/// Provides metadata for the application entry point type.
+/// </summary>
+public partial class Program;
+

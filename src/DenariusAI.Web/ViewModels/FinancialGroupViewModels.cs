@@ -4,6 +4,9 @@ using DenariusAI.Domain.Enums;
 
 namespace DenariusAI.Web.ViewModels;
 
+/// <summary>
+/// Contains definitions for FinancialGroupViewModels.
+/// </summary>
 public sealed class FinancialGroupFormViewModel
 {
     public Guid Id { get; set; }

@@ -6,6 +6,9 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace DenariusAI.IntegrationTests;
 
+/// <summary>
+/// Contains definitions for AuthenticationTests.
+/// </summary>
 public sealed class AuthenticationTests
 {
     [Fact]

@@ -7,6 +7,9 @@ using Microsoft.AspNetCore.Mvc;
 namespace DenariusAI.Web.Controllers;
 
 [Authorize(Roles = ApplicationRoles.Administrator)]
+/// <summary>
+/// Contains definitions for UsersController.
+/// </summary>
 public sealed class UsersController(UserManager<ApplicationUser> userManager) : Controller
 {
     public async Task<IActionResult> Index()

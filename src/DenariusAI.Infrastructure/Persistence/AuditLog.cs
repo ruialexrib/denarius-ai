@@ -1,5 +1,8 @@
 namespace DenariusAI.Infrastructure.Persistence;
 
+/// <summary>
+/// Contains definitions for AuditLog.
+/// </summary>
 public sealed class AuditLog
 {
     public Guid Id { get; set; } = Guid.NewGuid();

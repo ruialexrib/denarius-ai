@@ -5,6 +5,9 @@ using DenariusAI.Domain.Enums;
 
 namespace DenariusAI.IntegrationTests;
 
+/// <summary>
+/// Contains definitions for JournalEntrySuggestionServiceTests.
+/// </summary>
 public sealed class JournalEntrySuggestionServiceTests
 {
     [Fact]
