@@ -3,9 +3,6 @@ using DenariusAI.Domain.Enums;
 
 namespace DenariusAI.UnitTests;
 
-/// <summary>
-/// Contains tests for the JournalEntry type.
-/// </summary>
 public sealed class JournalEntryTests
 {
     private static readonly Guid BankAccountId = Guid.Parse("30000000-0000-0000-0000-000000000001");

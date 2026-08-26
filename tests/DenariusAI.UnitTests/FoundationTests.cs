@@ -1,8 +1,5 @@
 namespace DenariusAI.UnitTests;
 
-/// <summary>
-/// Contains tests for the Foundation type.
-/// </summary>
 public sealed class FoundationTests
 {
     [Fact]

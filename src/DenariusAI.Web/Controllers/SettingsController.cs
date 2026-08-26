@@ -9,7 +9,7 @@ using DenariusAI.Infrastructure.Identity;
 namespace DenariusAI.Web.Controllers;
 
 /// <summary>
-/// Represents the SettingsController type.
+/// Manages runtime application settings available to administrators.
 /// </summary>
 [Authorize(Roles = ApplicationRoles.Administrator)]
 public sealed class SettingsController(IApplicationSettingsService settingsService, ILLMService llmService, IFinancialDataResetService resetService, IDemonstrationDataService demonstrationDataService, UserManager<ApplicationUser> userManager, ILogger<SettingsController> logger) : Controller

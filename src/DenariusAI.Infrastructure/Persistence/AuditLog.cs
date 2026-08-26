@@ -1,7 +1,7 @@
 namespace DenariusAI.Infrastructure.Persistence;
 
 /// <summary>
-/// Represents the AuditLog type.
+/// Represents an immutable audit trail record for a persisted entity change.
 /// </summary>
 public sealed class AuditLog
 {

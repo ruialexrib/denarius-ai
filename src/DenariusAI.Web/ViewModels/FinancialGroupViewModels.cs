@@ -4,9 +4,6 @@ using DenariusAI.Domain.Enums;
 
 namespace DenariusAI.Web.ViewModels;
 
-/// <summary>
-/// Represents the FinancialGroupViewModels type.
-/// </summary>
 public sealed class FinancialGroupFormViewModel
 {
     public Guid Id { get; set; }
@@ -24,9 +21,6 @@ public sealed class FinancialGroupFormViewModel
     public int SortOrder { get; set; }
 }
 
-/// <summary>
-/// Represents the FinancialGroupIndexViewModel type.
-/// </summary>
 public sealed record FinancialGroupIndexViewModel(
     IReadOnlyList<FinancialGroupDto> Items,
     string? Search,

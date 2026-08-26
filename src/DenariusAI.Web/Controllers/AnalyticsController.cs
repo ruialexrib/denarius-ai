@@ -13,7 +13,7 @@ using System.Text;
 namespace DenariusAI.Web.Controllers;
 
 /// <summary>
-/// Represents the AnalyticsController type.
+/// Provides expense and income analytics views for configurable date ranges.
 /// </summary>
 [Authorize]
 public sealed class AnalyticsController(IAnalyticsService analyticsService, IFinancialGroupService groupService, ICategoryService categoryService, IAccountService accountService, IDashboardService dashboardService, DenariusDbContext dbContext, ILLMService llmService) : Controller

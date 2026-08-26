@@ -7,7 +7,7 @@ using ModelContextProtocol.Server;
 namespace DenariusAI.Mcp.Tools;
 
 /// <summary>
-/// Represents the FinancialTools type.
+/// Exposes read-only MCP financial tools backed by application services.
 /// </summary>
 [McpServerToolType]
 public static class FinancialTools

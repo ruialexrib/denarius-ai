@@ -10,9 +10,6 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace DenariusAI.Infrastructure.Persistence.Migrations
 {
-    /// <summary>
-    /// Represents the Entity Framework Core model snapshot for the Denarius database context.
-    /// </summary>
     [DbContext(typeof(DenariusDbContext))]
     partial class DenariusDbContextModelSnapshot : ModelSnapshot
     {
@@ -4267,4 +4264,3 @@ namespace DenariusAI.Infrastructure.Persistence.Migrations
         }
     }
 }
-

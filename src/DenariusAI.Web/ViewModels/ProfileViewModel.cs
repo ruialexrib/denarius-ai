@@ -2,9 +2,6 @@ using System.ComponentModel.DataAnnotations;
 
 namespace DenariusAI.Web.ViewModels;
 
-/// <summary>
-/// Represents the ProfileViewModel type.
-/// </summary>
 public sealed class ProfileViewModel
 {
     [Required(ErrorMessage = "Introduza o nome a apresentar.")]
@@ -17,9 +14,6 @@ public sealed class ProfileViewModel
 
 }
 
-/// <summary>
-/// Represents the ResetFinancialDataViewModel type.
-/// </summary>
 public sealed class ResetFinancialDataViewModel
 {
     [Required(ErrorMessage = "Introduza a palavra-passe atual.")]
@@ -33,9 +27,6 @@ public sealed class ResetFinancialDataViewModel
     public string Confirmation { get; set; } = string.Empty;
 }
 
-/// <summary>
-/// Represents the LoadDemonstrationDataViewModel type.
-/// </summary>
 public sealed class LoadDemonstrationDataViewModel
 {
     [Required(ErrorMessage = "Introduza a palavra-passe atual.")]
@@ -48,9 +39,6 @@ public sealed class LoadDemonstrationDataViewModel
     [Display(Name = "Confirmação")]
     public string Confirmation { get; set; } = string.Empty;
 }
-/// <summary>
-/// Represents the ChangePasswordViewModel type.
-/// </summary>
 public sealed class ChangePasswordViewModel
 {
     [Required(ErrorMessage = "Introduza a palavra-passe atual."), DataType(DataType.Password), Display(Name = "Palavra-passe atual")]

@@ -6,9 +6,6 @@ using Microsoft.EntityFrameworkCore.Metadata;
 
 namespace DenariusAI.IntegrationTests;
 
-/// <summary>
-/// Contains tests for the StructuralSeed type.
-/// </summary>
 public sealed class StructuralSeedTests
 {
     [Fact]

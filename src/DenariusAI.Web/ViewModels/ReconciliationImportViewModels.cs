@@ -2,9 +2,6 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace DenariusAI.Web.ViewModels;
 
-/// <summary>
-/// Represents the ReconciliationImportViewModels type.
-/// </summary>
 public sealed class ReconciliationImportRowViewModel
 {
     public int RowNumber { get; set; }
@@ -18,9 +15,6 @@ public sealed class ReconciliationImportRowViewModel
     public bool Selected { get; set; } = true;
 }
 
-/// <summary>
-/// Represents the ReconciliationImportReviewViewModel type.
-/// </summary>
 public sealed class ReconciliationImportReviewViewModel
 {
     public Guid BankAccountId { get; set; }
@@ -30,9 +24,6 @@ public sealed class ReconciliationImportReviewViewModel
     public IReadOnlyList<SelectListItem> CounterAccounts { get; set; } = [];
 }
 
-/// <summary>
-/// Represents the ReconciliationPasteViewModel type.
-/// </summary>
 public sealed class ReconciliationPasteViewModel
 {
     public Guid BankAccountId { get; set; }

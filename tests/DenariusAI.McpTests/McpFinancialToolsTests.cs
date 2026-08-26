@@ -6,9 +6,6 @@ using Xunit;
 
 namespace DenariusAI.McpTests;
 
-/// <summary>
-/// Contains tests for the McpFinancialTools type.
-/// </summary>
 public sealed class McpFinancialToolsTests
 {
     private readonly ToolServices _services = new();
@@ -33,9 +30,6 @@ public sealed class McpFinancialToolsTests
     public async Task TransactionToolEnforcesSafeLimit() =>
         await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => FinancialTools.GetTransactions(null, null, 201, _services, default));
 
-    /// <summary>
-    /// Represents the ToolServices type.
-    /// </summary>
     private sealed class ToolServices : IAccountService, IJournalEntryService, IBudgetService, IAnalyticsService, IReconciliationService, IDashboardService
     {
         public static readonly Guid AccountId = Guid.NewGuid();

@@ -9,7 +9,7 @@ using Microsoft.Extensions.Caching.Memory;
 namespace DenariusAI.Web.Controllers;
 
 /// <summary>
-/// Represents the InformationController type.
+/// Serves help, guidance, and informational content pages in the web UI.
 /// </summary>
 [Authorize]
 public sealed class InformationController(ApplicationInfo appInfo, IHttpClientFactory httpClientFactory, IMemoryCache cache) : Controller

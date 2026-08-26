@@ -7,9 +7,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace DenariusAI.IntegrationTests;
 
-/// <summary>
-/// Contains tests for the AuditLog type.
-/// </summary>
 public sealed class AuditLogTests
 {
     [Fact]

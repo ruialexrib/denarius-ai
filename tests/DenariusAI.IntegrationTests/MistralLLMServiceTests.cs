@@ -7,9 +7,6 @@ using Microsoft.Extensions.Options;
 
 namespace DenariusAI.IntegrationTests;
 
-/// <summary>
-/// Contains tests for the MistralLLMService type.
-/// </summary>
 public sealed class MistralLLMServiceTests
 {
     [Fact]
@@ -39,18 +36,12 @@ public sealed class MistralLLMServiceTests
         Options.Create(new MistralOptions { ApiKey = apiKey, Model = "mistral-small-latest" }), new TestSettings(),
         NullLogger<MistralLLMService>.Instance);
 
-    /// <summary>
-    /// Represents the TestSettings type.
-    /// </summary>
     private sealed class TestSettings : DenariusAI.Application.Abstractions.Services.IApplicationSettingsService
     {
         public Task<ApplicationSettingsDto> GetAsync(CancellationToken cancellationToken = default) => Task.FromResult(new ApplicationSettingsDto("mistral-small-latest", "https://api.mistral.ai/v1/", 1024, .2, "assistant", 12, 200, 10, "suggestion", 10, "Prompt de extração", "Prompt de classificação"));
         public Task UpdateAsync(ApplicationSettingsDto settings, string userId, CancellationToken cancellationToken = default) => throw new NotSupportedException();
     }
 
-    /// <summary>
-    /// Represents the RecordingHandler type.
-    /// </summary>
     private sealed class RecordingHandler(string response) : HttpMessageHandler
     {
         public HttpRequestMessage? Request { get; private set; }

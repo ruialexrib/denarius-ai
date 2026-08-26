@@ -4,9 +4,6 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace DenariusAI.Web.ViewModels;
 
-/// <summary>
-/// Represents the CategoryViewModels type.
-/// </summary>
 public sealed class CategoryFormViewModel
 {
     public Guid Id { get; set; }
@@ -26,13 +23,7 @@ public sealed class CategoryFormViewModel
     public IReadOnlyList<SelectListItem> Groups { get; set; } = [];
 }
 
-/// <summary>
-/// Represents the CategoryListItemViewModel type.
-/// </summary>
 public sealed record CategoryListItemViewModel(CategoryDto Category, string GroupName, DenariusAI.Domain.Enums.FinancialGroupKind Kind);
-/// <summary>
-/// Represents the CategoryIndexViewModel type.
-/// </summary>
 public sealed record CategoryIndexViewModel(
     IReadOnlyList<CategoryListItemViewModel> Items,
     IReadOnlyList<SelectListItem> Groups,

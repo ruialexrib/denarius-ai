@@ -128,7 +128,4 @@ static async Task SeedDemonstrationUsersAsync(WebApplication application)
     await service.EnsureUsersAsync();
 }
 
-/// <summary>
-/// Represents the Program type.
-/// </summary>
 public partial class Program;

@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace DenariusAI.Web.Controllers;
 
 /// <summary>
-/// Represents the AccountController type.
+/// Handles sign-in, sign-out, and cookie-consent actions for authenticated users.
 /// </summary>
 public sealed class AccountController(SignInManager<ApplicationUser> signInManager, UserManager<ApplicationUser> userManager) : Controller
 {

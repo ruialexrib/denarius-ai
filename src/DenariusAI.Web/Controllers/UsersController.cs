@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace DenariusAI.Web.Controllers;
 
 /// <summary>
-/// Represents the UsersController type.
+/// Provides administrative user provisioning, editing, and role management actions.
 /// </summary>
 [Authorize(Roles = ApplicationRoles.Administrator)]
 public sealed class UsersController(UserManager<ApplicationUser> userManager) : Controller

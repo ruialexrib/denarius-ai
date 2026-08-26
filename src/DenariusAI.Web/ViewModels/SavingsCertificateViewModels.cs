@@ -3,9 +3,6 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace DenariusAI.Web.ViewModels;
 
-/// <summary>
-/// Represents the SavingsCertificateViewModels type.
-/// </summary>
 public sealed class SavingsCertificateFormViewModel
 {
     public Guid Id { get; set; }
@@ -25,16 +22,10 @@ public sealed class SavingsCertificateFormViewModel
     public DateOnly NextCapitalization { get; set; } = DateOnly.FromDateTime(DateTime.Today);
 }
 
-/// <summary>
-/// Represents the SavingsCertificateRowViewModel type.
-/// </summary>
 public sealed record SavingsCertificateRowViewModel(Guid Id, DateOnly InvestmentDate, int AgeDays,
     string SeriesNumber, string Description, decimal InvestmentValue, decimal Rate, decimal CurrentValue,
     decimal Yield, DateOnly NextCapitalization, int DaysUntilCapitalization, decimal FutureNetInterest, decimal FutureValue);
 
-/// <summary>
-/// Represents the SavingsCertificateIndexViewModel type.
-/// </summary>
 public sealed record SavingsCertificateIndexViewModel(IReadOnlyList<SavingsCertificateRowViewModel> Items,
     decimal TotalInvestment, decimal TotalCurrentValue, decimal TotalYield, decimal TotalFutureNetInterest, decimal TotalFutureValue,
     DateOnly? From, DateOnly? To, string? Search, string Sort, IReadOnlyList<SelectListItem> SortOptions, PaginationViewModel Pagination);

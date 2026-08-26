@@ -2,9 +2,6 @@ using DenariusAI.Application.DTOs;
 
 namespace DenariusAI.Web.ViewModels;
 
-/// <summary>
-/// Represents the ClassificationStatementViewModel type.
-/// </summary>
 public sealed record ClassificationStatementViewModel(
     string EntityType,
     Guid Id,

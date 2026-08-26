@@ -2,9 +2,6 @@ using System.ComponentModel.DataAnnotations;
 
 namespace DenariusAI.Web.ViewModels;
 
-/// <summary>
-/// Represents the ReminderViewModels type.
-/// </summary>
 public sealed class ReminderFormViewModel
 {
     public Guid Id { get; set; }
@@ -16,13 +13,7 @@ public sealed class ReminderFormViewModel
     public int NoticeDays { get; set; } = 3;
 }
 
-/// <summary>
-/// Represents the ReminderRowViewModel type.
-/// </summary>
 public sealed record ReminderRowViewModel(Guid Id, string Text, DateOnly EventDate, int NoticeDays, bool IsAvailable, bool IsAcknowledged, int DaysRemaining);
-/// <summary>
-/// Represents the ReminderIndexViewModel type.
-/// </summary>
 public sealed record ReminderIndexViewModel(
     IReadOnlyList<ReminderRowViewModel> Items,
     int ActiveCount,
@@ -33,7 +24,4 @@ public sealed record ReminderIndexViewModel(
     string Status,
     DateOnly? From,
     DateOnly? To);
-/// <summary>
-/// Represents the DashboardReminderViewModel type.
-/// </summary>
 public sealed record DashboardReminderViewModel(Guid Id, string Text, DateOnly EventDate, int DaysRemaining);

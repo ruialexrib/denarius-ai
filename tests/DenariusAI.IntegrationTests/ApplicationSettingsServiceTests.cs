@@ -6,9 +6,6 @@ using Microsoft.Extensions.Options;
 
 namespace DenariusAI.IntegrationTests;
 
-/// <summary>
-/// Contains tests for the ApplicationSettingsService type.
-/// </summary>
 public sealed class ApplicationSettingsServiceTests
 {
     [Fact]

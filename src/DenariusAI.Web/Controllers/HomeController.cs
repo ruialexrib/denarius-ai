@@ -15,7 +15,7 @@ using System.Text.Json;
 namespace DenariusAI.Web.Controllers;
 
 /// <summary>
-/// Represents the HomeController type.
+/// Serves the application home page and shared top-level navigation endpoints.
 /// </summary>
 [Authorize]
 public sealed class HomeController(

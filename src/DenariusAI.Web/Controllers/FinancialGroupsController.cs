@@ -9,7 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace DenariusAI.Web.Controllers;
 
 /// <summary>
-/// Represents the FinancialGroupsController type.
+/// Manages financial group entities that organize transaction categories.
 /// </summary>
 [Authorize]
 public sealed class FinancialGroupsController(IFinancialGroupService service) : Controller
