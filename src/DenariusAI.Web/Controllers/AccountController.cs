@@ -6,6 +6,9 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace DenariusAI.Web.Controllers;
 
+/// <summary>
+/// Handles authentication, session/profile, and cookie-consent workflows, including anonymous sign-in entry points.
+/// </summary>
 public sealed class AccountController(SignInManager<ApplicationUser> signInManager, UserManager<ApplicationUser> userManager) : Controller
 {
     [AllowAnonymous, HttpGet]

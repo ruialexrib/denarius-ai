@@ -13,6 +13,9 @@ using System.Text;
 
 namespace DenariusAI.Web.Controllers;
 
+/// <summary>
+/// Handles bank statement import and transaction reconciliation workflows.
+/// </summary>
 [Authorize]
 public sealed class ReconciliationController(IReconciliationService service, IAccountService accountService, ILogger<ReconciliationController> logger, DenariusDbContext dbContext, ILLMService llmService, IApplicationSettingsService settingsService) : Controller
 {

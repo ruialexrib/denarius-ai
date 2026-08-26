@@ -8,6 +8,9 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace DenariusAI.Web.Controllers;
 
+/// <summary>
+/// Manages category definitions used to classify financial transactions.
+/// </summary>
 [Authorize]
 public sealed class CategoriesController(ICategoryService service, IFinancialGroupService groupService) : Controller
 {

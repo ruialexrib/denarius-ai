@@ -5,6 +5,9 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace DenariusAI.Web.Controllers;
 
+/// <summary>
+/// Coordinates AI assistant interactions and intelligent financial report generation.
+/// </summary>
 public sealed class AssistantController(IAssistantService assistantService, IApplicationSettingsService settingsService, ILogger<AssistantController> logger) : Controller
 {
     [HttpGet]

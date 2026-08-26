@@ -8,6 +8,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace DenariusAI.Web.Controllers;
 
+/// <summary>
+/// Manages reminder schedules and acknowledgement state for users.
+/// </summary>
 [Authorize]
 public sealed class RemindersController(DenariusDbContext dbContext) : Controller
 {

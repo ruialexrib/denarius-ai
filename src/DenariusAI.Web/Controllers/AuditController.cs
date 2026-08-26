@@ -9,6 +9,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace DenariusAI.Web.Controllers;
 
+/// <summary>
+/// Displays audit trail entries and filtering options for administrative review.
+/// </summary>
 [Authorize(Roles = ApplicationRoles.Administrator)]
 public sealed class AuditController(DenariusDbContext dbContext) : Controller
 {

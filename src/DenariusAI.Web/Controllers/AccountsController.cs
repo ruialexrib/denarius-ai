@@ -9,6 +9,9 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace DenariusAI.Web.Controllers;
 
+/// <summary>
+/// Manages financial account CRUD operations and account listing screens.
+/// </summary>
 [Authorize]
 public sealed class AccountsController(IAccountService service, ICategoryService categoryService, IFinancialGroupService groupService) : Controller
 {

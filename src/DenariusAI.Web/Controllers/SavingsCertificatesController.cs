@@ -9,6 +9,9 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace DenariusAI.Web.Controllers;
 
+/// <summary>
+/// Manages Portuguese Savings Certificate positions and related views.
+/// </summary>
 [Authorize]
 public sealed class SavingsCertificatesController(DenariusDbContext dbContext) : Controller
 {

@@ -1,5 +1,8 @@
 namespace DenariusAI.Infrastructure.Persistence;
 
+/// <summary>
+/// Represents a persisted audit trail record for an entity change.
+/// </summary>
 public sealed class AuditLog
 {
     public Guid Id { get; set; } = Guid.NewGuid();

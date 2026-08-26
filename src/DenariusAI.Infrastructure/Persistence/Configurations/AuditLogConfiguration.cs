@@ -3,6 +3,9 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace DenariusAI.Infrastructure.Persistence.Configurations;
 
+/// <summary>
+/// Configures Entity Framework Core mapping for persisted audit log records.
+/// </summary>
 public sealed class AuditLogConfiguration : IEntityTypeConfiguration<AuditLog>
 {
     public void Configure(EntityTypeBuilder<AuditLog> builder)

@@ -12,6 +12,9 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace DenariusAI.Web.Controllers;
 
+/// <summary>
+/// Handles monthly budget planning, maintenance, and execution workflows.
+/// </summary>
 [Authorize]
 public sealed class BudgetController(IBudgetService service, DenariusDbContext dbContext, ILogger<BudgetController> logger) : Controller
 {

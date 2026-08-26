@@ -9,6 +9,9 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace DenariusAI.Web.Controllers;
 
+/// <summary>
+/// Manages journal entry creation, editing, posting, and list operations.
+/// </summary>
 [Authorize]
 public sealed class JournalEntriesController(IJournalEntryService service, IAccountService accountService, ICategoryService categoryService, IFinancialGroupService groupService, IBudgetService budgetService, IJournalEntrySuggestionService suggestionService, ILogger<JournalEntriesController> logger) : Controller
 {
