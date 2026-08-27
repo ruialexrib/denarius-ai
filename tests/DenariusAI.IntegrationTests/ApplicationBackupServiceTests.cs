@@ -2,6 +2,8 @@ using DenariusAI.Infrastructure.Identity;
 using DenariusAI.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using System.Text;
+using System.Text.Json.Nodes;
 
 namespace DenariusAI.IntegrationTests;
 
@@ -21,6 +23,11 @@ public sealed class ApplicationBackupServiceTests
         var service = new ApplicationBackupService(context);
 
         var backup = await service.ExportAsync("0.19.0");
+        var legacyBackup = JsonNode.Parse(backup)!.AsObject();
+        foreach (var table in legacyBackup["tables"]!.AsObject())
+        foreach (var row in table.Value!.AsArray())
+            row!.AsObject().Remove(nameof(ApplicationUser.ShowAssetBalancesWidget));
+        backup = Encoding.UTF8.GetBytes(legacyBackup.ToJsonString());
         context.ApplicationSettings.RemoveRange(context.ApplicationSettings);
         user.DisplayName = "Alterado";
         context.ApplicationSettings.Add(new() { Key = "Temporary", Value = "remove", CreatedBy = user.Id });
@@ -31,6 +38,7 @@ public sealed class ApplicationBackupServiceTests
 
         Assert.True(result.Tables > 10);
         Assert.Equal("Administrador", (await context.Users.SingleAsync()).DisplayName);
+        Assert.True((await context.Users.SingleAsync()).ShowAssetBalancesWidget);
         var userRole = await context.UserRoles.SingleAsync();
         Assert.Equal("admin-1", userRole.UserId);
         Assert.Equal("role-1", userRole.RoleId);

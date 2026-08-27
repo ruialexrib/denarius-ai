@@ -33,7 +33,7 @@ public sealed class DashboardService(
         if (year is < 2000 or > 9999 || month is < 1 or > 12) throw new ArgumentOutOfRangeException(nameof(month));
 
         var accounts = await accountService.ListAsync(activeOnly: true, cancellationToken);
-        var summary = await journalEntryService.GetMonthlySummaryAsync(year, month, cancellationToken);
+        var summary = await journalEntryService.GetBudgetSummaryAsync(year, month, cancellationToken);
         var execution = await budgetService.GetExecutionAsync(year, month, cancellationToken);
         var unreconciled = await reconciliationService.ListAsync(status: ReconciliationStatus.Unreconciled, cancellationToken: cancellationToken);
         var certificates = savingsRepository is null ? [] : await savingsRepository.ListAsync(cancellationToken);
@@ -52,7 +52,7 @@ public sealed class DashboardService(
         var budgetEvolution = new List<DashboardBudgetMonthDto>();
         for (var monthNumber = 1; monthNumber <= 12; monthNumber++)
         {
-            var item = await journalEntryService.GetMonthlySummaryAsync(year, monthNumber, cancellationToken);
+            var item = await journalEntryService.GetBudgetSummaryAsync(year, monthNumber, cancellationToken);
             evolution.Add(new(year, monthNumber, item.Income, item.Expenses));
             var monthExecution = monthNumber == month ? execution : await budgetService.GetExecutionAsync(year, monthNumber, cancellationToken);
             budgetEvolution.Add(new(year, monthNumber, monthExecution.Sum(value => value.Budgeted), monthExecution.Sum(value => value.Actual)));

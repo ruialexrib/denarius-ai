@@ -535,6 +535,15 @@ public sealed class JournalEntryService(IUnitOfWork unitOfWork) : IJournalEntryS
         return new MonthlySummaryDto(income, expenses);
     }
 
+    /// <inheritdoc />
+    public async Task<MonthlySummaryDto> GetBudgetSummaryAsync(int year, int month, CancellationToken cancellationToken = default)
+    {
+        ValidatePeriod(year, month);
+        var income = await unitOfWork.JournalEntries.GetAmountByBudgetAndGroupKindAsync(year, month, FinancialGroupKind.Income, cancellationToken);
+        var expenses = await unitOfWork.JournalEntries.GetAmountByBudgetAndGroupKindAsync(year, month, FinancialGroupKind.Expense, cancellationToken);
+        return new MonthlySummaryDto(income, expenses);
+    }
+
     /// <summary>
     /// Validates the period (year and month).
     /// </summary>

@@ -228,6 +228,10 @@ public interface IJournalEntryService
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Monthly summary with totals and breakdown.</returns>
     Task<MonthlySummaryDto> GetMonthlySummaryAsync(int year, int month, CancellationToken cancellationToken = default);
+
+    /// <summary>Gets income and expenses from movements explicitly associated with the selected budget.</summary>
+    Task<MonthlySummaryDto> GetBudgetSummaryAsync(int year, int month, CancellationToken cancellationToken = default) =>
+        GetMonthlySummaryAsync(year, month, cancellationToken);
 }
 
 /// <summary>

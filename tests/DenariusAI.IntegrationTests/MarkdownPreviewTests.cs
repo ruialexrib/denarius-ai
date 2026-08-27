@@ -1,4 +1,5 @@
 using DenariusAI.Web.Models;
+using DenariusAI.Application.DTOs;
 
 namespace DenariusAI.IntegrationTests;
 
@@ -36,6 +37,20 @@ public sealed class MarkdownPreviewTests
     public void FinancialReportPdf_GeneratesAValidPdf()
     {
         var pdf = FinancialReportPdf.Generate("# Relatório\n\n| Categoria | Total |\n|---|---:|\n| Salário | 1 500,00 € |", new DateOnly(2026, 1, 1), new DateOnly(2026, 8, 26));
+
+        Assert.True(pdf.Length > 1_000);
+        Assert.Equal("%PDF", System.Text.Encoding.ASCII.GetString(pdf, 0, 4));
+    }
+
+    [Fact]
+    public void BudgetReportPdf_GeneratesAValidPdf()
+    {
+        var pdf = BudgetReportPdf.Generate(2026, 8,
+        [
+            new(Guid.NewGuid(), "Habitação", 780m, 780m, Guid.NewGuid(), "Despesas correntes"),
+            new(Guid.NewGuid(), "Alimentação", 320m, 242m, Guid.NewGuid(), "Despesas correntes"),
+            new(Guid.NewGuid(), "Sem atividade", 0m, 0m, Guid.NewGuid(), "Despesas correntes")
+        ]);
 
         Assert.True(pdf.Length > 1_000);
         Assert.Equal("%PDF", System.Text.Encoding.ASCII.GetString(pdf, 0, 4));

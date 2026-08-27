@@ -117,6 +117,20 @@ public sealed class AccountController(SignInManager<ApplicationUser> signInManag
         await signInManager.RefreshSignInAsync(user); TempData["SuccessMessage"] = "Palavra-passe alterada com sucesso."; return RedirectToAction(nameof(Profile), new { fragment = "security" });
     }
 
+    /// <summary>Enables or hides the persistent asset balance summary for the current user.</summary>
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> SetAssetBalancesWidget(bool enabled, string? returnUrl = null)
+    {
+        var user = await userManager.GetUserAsync(User); if (user is null) return Challenge();
+        user.ShowAssetBalancesWidget = enabled;
+        var result = await userManager.UpdateAsync(user);
+        if (!result.Succeeded) TempData["ErrorMessage"] = "Não foi possível atualizar a visibilidade do resumo patrimonial.";
+        else TempData["SuccessMessage"] = enabled
+            ? "Resumo patrimonial reativado. Ficará visível em toda a aplicação."
+            : "Resumo patrimonial ocultado. Pode reativá-lo a qualquer momento nas Preferências.";
+        return Url.IsLocalUrl(returnUrl) ? LocalRedirect(returnUrl) : RedirectToAction(nameof(Profile));
+    }
+
     /// <summary>
     /// Maps password error codes to user-friendly error messages.
     /// </summary>
@@ -133,6 +147,7 @@ public sealed class AccountController(SignInManager<ApplicationUser> signInManag
     {
         DisplayName = user.DisplayName,
         Email = user.Email ?? string.Empty,
+        ShowAssetBalancesWidget = user.ShowAssetBalancesWidget,
         LoginHistory = await dbContext.LoginHistory.AsNoTracking().Where(item => item.UserId == user.Id).OrderByDescending(item => item.LoggedInAt).Take(10).Select(item => new LoginHistoryItemViewModel(item.LoggedInAt, item.IpAddress)).ToListAsync()
     };
     

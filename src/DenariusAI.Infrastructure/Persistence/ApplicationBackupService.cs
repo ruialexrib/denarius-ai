@@ -67,7 +67,8 @@ public sealed class ApplicationBackupService(DenariusDbContext dbContext) : IApp
                     var entry = dbContext.Entry(entity);
                     foreach (var property in entityType.GetProperties())
                     {
-                        var value = row[property.Name].Deserialize(property.ClrType, JsonOptions);
+                        if (!row.TryGetValue(property.Name, out var serializedValue)) continue;
+                        var value = serializedValue.Deserialize(property.ClrType, JsonOptions);
                         entry.Property(property.Name).CurrentValue = value;
                     }
                     entry.State = EntityState.Added;
@@ -113,7 +114,10 @@ public sealed class ApplicationBackupService(DenariusDbContext dbContext) : IApp
         {
             if (!document.Tables.TryGetValue(pair.Key, out var rows)) throw new InvalidDataException($"Falta a tabela {pair.Key}.");
             var properties = pair.Value.GetProperties().Select(property => property.Name).ToHashSet(StringComparer.Ordinal);
-            if (rows.Any(row => row.Count != properties.Count || row.Keys.Any(key => !properties.Contains(key))))
+            var optionalProperties = pair.Value.ClrType == typeof(DenariusAI.Infrastructure.Identity.ApplicationUser)
+                ? new HashSet<string>([nameof(DenariusAI.Infrastructure.Identity.ApplicationUser.ShowAssetBalancesWidget)], StringComparer.Ordinal)
+                : [];
+            if (rows.Any(row => row.Keys.Any(key => !properties.Contains(key)) || properties.Except(row.Keys).Any(property => !optionalProperties.Contains(property))))
                 throw new InvalidDataException($"A estrutura da tabela {pair.Key} é inválida.");
         }
     }

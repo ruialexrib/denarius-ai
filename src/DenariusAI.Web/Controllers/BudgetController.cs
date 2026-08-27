@@ -3,6 +3,7 @@ using System.Security.Claims;
 using DenariusAI.Application.Abstractions.Services;
 using DenariusAI.Application.DTOs;
 using DenariusAI.Web.ViewModels;
+using DenariusAI.Web.Models;
 using DenariusAI.Domain.Enums;
 using DenariusAI.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -18,6 +19,19 @@ namespace DenariusAI.Web.Controllers;
 [Authorize]
 public sealed class BudgetController(IBudgetService service, DenariusDbContext dbContext, ILogger<BudgetController> logger) : Controller
 {
+    /// <summary>
+    /// Exports the complete budget for the selected period as a PDF report.
+    /// </summary>
+    [HttpGet]
+    public async Task<IActionResult> ExportPdf(int year, int month, CancellationToken cancellationToken = default)
+    {
+        IReadOnlyList<BudgetExecutionItemDto> execution;
+        try { execution = await service.GetExecutionAsync(year, month, cancellationToken); }
+        catch (ArgumentOutOfRangeException) { return BadRequest(); }
+        var pdf = BudgetReportPdf.Generate(year, month, execution);
+        return File(pdf, "application/pdf", $"orcamento-{year:D4}-{month:D2}.pdf");
+    }
+
     /// <summary>
     /// Displays the budget execution index page with filtering, sorting, and pagination capabilities.
     /// </summary>

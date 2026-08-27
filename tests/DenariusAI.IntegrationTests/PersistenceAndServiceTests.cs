@@ -38,6 +38,9 @@ public sealed class PersistenceAndServiceTests
         budget.Lines.Add(new BudgetLine { CategoryId = expenseCategory.Id, Amount = 100m });
         context.Budgets.Add(budget);
         await context.SaveChangesAsync();
+        var julyEntries = await context.JournalEntries.Include(item => item.Lines).Where(item => item.Date.Year == 2026 && item.Date.Month == 7).ToListAsync();
+        foreach (var entry in julyEntries) entry.AssignBudget(budget.Id);
+        await context.SaveChangesAsync();
         var unitOfWork = new UnitOfWork(context, new AccountRepository(context), new JournalEntryRepository(context), new BudgetRepository(context));
         var dashboardService = new DashboardService(
             new AccountService(unitOfWork),
@@ -360,6 +363,34 @@ public sealed class PersistenceAndServiceTests
         await service.CancelAsync(expenseEntry.Id, "user-id");
         summary = await service.GetMonthlySummaryAsync(2026, 8);
         Assert.Equal(0m, summary.Expenses);
+    }
+
+    [Fact]
+    public async Task BudgetSummaryUsesBudgetAssociationInsteadOfMovementDate()
+    {
+        await using var context = CreateContext();
+        var unitOfWork = new UnitOfWork(context, new AccountRepository(context), new JournalEntryRepository(context), new BudgetRepository(context));
+        var expenseGroup = new FinancialGroup { Name = "Despesas", Kind = FinancialGroupKind.Expense };
+        var incomeGroup = new FinancialGroup { Name = "Rendimentos", Kind = FinancialGroupKind.Income };
+        var expenseCategory = new Category { Name = "Energia", FinancialGroup = expenseGroup, IsActive = true };
+        var incomeCategory = new Category { Name = "Salário", FinancialGroup = incomeGroup, IsActive = true };
+        var bank = NewAccount("Banco", AccountType.BankAccount);
+        var expense = NewAccount("Energia", AccountType.Expense);
+        var income = NewAccount("Salário", AccountType.Income);
+        var augustBudget = new Budget { Year = 2026, Month = 8 };
+        context.AddRange(expenseGroup, incomeGroup, expenseCategory, incomeCategory, bank, expense, income, augustBudget);
+        await context.SaveChangesAsync();
+        var service = new JournalEntryService(unitOfWork);
+        await service.CreateAsync(new(new DateOnly(2026, 7, 31), "Energia de agosto", null, null,
+            [new(expense.Id, 45m, 0m, CategoryId: expenseCategory.Id), new(bank.Id, 0m, 45m)], augustBudget.Id), "user-id");
+        await service.CreateAsync(new(new DateOnly(2026, 9, 1), "Salário de agosto", null, null,
+            [new(bank.Id, 1500m, 0m), new(income.Id, 0m, 1500m, CategoryId: incomeCategory.Id)], augustBudget.Id), "user-id");
+
+        var summary = await service.GetBudgetSummaryAsync(2026, 8);
+
+        Assert.Equal(1500m, summary.Income);
+        Assert.Equal(45m, summary.Expenses);
+        Assert.Equal(0m, (await service.GetMonthlySummaryAsync(2026, 8)).Income);
     }
 
     private static DenariusDbContext CreateContext() => new(new DbContextOptionsBuilder<DenariusDbContext>()

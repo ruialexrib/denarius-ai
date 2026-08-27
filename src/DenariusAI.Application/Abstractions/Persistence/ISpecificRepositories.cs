@@ -77,6 +77,9 @@ public interface IJournalEntryRepository : IRepository<JournalEntry>
     /// <returns>The aggregated amount.</returns>
     Task<decimal> GetAmountByGroupKindAsync(DateOnly from, DateOnly to, Domain.Enums.FinancialGroupKind kind, CancellationToken cancellationToken = default);
 
+    /// <summary>Calculates the total amount associated with a budget period, regardless of movement date.</summary>
+    Task<decimal> GetAmountByBudgetAndGroupKindAsync(int year, int month, Domain.Enums.FinancialGroupKind kind, CancellationToken cancellationToken = default);
+
     /// <summary>
     /// Gets the classification statement for a specific group, category, and financial kind.
     /// </summary>

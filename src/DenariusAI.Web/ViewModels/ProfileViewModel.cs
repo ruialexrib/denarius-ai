@@ -11,6 +11,7 @@ public sealed class ProfileViewModel
 
     [Display(Name = "Email")]
     public string Email { get; set; } = string.Empty;
+    public bool ShowAssetBalancesWidget { get; set; }
     public IReadOnlyList<LoginHistoryItemViewModel> LoginHistory { get; set; } = [];
 }
 

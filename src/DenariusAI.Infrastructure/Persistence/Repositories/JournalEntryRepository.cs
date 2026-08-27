@@ -106,6 +106,19 @@ public sealed class JournalEntryRepository(DenariusDbContext dbContext) : Reposi
             : lines.SumAsync(line => line.Debit - line.Credit, cancellationToken);
     }
 
+    /// <inheritdoc />
+    public Task<decimal> GetAmountByBudgetAndGroupKindAsync(int year, int month, FinancialGroupKind kind, CancellationToken cancellationToken = default)
+    {
+        var lines = DbContext.JournalEntryLines.AsNoTracking().Where(line =>
+            line.JournalEntry.Status == JournalEntryStatus.Active &&
+            line.JournalEntry.Budget != null && line.JournalEntry.Budget.Year == year && line.JournalEntry.Budget.Month == month &&
+            ((line.Category != null && line.Category.FinancialGroup.Kind == kind) ||
+             (line.CategoryId == null && line.Account.Category != null && line.Account.Category.FinancialGroup.Kind == kind)));
+        return kind == FinancialGroupKind.Income
+            ? lines.SumAsync(line => line.Credit - line.Debit, cancellationToken)
+            : lines.SumAsync(line => line.Debit - line.Credit, cancellationToken);
+    }
+
     /// <summary>
     /// Generates a classification statement for a specific financial group or category, showing all transactions and running balance.
     /// </summary>

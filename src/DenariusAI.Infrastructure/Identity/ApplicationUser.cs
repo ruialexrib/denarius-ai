@@ -26,4 +26,7 @@ public sealed class ApplicationUser : IdentityUser
     /// Gets or sets the date and time when the user accepted the cookie consent.
     /// </summary>
     public DateTimeOffset? CookieConsentAcceptedAt { get; set; }
+
+    /// <summary>Gets or sets whether the persistent asset balance summary is visible.</summary>
+    public bool ShowAssetBalancesWidget { get; set; } = true;
 }
