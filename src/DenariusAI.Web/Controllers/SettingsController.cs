@@ -5,6 +5,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Identity;
 using DenariusAI.Infrastructure.Identity;
+using DenariusAI.Web.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace DenariusAI.Web.Controllers;
 
@@ -12,7 +14,7 @@ namespace DenariusAI.Web.Controllers;
 /// Manages runtime application settings available to administrators.
 /// </summary>
 [Authorize(Roles = ApplicationRoles.Administrator)]
-public sealed class SettingsController(IApplicationSettingsService settingsService, ILLMService llmService, IFinancialDataResetService resetService, IDemonstrationDataService demonstrationDataService, UserManager<ApplicationUser> userManager, ILogger<SettingsController> logger) : Controller
+public sealed class SettingsController(IApplicationSettingsService settingsService, ILLMService llmService, IFinancialDataResetService resetService, IDemonstrationDataService demonstrationDataService, IApplicationBackupService backupService, ApplicationInfo appInfo, UserManager<ApplicationUser> userManager, ILogger<SettingsController> logger) : Controller
 {
     /// <summary>
     /// Displays the application settings page.
@@ -48,6 +50,50 @@ public sealed class SettingsController(IApplicationSettingsService settingsServi
         else try { var settings = await settingsService.GetAsync(cancellationToken); var response = await llmService.CompleteAsync([new("user", settings.ConnectionTestPrompt)], cancellationToken); TempData["SuccessMessage"] = $"Ligação confirmada com {response.Model}."; }
         catch (Exception exception) when (exception is HttpRequestException or InvalidOperationException or TaskCanceledException) { logger.LogWarning(exception, "AI connection test failed."); TempData["ErrorMessage"] = "Não foi possível confirmar a ligação à Mistral."; }
         return RedirectToAction(nameof(Index));
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> DownloadBackup(CancellationToken cancellationToken)
+    {
+        var data = await backupService.ExportAsync(appInfo.Version, cancellationToken);
+        logger.LogWarning("Full application backup downloaded by {UserId}.", UserId());
+        return File(data, "application/json", $"denariusai-backup-{DateTime.UtcNow:yyyyMMdd-HHmmss}.json");
+    }
+
+    [HttpGet]
+    public IActionResult RestoreBackup() => View(new RestoreBackupViewModel());
+
+    [HttpPost, ValidateAntiForgeryToken, RequestSizeLimit(52_428_800)]
+    public async Task<IActionResult> RestoreBackup(RestoreBackupViewModel model, CancellationToken cancellationToken)
+    {
+        var user = await userManager.GetUserAsync(User); if (user is null) return Challenge();
+        if (!await userManager.CheckPasswordAsync(user, model.Password)) ModelState.AddModelError(nameof(model.Password), "A palavra-passe está incorreta.");
+        if (model.BackupFile is { Length: > 52_428_800 }) ModelState.AddModelError(nameof(model.BackupFile), "O ficheiro não pode exceder 50 MB.");
+        if (model.BackupFile is not null && !string.Equals(Path.GetExtension(model.BackupFile.FileName), ".json", StringComparison.OrdinalIgnoreCase)) ModelState.AddModelError(nameof(model.BackupFile), "Selecione um ficheiro JSON.");
+        if (!ModelState.IsValid) return View(model);
+
+        try
+        {
+            var safetyBackup = await backupService.ExportAsync(appInfo.Version, cancellationToken);
+            await using var stream = model.BackupFile!.OpenReadStream();
+            var result = await backupService.RestoreAsync(stream, cancellationToken);
+            logger.LogWarning("Full application restore completed by {UserId}: {Tables} tables and {Records} records.", UserId(), result.Tables, result.Records);
+            Response.Headers.Append("X-DenariusAI-Restore", $"{result.Tables} tables; {result.Records} records");
+            TempData["SuccessMessage"] = $"Restauro concluído: {result.Records} registos em {result.Tables} tabelas. Foi também descarregado o backup de segurança dos dados anteriores.";
+            return File(safetyBackup, "application/json", $"denariusai-before-restore-{DateTime.UtcNow:yyyyMMdd-HHmmss}.json");
+        }
+        catch (InvalidDataException exception)
+        {
+            logger.LogWarning(exception, "Invalid application backup rejected for {UserId}.", UserId());
+            ModelState.AddModelError(nameof(model.BackupFile), exception.Message);
+            return View(model);
+        }
+        catch (DbUpdateException exception)
+        {
+            logger.LogError(exception, "Application restore failed for {UserId}.", UserId());
+            ModelState.AddModelError(string.Empty, "O backup é incompatível ou contém relações inválidas. A informação existente foi preservada.");
+            return View(model);
+        }
     }
     
     /// <summary>

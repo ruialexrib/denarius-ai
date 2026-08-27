@@ -7,6 +7,11 @@
     overlay.hidden = false;
     document.body.classList.add('operation-pending');
   };
+  const hideProgress = () => {
+    overlay.hidden = true;
+    document.body.classList.remove('operation-pending');
+  };
+  window.denariusOperationProgress = { show: showProgress, hide: hideProgress };
 
   document.addEventListener('click', event => {
     if (event.defaultPrevented || event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
@@ -38,7 +43,6 @@
     showProgress(form.dataset.progressMessage || submitter?.dataset.progressMessage || 'A executar a operação…');
   });
   window.addEventListener('pageshow', () => {
-    overlay.hidden = true;
-    document.body.classList.remove('operation-pending');
+    hideProgress();
   });
 })();

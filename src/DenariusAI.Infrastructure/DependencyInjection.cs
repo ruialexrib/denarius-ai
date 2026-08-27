@@ -74,6 +74,7 @@ public static class DependencyInjection
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddScoped<IFinancialDataResetService, FinancialDataResetService>();
         services.AddScoped<IDemonstrationDataService, DemonstrationDataService>();
+        services.AddScoped<IApplicationBackupService, ApplicationBackupService>();
         services.Configure<MistralOptions>(configuration.GetSection(MistralOptions.SectionName));
         services.AddScoped<IApplicationSettingsService, ApplicationSettingsService>();
         services.AddHttpClient<ILLMService, MistralLLMService>((serviceProvider, client) =>

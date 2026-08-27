@@ -16,6 +16,7 @@ namespace DenariusAI.Infrastructure.Persistence;
 public sealed class DenariusDbContext(DbContextOptions<DenariusDbContext> options, IHttpContextAccessor? httpContextAccessor = null)
     : IdentityDbContext<ApplicationUser>(options)
 {
+    public bool SuppressAudit { get; set; }
     /// <summary>
     /// Gets or sets the collection of financial groups.
     /// </summary>
@@ -106,6 +107,7 @@ public sealed class DenariusDbContext(DbContextOptions<DenariusDbContext> option
 
     private void CaptureAuditLogs()
     {
+        if (SuppressAudit) return;
         var entries = ChangeTracker.Entries()
             .Where(entry => entry.Entity is not AuditLog &&
                 entry.State is EntityState.Added or EntityState.Modified or EntityState.Deleted &&

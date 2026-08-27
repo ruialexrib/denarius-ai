@@ -1,0 +1,60 @@
+@model RestoreBackupViewModel
+@{ ViewData["Title"] = "Restaurar backup"; }
+<link rel="stylesheet" href="~/css/data-forms.css" asp-append-version="true" />
+<div class="page-header"><div><p class="eyebrow">Definições · Backup</p><h1>Restaurar todos os dados</h1><p class="page-subtitle">Substitua integralmente a informação da aplicação por um backup DenariusAI.</p></div></div>
+<section class="panel narrow danger-zone"><div class="panel-heading"><h2>Confirmação obrigatória</h2><p>O conteúdo atual será substituído, incluindo utilizadores, definições, movimentos e auditoria. A operação é transacional: um erro mantém a base de dados atual.</p></div>
+<div class="alert error"><strong>O ficheiro de backup é sensível.</strong> Pode conter emails e hashes de palavras-passe. Utilize apenas ficheiros de origem confiável.</div>
+<form asp-action="RestoreBackup" method="post" enctype="multipart/form-data" class="form-stack" data-no-progress="true" data-restore-form data-settings-url="@Url.Action("Index", "Settings")">
+<div asp-validation-summary="ModelOnly" class="validation-summary"></div>
+<label asp-for="BackupFile"></label><input asp-for="BackupFile" type="file" accept="application/json,.json" /><span asp-validation-for="BackupFile" class="field-error"></span>
+<label asp-for="Password"></label><input asp-for="Password" autocomplete="current-password" /><span asp-validation-for="Password" class="field-error"></span>
+<label asp-for="Confirmation"></label><input asp-for="Confirmation" autocomplete="off" placeholder="RESTAURAR TUDO" /><span asp-validation-for="Confirmation" class="field-error"></span>
+<p class="form-help">Escreva exatamente <strong>RESTAURAR TUDO</strong>. Após o restauro será descarregado automaticamente um backup da informação anterior.</p>
+<div class="alert info" data-restore-status hidden role="status" aria-live="polite"><strong>Restauro em curso.</strong> A validar e substituir os dados. Não feche esta página.</div>
+<div class="form-actions"><button class="button danger" type="submit" data-restore-submit>Validar e restaurar dados</button><a class="button secondary" asp-action="Index">Cancelar</a></div>
+</form></section>
+@section Scripts {
+<script>
+(() => {
+    const form = document.querySelector('[data-restore-form]');
+    if (!form) return;
+    const submit = form.querySelector('[data-restore-submit]');
+    const status = form.querySelector('[data-restore-status]');
+
+    form.addEventListener('submit', async event => {
+        event.preventDefault();
+        if (!form.reportValidity() || !confirm('Confirma que pretende substituir integralmente todos os dados da aplicação?')) return;
+        submit.disabled = true;
+        submit.textContent = 'A restaurar…';
+        window.denariusOperationProgress?.show('A validar e restaurar todos os dados…');
+
+        try {
+            const response = await fetch(form.action, { method: 'POST', body: new FormData(form), credentials: 'same-origin' });
+            const disposition = response.headers.get('Content-Disposition') || '';
+            if (!response.ok || !disposition.toLowerCase().includes('attachment')) {
+                const html = await response.text();
+                document.open(); document.write(html); document.close();
+                return;
+            }
+
+            const blob = await response.blob();
+            const match = disposition.match(/filename\*?=(?:UTF-8''|\")?([^\";]+)/i);
+            const filename = match ? decodeURIComponent(match[1].replace(/\"$/, '')) : 'denariusai-before-restore.json';
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url; link.download = filename; document.body.appendChild(link); link.click(); link.remove();
+            window.denariusOperationProgress?.show('Restauro concluído. A descarregar o backup de segurança…');
+            await new Promise(resolve => window.setTimeout(resolve, 1500));
+            URL.revokeObjectURL(url);
+            window.location.assign(form.dataset.settingsUrl);
+        } catch {
+            window.denariusOperationProgress?.hide();
+            status.hidden = false;
+            status.classList.remove('info'); status.classList.add('error');
+            status.innerHTML = '<strong>Não foi possível confirmar o resultado.</strong> Verifique a ligação e os dados antes de repetir a operação.';
+            submit.disabled = false; submit.textContent = 'Validar e restaurar dados';
+        }
+    });
+})();
+</script>
+}
