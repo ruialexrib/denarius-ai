@@ -72,7 +72,7 @@ public sealed class InformationController(ApplicationInfo appInfo, IHttpClientFa
                 release.GetProperty("tag_name").GetString() ?? "Versão",
                 release.TryGetProperty("published_at", out var date) ? date.GetString()?[..10] ?? string.Empty : string.Empty,
                 release.GetProperty("html_url").GetString() ?? RepositoryUrl,
-                (release.GetProperty("body").GetString() ?? "Atualizações e melhorias.").Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList())).ToList();
+                MarkdownPreview.NormalizeReleaseNotes(release.GetProperty("body").GetString()))).ToList();
             cache.Set("github-latest-releases", releases, TimeSpan.FromMinutes(15));
             return releases;
         }
@@ -98,16 +98,7 @@ public sealed class InformationController(ApplicationInfo appInfo, IHttpClientFa
     private static IReadOnlyList<ReleaseNoteViewModel> LocalReleases(string version) =>
     [
         new($"v{version}", DateTime.Today.ToString("yyyy-MM-dd"), RepositoryUrl,
-        [
-            "Todas as prompts de IA estão agora visíveis e editáveis nas Definições da aplicação.",
-            "A reconciliação interpreta extratos com três ou quatro colunas, incluindo referências, mesmo quando os formatos são misturados.",
-            "Na revisão da importação pode alterar descrição, referência e categoria antes de criar os movimentos.",
-            "As sugestões de categoria apresentam o grau de confiança atribuído pelo modelo.",
-            "Categorias e orçamentos podem ser encontrados através de seletores pesquisáveis nos principais formulários e filtros.",
-            "As listas pesquisáveis mostram todos os resultados correspondentes, com navegação por teclado e scroll.",
-            "O dashboard usa uma prompt integralmente configurável para o resumo e a projeção financeira.",
-            "Melhorias de consistência visual e de largura nas páginas de contas, análise e importação de extratos."
-        ])
+            "## Português\n\n### Novas funcionalidades\n\n- Consulte as funcionalidades mais recentes do DenariusAI.\n\n### Correções\n\n- Melhorias de estabilidade e apresentação.\n\n## English\n\n### New features\n\n- Explore the latest DenariusAI features.\n\n### Fixes\n\n- Stability and presentation improvements.")
     ];
 
     /// <summary>

@@ -34,6 +34,22 @@ public sealed class MarkdownPreviewTests
     }
 
     [Fact]
+    public void NormalizeReleaseNotes_ConvertsPlainLinesToMarkdownList()
+    {
+        var markdown = MarkdownPreview.NormalizeReleaseNotes("Primeira melhoria.\nSegunda melhoria.");
+
+        Assert.Equal("## Novidades\n\n- Primeira melhoria.\n- Segunda melhoria.", markdown);
+    }
+
+    [Fact]
+    public void NormalizeReleaseNotes_PreservesStructuredMarkdown()
+    {
+        const string source = "## Português\n### Correções\n- Erro corrigido.";
+
+        Assert.Equal(source, MarkdownPreview.NormalizeReleaseNotes(source));
+    }
+
+    [Fact]
     public void FinancialReportPdf_GeneratesAValidPdf()
     {
         var pdf = FinancialReportPdf.Generate("# Relatório\n\n| Categoria | Total |\n|---|---:|\n| Salário | 1 500,00 € |", new DateOnly(2026, 1, 1), new DateOnly(2026, 8, 26));

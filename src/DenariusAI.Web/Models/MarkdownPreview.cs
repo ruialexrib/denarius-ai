@@ -76,6 +76,22 @@ public static class MarkdownPreview
         return html.ToString();
     }
 
+    public static string NormalizeReleaseNotes(string? markdown)
+    {
+        markdown = Normalize(markdown);
+        if (markdown.Length == 0) return "## Novidades\n\n- Atualizações e melhorias.";
+
+        var lines = markdown.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        var hasMarkdownStructure = lines.Any(line =>
+            Regex.IsMatch(line, @"^#{1,6}\s+")
+            || Regex.IsMatch(line, @"^(?:[-*]|\d+\.)\s+")
+            || line.StartsWith("> ", StringComparison.Ordinal)
+            || IsTableRow(line));
+        if (hasMarkdownStructure) return markdown;
+
+        return "## Novidades\n\n" + string.Join('\n', lines.Select(line => $"- {line.TrimEnd()}"));
+    }
+
     private static bool IsTableRow(string value) => value.Trim().Trim('|').Contains('|');
 
     private static bool IsTableSeparator(string value)
