@@ -82,6 +82,25 @@ docker compose down
 
 Never commit `.env`, credentials or real financial data.
 
+### Optional Google authentication
+
+User provisioning remains exclusive to DenariusAI administrators. Google authentication never creates a local account: access is granted only when the Google email exactly matches an existing application user. The same user can continue to sign in with the local email and password.
+
+Create OAuth 2.0 web credentials in Google Cloud and register this authorized redirect URI for a local installation:
+
+```text
+http://localhost:8080/signin-google
+```
+
+For a public installation, register the equivalent HTTPS address for its domain. Configure the credentials in `.env`:
+
+```text
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+```
+
+When either value is absent, the Google button is not displayed and local authentication continues to work normally.
+
 ## License
 
 Distributed under the [MIT License](LICENSE). Copyright © 2026 [Rui Ribeiro](https://github.com/ruialexrib).

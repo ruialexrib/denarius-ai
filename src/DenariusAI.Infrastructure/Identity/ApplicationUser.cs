@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Identity;
+using System.ComponentModel.DataAnnotations;
 
 namespace DenariusAI.Infrastructure.Identity;
 
@@ -29,4 +30,11 @@ public sealed class ApplicationUser : IdentityUser
 
     /// <summary>Gets or sets whether the persistent asset balance summary is visible.</summary>
     public bool ShowAssetBalancesWidget { get; set; } = true;
+
+    /// <summary>Gets or sets the Base64-encoded profile image synchronized from Google.</summary>
+    public string? ProfileImageBase64 { get; set; }
+
+    /// <summary>Gets or sets the media type of the synchronized profile image.</summary>
+    [MaxLength(100)]
+    public string? ProfileImageContentType { get; set; }
 }

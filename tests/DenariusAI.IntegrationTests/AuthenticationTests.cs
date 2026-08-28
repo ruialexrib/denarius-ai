@@ -3,6 +3,7 @@ using DenariusAI.Web.Controllers;
 using DenariusAI.Web.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using DenariusAI.Infrastructure.Identity;
 
 namespace DenariusAI.IntegrationTests;
 
@@ -50,6 +51,40 @@ public sealed class AuthenticationTests
         Assert.False(isValid);
         Assert.Contains(results, result => result.MemberNames.Contains(nameof(LoginViewModel.Email)));
         Assert.Contains(results, result => result.MemberNames.Contains(nameof(LoginViewModel.Password)));
+    }
+
+    [Fact]
+    public void GoogleLoginEntryPointAllowsAnonymousUsersAndRequiresAntiforgery()
+    {
+        var method = typeof(AccountController).GetMethod(nameof(AccountController.ExternalLogin));
+
+        Assert.NotNull(method);
+        Assert.NotNull(method!.GetCustomAttributes(typeof(AllowAnonymousAttribute), true).SingleOrDefault());
+        Assert.NotNull(method.GetCustomAttributes(typeof(HttpPostAttribute), true).SingleOrDefault());
+        Assert.NotNull(method.GetCustomAttributes(typeof(ValidateAntiForgeryTokenAttribute), true).SingleOrDefault());
+    }
+
+    [Fact]
+    public void GoogleLoginCallbackAllowsAnonymousUsers()
+    {
+        var method = typeof(AccountController).GetMethod(nameof(AccountController.ExternalLoginCallback));
+
+        Assert.NotNull(method);
+        Assert.NotNull(method!.GetCustomAttributes(typeof(AllowAnonymousAttribute), true).SingleOrDefault());
+        Assert.NotNull(method.GetCustomAttributes(typeof(HttpGetAttribute), true).SingleOrDefault());
+    }
+
+    [Fact]
+    public void UserProfileImageStorageIsOptionalAndKeepsItsMediaTypeBounded()
+    {
+        var user = new ApplicationUser();
+        var contentType = typeof(ApplicationUser).GetProperty(nameof(ApplicationUser.ProfileImageContentType));
+
+        Assert.Null(user.ProfileImageBase64);
+        Assert.Null(user.ProfileImageContentType);
+        Assert.Equal(100, contentType!.GetCustomAttributes(typeof(StringLengthAttribute), true)
+            .Cast<StringLengthAttribute>().SingleOrDefault()?.MaximumLength
+            ?? contentType.GetCustomAttributes(typeof(MaxLengthAttribute), true).Cast<MaxLengthAttribute>().Single().Length);
     }
 
     [Fact]

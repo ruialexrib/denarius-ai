@@ -4,6 +4,7 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageVersion Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="9.0.19" />
+    <PackageVersion Include="Microsoft.AspNetCore.Authentication.Google" Version="9.0.19" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.19" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.InMemory" Version="9.0.19" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.19" />

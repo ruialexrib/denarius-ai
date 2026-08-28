@@ -163,7 +163,7 @@ public sealed class DenariusDbContext(DbContextOptions<DenariusDbContext> option
         }
     }
 
-    private static bool IsSensitive(string name) => name is "PasswordHash" or "SecurityStamp" or "ConcurrencyStamp" or "AuthenticatorKey" or "Value";
+    private static bool IsSensitive(string name) => name is "PasswordHash" or "SecurityStamp" or "ConcurrencyStamp" or "AuthenticatorKey" or "Value" or "ProfileImageBase64";
 
     private static string? FindActor(Microsoft.EntityFrameworkCore.ChangeTracking.EntityEntry entry, string action) =>
         entry.Properties.FirstOrDefault(property => property.Metadata.Name == (action == "Created" ? "CreatedBy" : "UpdatedBy"))?.CurrentValue?.ToString()

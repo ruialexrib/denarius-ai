@@ -115,7 +115,12 @@ public sealed class ApplicationBackupService(DenariusDbContext dbContext) : IApp
             if (!document.Tables.TryGetValue(pair.Key, out var rows)) throw new InvalidDataException($"Falta a tabela {pair.Key}.");
             var properties = pair.Value.GetProperties().Select(property => property.Name).ToHashSet(StringComparer.Ordinal);
             var optionalProperties = pair.Value.ClrType == typeof(DenariusAI.Infrastructure.Identity.ApplicationUser)
-                ? new HashSet<string>([nameof(DenariusAI.Infrastructure.Identity.ApplicationUser.ShowAssetBalancesWidget)], StringComparer.Ordinal)
+                ? new HashSet<string>(
+                [
+                    nameof(DenariusAI.Infrastructure.Identity.ApplicationUser.ShowAssetBalancesWidget),
+                    nameof(DenariusAI.Infrastructure.Identity.ApplicationUser.ProfileImageBase64),
+                    nameof(DenariusAI.Infrastructure.Identity.ApplicationUser.ProfileImageContentType)
+                ], StringComparer.Ordinal)
                 : [];
             if (rows.Any(row => row.Keys.Any(key => !properties.Contains(key)) || properties.Except(row.Keys).Any(property => !optionalProperties.Contains(property))))
                 throw new InvalidDataException($"A estrutura da tabela {pair.Key} é inválida.");

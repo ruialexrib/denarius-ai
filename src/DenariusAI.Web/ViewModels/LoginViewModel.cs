@@ -18,4 +18,6 @@ public sealed class LoginViewModel
     public bool RememberMe { get; set; }
 
     public string? ReturnUrl { get; set; }
+
+    public bool GoogleEnabled { get; set; }
 }

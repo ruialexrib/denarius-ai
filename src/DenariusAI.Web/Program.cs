@@ -11,6 +11,8 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllersWithViews();
 builder.Services.AddHttpClient();
+builder.Services.AddHttpClient("GoogleProfileImages")
+    .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false });
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddMemoryCache();
 builder.Services.AddSession(options => { options.IdleTimeout = TimeSpan.FromMinutes(30); options.Cookie.HttpOnly = true; options.Cookie.IsEssential = true; });
@@ -28,7 +30,7 @@ builder.Services.AddAuthorizationBuilder()
         .RequireAuthenticatedUser()
         .Build());
 builder.Services.AddSingleton(new DenariusAI.Web.Models.ApplicationInfo(
-    Version: typeof(Program).Assembly.GetName().Version?.ToString(3) ?? "0.20.0",
+    Version: typeof(Program).Assembly.GetName().Version?.ToString(3) ?? "0.21.0",
     Description: "O controlo do seu futuro financeiro começa aqui."));
 builder.Services.AddHealthChecks().AddDbContextCheck<DenariusDbContext>("sqlserver");
 

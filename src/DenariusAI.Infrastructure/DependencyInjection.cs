@@ -10,6 +10,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using DenariusAI.Infrastructure.ArtificialIntelligence;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.OAuth.Claims;
 
 namespace DenariusAI.Infrastructure;
 
@@ -52,6 +53,20 @@ public static class DependencyInjection
             })
             .AddEntityFrameworkStores<DenariusDbContext>()
             .AddDefaultTokenProviders();
+
+        var googleClientId = configuration["Authentication:Google:ClientId"];
+        var googleClientSecret = configuration["Authentication:Google:ClientSecret"];
+        if (!string.IsNullOrWhiteSpace(googleClientId) && !string.IsNullOrWhiteSpace(googleClientSecret))
+        {
+            services.AddAuthentication()
+                .AddGoogle(options =>
+                {
+                    options.ClientId = googleClientId;
+                    options.ClientSecret = googleClientSecret;
+                    options.SaveTokens = false;
+                    options.ClaimActions.MapJsonKey("urn:google:picture", "picture", "url");
+                });
+        }
 
         services.ConfigureApplicationCookie(options =>
         {

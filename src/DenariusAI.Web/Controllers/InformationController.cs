@@ -72,7 +72,7 @@ public sealed class InformationController(ApplicationInfo appInfo, IHttpClientFa
                 release.GetProperty("tag_name").GetString() ?? "Versão",
                 release.TryGetProperty("published_at", out var date) ? date.GetString()?[..10] ?? string.Empty : string.Empty,
                 release.GetProperty("html_url").GetString() ?? RepositoryUrl,
-                (release.GetProperty("body").GetString() ?? "Atualizações e melhorias.").Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).Take(8).ToList())).ToList();
+                (release.GetProperty("body").GetString() ?? "Atualizações e melhorias.").Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList())).ToList();
             cache.Set("github-latest-releases", releases, TimeSpan.FromMinutes(15));
             return releases;
         }

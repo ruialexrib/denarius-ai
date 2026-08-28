@@ -20,4 +20,5 @@
 .settings-operation-button,.support-button{min-height:42px;border-radius:10px;font:inherit;font-size:.8rem}
 .export-pdf-button{border-color:#c9d8d5!important;background:linear-gradient(135deg,#fff,#f2f8f6)!important;color:#126c57!important;box-shadow:0 3px 10px rgba(18,108,87,.10)}
 .export-pdf-button:hover{border-color:#9fcbbf!important;background:#eaf6f2!important;box-shadow:0 6px 16px rgba(18,108,87,.18)}
+.auth-divider{display:flex;align-items:center;gap:12px;margin:22px 0 12px;color:var(--muted);font-size:.72rem;text-transform:uppercase}.auth-divider:before,.auth-divider:after{height:1px;flex:1;background:var(--line);content:""}.google-button{width:100%;border-color:#d8dee8;background:#fff;color:#273246;box-shadow:0 4px 12px rgba(24,34,55,.07)}.google-button:hover{border-color:#c5ceda;background:#f8fafc;color:#172033;box-shadow:0 7px 17px rgba(24,34,55,.11)}.google-button svg{width:19px;height:19px;flex:0 0 auto}.external-login-help{margin:10px 0 0;color:var(--muted);font-size:.72rem;line-height:1.5;text-align:center}
 @media(max-width:800px){.filterbar>.button{width:100%;justify-self:stretch}.page-header .button,.header-actions .button{min-height:40px}}
