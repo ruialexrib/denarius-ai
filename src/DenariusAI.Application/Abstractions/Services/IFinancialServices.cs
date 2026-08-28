@@ -328,3 +328,9 @@ public interface IAnalyticsService
     /// <returns>Analytics data with charts and reports.</returns>
     Task<AnalyticsDto> GetAsync(AnalyticsFilterDto filter, CancellationToken cancellationToken = default);
 }
+
+/// <summary>Builds authoritative, pre-calculated data for financial reports and AI tools.</summary>
+public interface IFinancialReportDataService
+{
+    Task<FinancialReportDataDto> GetAsync(DateOnly from, DateOnly to, CancellationToken cancellationToken = default);
+}

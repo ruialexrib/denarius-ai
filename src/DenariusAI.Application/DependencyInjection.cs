@@ -24,6 +24,7 @@ public static class DependencyInjection
         services.AddScoped<IReconciliationService, ReconciliationService>();
         services.AddScoped<IDashboardService, DashboardService>();
         services.AddScoped<IAnalyticsService, AnalyticsService>();
+        services.AddScoped<IFinancialReportDataService, FinancialReportDataService>();
         services.AddScoped<IAssistantService, FinancialAssistantService>();
         services.AddScoped<IJournalEntrySuggestionService, JournalEntrySuggestionService>();
         return services;

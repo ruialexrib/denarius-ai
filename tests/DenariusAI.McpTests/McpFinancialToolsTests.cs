@@ -24,13 +24,14 @@ public sealed class McpFinancialToolsTests
         Assert.NotNull(await FinancialTools.GetSavingsRate(new(2026, 7, 1), new(2026, 7, 31), _services, default));
         Assert.Single(Assert.IsAssignableFrom<IReadOnlyList<ReconciliationItemDto>>(await FinancialTools.GetUnreconciledTransactions(null, null, _services, default)));
         Assert.Equal(2026, Assert.IsType<DashboardDto>(await FinancialTools.GetFinancialSummary(2026, 7, _services, default)).Year);
+        Assert.Equal(10m, Assert.IsType<FinancialReportDataDto>(await FinancialTools.GetFinancialReportData(new(2026, 7, 1), new(2026, 7, 31), _services, default)).Savings);
     }
 
     [Fact]
     public async Task TransactionToolEnforcesSafeLimit() =>
         await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => FinancialTools.GetTransactions(null, null, 201, _services, default));
 
-    private sealed class ToolServices : IAccountService, IJournalEntryService, IBudgetService, IAnalyticsService, IReconciliationService, IDashboardService
+    private sealed class ToolServices : IAccountService, IJournalEntryService, IBudgetService, IAnalyticsService, IReconciliationService, IDashboardService, IFinancialReportDataService
     {
         public static readonly Guid AccountId = Guid.NewGuid();
         private static readonly Guid CategoryId = Guid.NewGuid();
@@ -43,6 +44,7 @@ public sealed class McpFinancialToolsTests
         public Task<AnalyticsDto> GetAsync(AnalyticsFilterDto filter, CancellationToken cancellationToken = default) => Task.FromResult(new AnalyticsDto(20m, 10m, 0m, 0m, 100m, [new(CategoryId, "Despesas", 10m)], [new(CategoryId, "Água", 10m)], [], []));
         public Task<IReadOnlyList<ReconciliationItemDto>> ListAsync(Guid? accountId = null, DateOnly? from = null, DateOnly? to = null, ReconciliationStatus? status = null, string? search = null, CancellationToken cancellationToken = default) => Task.FromResult<IReadOnlyList<ReconciliationItemDto>>([new(Guid.NewGuid(), new(2026, 7, 1), "Demo", null, "Banco", 10m, 10m, ReconciliationStatus.Unreconciled, null, null)]);
         public Task<DashboardDto> GetAsync(int year, int month, CancellationToken cancellationToken = default) => Task.FromResult(new DashboardDto(year, month, 10m, 20m, 30m, 20m, 10m, 15m, 10m, 1, [], []));
+        Task<FinancialReportDataDto> IFinancialReportDataService.GetAsync(DateOnly from, DateOnly to, CancellationToken cancellationToken) => Task.FromResult(new FinancialReportDataDto(from, to, "EUR", 20m, 10m, 10m, 50m, 100m, [], [], [], [], [], new(0, 0, 0, [])));
         private static AccountDto Account() => new(AccountId, "Banco", null, AccountType.BankAccount, 0m, 10m, "EUR", true, null);
         public Task<Guid> CreateAsync(SaveAccountDto input, string userId, CancellationToken cancellationToken = default) => throw new NotSupportedException();
         public Task UpdateAsync(Guid id, SaveAccountDto input, string userId, CancellationToken cancellationToken = default) => throw new NotSupportedException();

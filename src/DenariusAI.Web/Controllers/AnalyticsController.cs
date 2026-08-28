@@ -5,8 +5,6 @@ using DenariusAI.Web.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using DenariusAI.Infrastructure.Persistence;
-using Microsoft.EntityFrameworkCore;
 using System.Text.Json;
 using System.Text;
 
@@ -24,7 +22,7 @@ namespace DenariusAI.Web.Controllers;
 /// <param name="llmService">Service for LLM-based intelligent report generation.</param>
 /// <param name="settingsService">Service for retrieving application settings.</param>
 [Authorize]
-public sealed class AnalyticsController(IAnalyticsService analyticsService, IFinancialGroupService groupService, ICategoryService categoryService, IAccountService accountService, IDashboardService dashboardService, DenariusDbContext dbContext, ILLMService llmService, IApplicationSettingsService settingsService) : Controller
+public sealed class AnalyticsController(IAnalyticsService analyticsService, IFinancialGroupService groupService, ICategoryService categoryService, IAccountService accountService, IDashboardService dashboardService, IFinancialReportDataService reportDataService, ILLMService llmService, IApplicationSettingsService settingsService) : Controller
 {
     /// <summary>
     /// Displays the analytics dashboard with filtering options.
@@ -66,19 +64,12 @@ public sealed class AnalyticsController(IAnalyticsService analyticsService, IFin
     {
         if (from == default || to == default || from > to) return BadRequest();
         if (!llmService.IsConfigured) { TempData["ErrorMessage"] = "Configure a integração Mistral antes de gerar o relatório inteligente."; return RedirectToAction(nameof(Index), new { from, to }); }
-        var data = new
-        {
-            period = new { from, to },
-            groups = await dbContext.FinancialGroups.AsNoTracking().Select(x => new { x.Name, x.Kind, x.IsActive }).ToListAsync(cancellationToken),
-            categories = await dbContext.Categories.AsNoTracking().Select(x => new { x.Name, Group = x.FinancialGroup.Name, x.IsActive }).ToListAsync(cancellationToken),
-            accounts = await dbContext.Accounts.AsNoTracking().Select(x => new { x.Name, x.AccountType, x.InitialBalance, x.Currency, x.IsActive }).ToListAsync(cancellationToken),
-            movements = await dbContext.JournalEntries.AsNoTracking().Where(x => x.Date >= from && x.Date <= to).Select(x => new { x.Date, x.Description, x.Reference, x.Status, x.BudgetId, Lines = x.Lines.Select(l => new { Account = l.Account.Name, Category = l.Category != null ? l.Category.Name : null, l.Debit, l.Credit }) }).ToListAsync(cancellationToken),
-            budgets = await dbContext.Budgets.AsNoTracking().Where(x => x.Year >= from.Year && x.Year <= to.Year).Select(x => new { x.Year, x.Month, Lines = x.Lines.Select(l => new { Category = l.Category.Name, l.Amount }) }).ToListAsync(cancellationToken),
-            reconciliations = await dbContext.Reconciliations.AsNoTracking().Select(x => new { x.Status, x.ReconciledAt }).ToListAsync(cancellationToken),
-            savingsCertificates = await dbContext.SavingsCertificates.AsNoTracking().Select(x => new { x.InvestmentDate, x.SeriesNumber, x.Description, x.InvestmentValue, x.Rate, x.CurrentValue, x.NextCapitalization }).ToListAsync(cancellationToken)
-        };
+        var data = await reportDataService.GetAsync(from, to, cancellationToken);
         var prompt = (await settingsService.GetAsync(cancellationToken)).FinancialAnalysisPrompt;
-        var completion = await llmService.CompleteAsync([new("system", prompt), new("user", JsonSerializer.Serialize(data))], 8192, cancellationToken);
+        var accuracyRules = """
+            Os dados JSON seguintes são factos financeiros autoritativos já calculados pela aplicação. Não recalcules, não somes movimentos e não alteres nenhum valor. Usa Income, Expenses, Savings, SavingsRate e NetWorth exatamente como fornecidos. Em Months, Expenses representa todas as despesas do mês; BudgetExecuted representa apenas movimentos associados ao orçamento desse mês e não são valores equivalentes. Se uma lista estiver vazia, indica que não existem registos. Não inventes contas, categorias, reconciliações ou Certificados de Aforro.
+            """;
+        var completion = await llmService.CompleteAsync([new("system", $"{prompt}\n\n{accuracyRules}"), new("user", JsonSerializer.Serialize(data))], 8192, cancellationToken);
         if (string.Equals(completion.FinishReason, "length", StringComparison.OrdinalIgnoreCase)) { TempData["ErrorMessage"] = "O modelo atingiu o limite antes de concluir o relatório. Reduza o período analisado e tente novamente."; return RedirectToAction(nameof(Index), new { from, to }); }
         return View("IntelligentReport", new IntelligentReportViewModel(from, to, DateTimeOffset.Now.ToString("dd/MM/yyyy HH:mm"), completion.Model, MarkdownPreview.Normalize(completion.Content)));
     }

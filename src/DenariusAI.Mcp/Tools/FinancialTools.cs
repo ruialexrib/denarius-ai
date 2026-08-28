@@ -70,4 +70,8 @@ public static class FinancialTools
     [McpServerTool(Name = "get_financial_summary"), Description("Returns the principal financial indicators and six-month evolution for a selected month.")]
     public static async Task<object> GetFinancialSummary(int year, int month, IDashboardService service, CancellationToken cancellationToken) =>
         await service.GetAsync(year, month, cancellationToken);
+
+    [McpServerTool(Name = "get_financial_report_data"), Description("Returns authoritative pre-calculated financial report data for a date interval. All totals, balances, budgets and reconciliation counts are calculated by the application; clients must not recalculate them.")]
+    public static async Task<object> GetFinancialReportData(DateOnly from, DateOnly to, IFinancialReportDataService service, CancellationToken cancellationToken) =>
+        await service.GetAsync(from, to, cancellationToken);
 }
