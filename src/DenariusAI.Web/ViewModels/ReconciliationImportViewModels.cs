@@ -3,6 +3,12 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace DenariusAI.Web.ViewModels;
 
+public static class ReconciliationImportPeriodPolicy
+{
+    public static int MonthDistance(DateOnly date, int budgetYear, int budgetMonth) =>
+        Math.Abs((date.Year * 12 + date.Month) - (budgetYear * 12 + budgetMonth));
+}
+
 public sealed class ReconciliationImportRowViewModel
 {
     public int RowNumber { get; set; }
@@ -16,6 +22,7 @@ public sealed class ReconciliationImportRowViewModel
     public string SuggestionConfidence { get; set; } = "none";
     public bool Selected { get; set; } = true;
     public bool IsEligible { get; set; } = true;
+    public bool IsPeriodWarning { get; set; }
     public string? EligibilityMessage { get; set; }
 }
 

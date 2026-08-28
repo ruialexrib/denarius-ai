@@ -12,7 +12,7 @@
     <article><span>Movimentos</span><strong>@Model.Pagination.TotalItems</strong><small>No intervalo selecionado</small></article>
 </section>
 <section class="panel entity-panel account-statement-panel">
-    <div class="statement-filter-heading"><div><span>Movimentos da conta</span><small>Filtre por período, descrição ou categoria</small></div></div>
+    <div class="statement-filter-heading"><div><span>Movimentos da conta</span><small>Filtre por período, descrição ou categoria</small></div><a class="button secondary export-pdf-button" asp-action="ExportPdf" asp-route-id="@Model.Account.Id" asp-route-from="@Model.From" asp-route-to="@Model.To" asp-route-search="@Model.Search">Exportar PDF</a></div>
     <form id="statement-filters" method="get" class="filterbar account-statement-filters"><input type="hidden" name="id" value="@Model.Account.Id" /><label>De <input type="date" name="from" value="@(Model.From?.ToString("yyyy-MM-dd"))" /></label><label>Até <input type="date" name="to" value="@(Model.To?.ToString("yyyy-MM-dd"))" /></label><input type="search" name="search" value="@Model.Search" placeholder="Descrição, referência ou categoria..." /><label class="page-size">Por página <select name="pageSize">@foreach (var size in PaginationViewModel.AllowedPageSizes) { <option value="@size" selected="@(size == Model.Pagination.PageSize)">@size</option> }</select></label><button class="button secondary" type="submit">Aplicar filtros</button></form>
     <div class="table-wrap"><table class="entity-table account-statement-table"><thead><tr><th>Data</th><th>Movimento</th><th>Categoria</th><th>Débito</th><th>Crédito</th><th>Saldo</th><th>Reconciliação</th><th class="actions">Ações</th></tr></thead><tbody>
     @foreach (var item in Model.Items) {

@@ -91,6 +91,26 @@ public sealed class ReconciliationController(IReconciliationService service, IAc
         return RedirectToIndex(accountId, from, to, status, search, sort, page, pageSize);
     }
 
+    /// <summary>Reconciles every unreconciled movement matching the current filters.</summary>
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> ReconcileAll(Guid? accountId, DateOnly? from, DateOnly? to, ReconciliationStatus? status, string? search, string sort = "dateDesc", int page = 1, int pageSize = 10, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var items = await service.ListAsync(accountId, from, to, ReconciliationStatus.Unreconciled, search, cancellationToken);
+            var ids = items.Select(item => item.JournalEntryId).Distinct().ToList();
+            foreach (var id in ids) await service.ReconcileAsync(id, UserId(), cancellationToken);
+            logger.LogInformation("{Count} journal entries reconciled in bulk by user {UserId}.", ids.Count, UserId());
+            TempData["SuccessMessage"] = ids.Count == 0
+                ? "Não existem movimentos por reconciliar com os filtros atuais."
+                : $"{ids.Count} movimentos reconciliados com sucesso.";
+        }
+        catch (ArgumentException exception) { TempData["ErrorMessage"] = exception.Message; }
+        catch (KeyNotFoundException exception) { TempData["ErrorMessage"] = exception.Message; }
+        catch (InvalidOperationException exception) { TempData["ErrorMessage"] = exception.Message; }
+        return RedirectToIndex(accountId, from, to, status, search, sort, page, pageSize);
+    }
+
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> Undo(Guid id, Guid? accountId, DateOnly? from, DateOnly? to, ReconciliationStatus? status, string? search, string sort = "dateDesc", int page = 1, int pageSize = 10, CancellationToken cancellationToken = default)
     {
@@ -161,8 +181,16 @@ public sealed class ReconciliationController(IReconciliationService service, IAc
         foreach (var row in imported.Where(row => row.Date.Year != selectedBudget.Year || row.Date.Month != selectedBudget.Month))
         {
             row.Selected = false;
-            row.IsEligible = false;
-            row.EligibilityMessage = $"A data {row.Date:dd/MM/yyyy} não pertence ao orçamento de {BudgetName(selectedBudget.Year, selectedBudget.Month)}. Este movimento não pode ser processado.";
+            if (ReconciliationImportPeriodPolicy.MonthDistance(row.Date, selectedBudget.Year, selectedBudget.Month) == 1)
+            {
+                row.IsPeriodWarning = true;
+                row.EligibilityMessage = $"A data {row.Date:dd/MM/yyyy} difere um mês do orçamento de {BudgetName(selectedBudget.Year, selectedBudget.Month)}. Confirme a seleção se pretende associar este movimento ao orçamento escolhido.";
+            }
+            else
+            {
+                row.IsEligible = false;
+                row.EligibilityMessage = $"A data {row.Date:dd/MM/yyyy} não pertence ao orçamento de {BudgetName(selectedBudget.Year, selectedBudget.Month)}. Este movimento não pode ser processado.";
+            }
         }
         await ApplySuggestionsAsync(imported, cancellationToken);
         var review = new ReconciliationImportReviewViewModel { BankAccountId = selectedBank.Id, BankAccountName = selectedBank.Name, BudgetId = selectedBudget.Id, BudgetName = BudgetName(selectedBudget.Year, selectedBudget.Month), BudgetYear = selectedBudget.Year, BudgetMonth = selectedBudget.Month, Rows = imported };
@@ -182,7 +210,7 @@ public sealed class ReconciliationController(IReconciliationService service, IAc
         var bank = await dbContext.Accounts.FindAsync([model.BankAccountId], cancellationToken); if (bank is null) return BadRequest();
         var budget = await dbContext.Budgets.AsNoTracking().FirstOrDefaultAsync(x => x.Id == model.BudgetId, cancellationToken); if (budget is null) return BadRequest();
         var selected = model.Rows.Where(x => x.Selected).ToList();
-        if (selected.Any(x => x.Date.Year != budget.Year || x.Date.Month != budget.Month)) { ModelState.AddModelError(string.Empty, $"Existem movimentos fora do período do orçamento de {BudgetName(budget.Year, budget.Month)}."); await PopulateReviewOptionsAsync(model, cancellationToken); return View("ReviewImport", model); }
+        if (selected.Any(x => ReconciliationImportPeriodPolicy.MonthDistance(x.Date, budget.Year, budget.Month) > 1)) { ModelState.AddModelError(string.Empty, $"Existem movimentos com uma diferença superior a um mês relativamente ao orçamento de {BudgetName(budget.Year, budget.Month)}."); await PopulateReviewOptionsAsync(model, cancellationToken); return View("ReviewImport", model); }
         if (selected.Count == 0) { ModelState.AddModelError(string.Empty, "Selecione pelo menos um movimento válido para processar."); await PopulateReviewOptionsAsync(model, cancellationToken); return View("ReviewImport", model); }
         if (selected.Any(x => !x.CategoryId.HasValue)) { ModelState.AddModelError(string.Empty, "Escolha a categoria de todas as linhas selecionadas."); await PopulateReviewOptionsAsync(model, cancellationToken); return View("ReviewImport", model); }
         var categoryIds = selected.Select(x => x.CategoryId!.Value).Distinct().ToList();

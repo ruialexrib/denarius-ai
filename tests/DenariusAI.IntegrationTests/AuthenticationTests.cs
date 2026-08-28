@@ -60,6 +60,27 @@ public sealed class AuthenticationTests
         Assert.NotNull(method.GetCustomAttributes(typeof(ValidateAntiForgeryTokenAttribute), true).SingleOrDefault());
     }
 
+    [Fact]
+    public void BulkReconciliationRequiresPostAndAntiforgery()
+    {
+        var method = typeof(ReconciliationController).GetMethod(nameof(ReconciliationController.ReconcileAll));
+
+        Assert.NotNull(method);
+        Assert.NotNull(method!.GetCustomAttributes(typeof(HttpPostAttribute), true).SingleOrDefault());
+        Assert.NotNull(method.GetCustomAttributes(typeof(ValidateAntiForgeryTokenAttribute), true).SingleOrDefault());
+    }
+
+    [Theory]
+    [InlineData(2026, 8, 2026, 8, 0)]
+    [InlineData(2026, 7, 2026, 8, 1)]
+    [InlineData(2026, 9, 2026, 8, 1)]
+    [InlineData(2025, 12, 2026, 1, 1)]
+    [InlineData(2026, 6, 2026, 8, 2)]
+    public void ReconciliationImportCalculatesBudgetMonthDistance(int movementYear, int movementMonth, int budgetYear, int budgetMonth, int expected)
+    {
+        Assert.Equal(expected, ReconciliationImportPeriodPolicy.MonthDistance(new DateOnly(movementYear, movementMonth, 1), budgetYear, budgetMonth));
+    }
+
     [Theory]
     [InlineData(typeof(HomeController), nameof(HomeController.AcknowledgeDemonstrationData))]
     [InlineData(typeof(AccountController), nameof(AccountController.AcceptCookieConsent))]

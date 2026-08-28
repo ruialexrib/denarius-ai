@@ -90,10 +90,23 @@ public sealed class AccountsController(IAccountService service, ICategoryService
                 || (item.CategoryName?.Contains(term, StringComparison.CurrentCultureIgnoreCase) ?? false)).ToList();
         }
 
-        lines = lines.OrderByDescending(item => item.Date).ThenByDescending(item => item.CreatedAt).ThenByDescending(item => item.LineId).ToList();
+        lines = lines.OrderByDescending(item => item.Date).ThenByDescending(item => item.CreatedAt).ThenByDescending(item => item.LineId).Take(50).ToList();
         var pagination = PaginationViewModel.Create(lines.Count, page, pageSize);
         var items = lines.Skip((pagination.Page - 1) * pagination.PageSize).Take(pagination.PageSize).ToList();
         return View(new AccountStatementViewModel(account, items, from, to, search, pagination));
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> ExportPdf(Guid id, DateOnly? from, DateOnly? to, string? search, CancellationToken cancellationToken = default)
+    {
+        var account = await service.GetAsync(id, cancellationToken);
+        if (account is null) return NotFound();
+        var lines = await service.GetStatementAsync(id, cancellationToken);
+        if (from.HasValue) lines = lines.Where(item => item.Date >= from.Value).ToList();
+        if (to.HasValue) lines = lines.Where(item => item.Date <= to.Value).ToList();
+        if (!string.IsNullOrWhiteSpace(search)) { var term = search.Trim(); lines = lines.Where(item => item.Description.Contains(term, StringComparison.CurrentCultureIgnoreCase) || (item.Reference?.Contains(term, StringComparison.CurrentCultureIgnoreCase) ?? false) || (item.LineDescription?.Contains(term, StringComparison.CurrentCultureIgnoreCase) ?? false) || (item.CategoryName?.Contains(term, StringComparison.CurrentCultureIgnoreCase) ?? false)).ToList(); }
+        lines = lines.OrderByDescending(item => item.Date).ThenByDescending(item => item.CreatedAt).ThenByDescending(item => item.LineId).Take(50).ToList();
+        return File(Models.AccountStatementPdf.Generate(account, lines, from, to), "application/pdf", $"extrato-{account.Name.Replace(' ', '-').ToLowerInvariant()}-{DateTime.UtcNow:yyyyMMdd}.pdf");
     }
 
     /// <summary>
