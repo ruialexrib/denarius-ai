@@ -1,6 +1,6 @@
-# Contributing to Denarius AI
+# Contributing to DenariusAI
 
-Thank you for your interest in contributing to Denarius AI.
+Thank you for your interest in contributing to DenariusAI.
 
 This document defines the basic rules for proposing changes to the project. The goal is to keep contributions focused, reviewable, secure, and consistent with the existing architecture.
 
