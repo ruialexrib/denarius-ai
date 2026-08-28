@@ -1,0 +1,23 @@
+/* Shared action system. Imported after page styles by operation-progress.css. */
+.button{display:inline-flex;min-height:42px;align-items:center;justify-content:center;gap:8px;padding:10px 16px;border:1px solid transparent;border-radius:10px;background:#159a70;color:#fff;font:inherit;font-size:.8rem;font-weight:800;line-height:1.15;text-align:center;text-decoration:none;white-space:nowrap;cursor:pointer;box-shadow:0 5px 13px rgba(21,154,112,.14);transition:transform .16s ease,box-shadow .16s ease,background-color .16s ease,border-color .16s ease,color .16s ease}
+.button:hover{background:#108461;box-shadow:0 8px 18px rgba(21,154,112,.21);transform:translateY(-1px)}
+.button:active{box-shadow:0 3px 8px rgba(21,154,112,.14);transform:translateY(0)}
+.button.secondary{border-color:#dce3e8;background:#f4f7f8;color:#344054;box-shadow:none}
+.button.secondary:hover{border-color:#c9d4dc;background:#eaf0f2;color:#17243a;box-shadow:0 5px 12px rgba(24,34,55,.08)}
+.button.danger{border-color:#b42318;background:#b42318;color:#fff;box-shadow:0 5px 13px rgba(180,35,24,.14)}
+.button.danger:hover{border-color:#941b12;background:#941b12;box-shadow:0 8px 18px rgba(180,35,24,.2)}
+.button.compact{min-height:36px;padding:8px 12px;font-size:.75rem}
+.button:focus-visible,.text-link:focus-visible,.pager-link:focus-visible,.settings-operation-button:focus-visible,.support-button:focus-visible{outline:3px solid rgba(52,211,153,.3);outline-offset:2px}
+.button:disabled,.button[aria-disabled=true]{box-shadow:none;cursor:not-allowed;opacity:.5;transform:none}
+.filterbar>.button{width:auto;justify-self:start}
+.form-actions,.header-actions{align-items:center}
+.text-link{display:inline-flex;min-height:28px;align-items:center;padding:4px 2px;border-radius:5px;font:inherit;font-size:.75rem;font-weight:750;line-height:1.2;white-space:nowrap;transition:background-color .15s ease,color .15s ease}
+.text-link:hover{background:#eaf7f2;color:#066b4e}
+.text-link.danger-link,.danger-link{color:#b42318}
+.text-link.danger-link:hover,.danger-link:hover{background:#fff0ee;color:#941b12}
+.pager-link{display:inline-flex;min-height:36px;align-items:center;justify-content:center;padding:8px 11px;border-radius:9px;font:inherit;font-size:.75rem;line-height:1}
+.pager-link:not(:disabled):hover{border-color:#b8d9cf;background:#eef8f5;color:#066b4e}
+.settings-operation-button,.support-button{min-height:42px;border-radius:10px;font:inherit;font-size:.8rem}
+.export-pdf-button{border-color:#c9d8d5!important;background:linear-gradient(135deg,#fff,#f2f8f6)!important;color:#126c57!important;box-shadow:0 3px 10px rgba(18,108,87,.10)}
+.export-pdf-button:hover{border-color:#9fcbbf!important;background:#eaf6f2!important;box-shadow:0 6px 16px rgba(18,108,87,.18)}
+@media(max-width:800px){.filterbar>.button{width:100%;justify-self:stretch}.page-header .button,.header-actions .button{min-height:40px}}

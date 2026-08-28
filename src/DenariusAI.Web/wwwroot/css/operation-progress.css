@@ -1,3 +1,4 @@
+@import url("./buttons.css");
 .operation-progress{background:rgba(10,20,36,.58);backdrop-filter:blur(7px)}
 .operation-progress-card{position:relative;display:grid;width:min(480px,calc(100vw - 36px));grid-template-columns:64px minmax(0,1fr);gap:22px;padding:30px 32px;overflow:hidden;border:1px solid rgba(255,255,255,.72);border-radius:20px;background:linear-gradient(145deg,rgba(255,255,255,.98),rgba(246,251,249,.96));text-align:left;box-shadow:0 28px 80px rgba(8,20,36,.3)}
 .operation-progress-card:before{position:absolute;top:-115px;right:-85px;width:230px;height:230px;border-radius:50%;background:radial-gradient(circle,rgba(52,211,153,.12),rgba(52,211,153,0) 68%);content:"";pointer-events:none}
