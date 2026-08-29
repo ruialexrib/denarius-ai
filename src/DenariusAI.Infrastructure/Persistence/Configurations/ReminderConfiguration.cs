@@ -19,6 +19,8 @@ internal sealed class ReminderConfiguration : IEntityTypeConfiguration<Reminder>
         builder.Property(item => item.Text).HasMaxLength(500).IsRequired();
         builder.Property(item => item.EventDate).HasColumnType("date");
         builder.HasIndex(item => item.EventDate);
+        builder.HasIndex(item => item.WarrantyId).IsUnique().HasFilter("[WarrantyId] IS NOT NULL");
+        builder.HasIndex(item => item.SavingsCertificateId).IsUnique().HasFilter("[SavingsCertificateId] IS NOT NULL");
         builder.HasMany(item => item.Acknowledgements).WithOne(item => item.Reminder).HasForeignKey(item => item.ReminderId).OnDelete(DeleteBehavior.Cascade);
         builder.HasData(StructuralSeed.Reminders);
     }

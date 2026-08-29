@@ -61,6 +61,8 @@ public sealed class SavingsCertificate : AuditableEntity
     /// </summary>
     public DateOnly NextCapitalization { get; private set; }
 
+    public Reminder Reminder { get; private set; } = null!;
+
     /// <summary>
     /// Updates the savings certificate with the specified parameters.
     /// </summary>

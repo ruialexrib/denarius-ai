@@ -32,6 +32,14 @@ public sealed class Reminder : AuditableEntity
     /// </summary>
     public int NoticeDays { get; private set; }
 
+    public Guid? WarrantyId { get; private set; }
+
+    public Warranty? Warranty { get; private set; }
+
+    public Guid? SavingsCertificateId { get; private set; }
+
+    public SavingsCertificate? SavingsCertificate { get; private set; }
+
     /// <summary>
     /// Gets the collection of acknowledgements for this reminder.
     /// </summary>
@@ -51,6 +59,10 @@ public sealed class Reminder : AuditableEntity
         if (noticeDays is < 0 or > 3650) throw new ArgumentOutOfRangeException(nameof(noticeDays));
         Text = text.Trim(); EventDate = eventDate; NoticeDays = noticeDays;
     }
+
+    public void LinkToWarranty(Guid warrantyId) => WarrantyId = warrantyId;
+
+    public void LinkToSavingsCertificate(Guid savingsCertificateId) => SavingsCertificateId = savingsCertificateId;
 }
 
 /// <summary>

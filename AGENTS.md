@@ -11,6 +11,7 @@ These instructions apply to every task in this repository.
 
 ## Implementation
 
+- Before beginning any repository modification, apply the `denarius-development-versioning` skill and assign a new visible `MAJOR.MINOR.PATCH-dev.N` version. Increment the development sequence for every new change set; read-only work does not require a version change.
 - Preserve the existing .NET 9, ASP.NET Core MVC, Entity Framework Core, SQL Server, and Razor architecture.
 - Follow the established visual system before adding new CSS. Reuse shared controls, layouts, tokens, partials, and `wwwroot/css/buttons.css` where applicable.
 - Keep create and edit forms, tables, filters, buttons, alerts, and feedback consistent across the application.

@@ -1,3 +1,5 @@
+using DenariusAI.Domain.Entities;
+using DenariusAI.Domain.Enums;
 using DenariusAI.Infrastructure.Identity;
 using DenariusAI.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Identity;
@@ -19,6 +21,14 @@ public sealed class ApplicationBackupServiceTests
         context.Roles.Add(new IdentityRole { Id = "role-1", Name = "Administrator", NormalizedName = "ADMINISTRATOR" });
         context.UserRoles.Add(new IdentityUserRole<string> { UserId = user.Id, RoleId = "role-1" });
         context.ApplicationSettings.Add(new() { Key = "Prompts.Test", Value = "original", CreatedBy = user.Id });
+        var bank = new Account { Name = "Conta", AccountType = AccountType.BankAccount };
+        var expense = new Account { Name = "Despesa", AccountType = AccountType.Expense };
+        var entry = new JournalEntry(new DateOnly(2026, 8, 29), "Compra");
+        entry.AddLine(expense.Id, 25m, 0m); entry.AddLine(bank.Id, 0m, 25m);
+        var certificate = new SavingsCertificate(new DateOnly(2026, 1, 1), "F-RESTORE", "Teste", 100m, 2m, 101m, new DateOnly(2026, 10, 1));
+        var capitalizationReminder = new Reminder("Capitalização do Certificado de Aforro F-RESTORE: Teste", certificate.NextCapitalization, 7);
+        capitalizationReminder.LinkToSavingsCertificate(certificate.Id);
+        context.AddRange(bank, expense, entry, certificate, capitalizationReminder);
         await context.SaveChangesAsync();
         var service = new ApplicationBackupService(context);
 
@@ -27,6 +37,13 @@ public sealed class ApplicationBackupServiceTests
         foreach (var table in legacyBackup["tables"]!.AsObject())
         foreach (var row in table.Value!.AsArray())
             row!.AsObject().Remove(nameof(ApplicationUser.ShowAssetBalancesWidget));
+        var tables = legacyBackup["tables"]!.AsObject();
+        tables.Remove(typeof(Correspondence).FullName!); tables.Remove(typeof(Warranty).FullName!); tables.Remove(typeof(CorrespondenceMetadata).FullName!);
+        foreach (var row in tables[typeof(Reminder).FullName!]!.AsArray())
+        {
+            row!.AsObject().Remove(nameof(Reminder.SavingsCertificateId));
+            row.AsObject().Remove(nameof(Reminder.WarrantyId));
+        }
         backup = Encoding.UTF8.GetBytes(legacyBackup.ToJsonString());
         context.ApplicationSettings.RemoveRange(context.ApplicationSettings);
         user.DisplayName = "Alterado";
@@ -45,6 +62,8 @@ public sealed class ApplicationBackupServiceTests
         var setting = await context.ApplicationSettings.SingleAsync();
         Assert.Equal("Prompts.Test", setting.Key);
         Assert.Equal("original", setting.Value);
+        Assert.Equal(2, await context.JournalEntryLines.CountAsync());
+        Assert.Single(await context.Reminders.Where(item => item.SavingsCertificateId == certificate.Id).ToListAsync());
     }
 
     [Fact]

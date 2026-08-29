@@ -4,6 +4,7 @@ using DenariusAI.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DenariusAI.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(DenariusDbContext))]
-    partial class DenariusDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260829120841_AddDocumentManagementAndLinkedReminders")]
+    partial class AddDocumentManagementAndLinkedReminders
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -630,54 +633,6 @@ namespace DenariusAI.Infrastructure.Persistence.Migrations
                     b.HasIndex("ReceivedDate");
 
                     b.ToTable("Correspondence", "denarius");
-                });
-
-            modelBuilder.Entity("DenariusAI.Domain.Entities.CorrespondenceMetadata", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Confidence")
-                        .HasMaxLength(10)
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(10)");
-
-                    b.Property<Guid>("CorrespondenceId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<string>("CreatedBy")
-                        .HasMaxLength(450)
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("Key")
-                        .IsRequired()
-                        .HasMaxLength(120)
-                        .HasColumnType("nvarchar(120)");
-
-                    b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<string>("UpdatedBy")
-                        .HasMaxLength(450)
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("Value")
-                        .IsRequired()
-                        .HasMaxLength(1000)
-                        .HasColumnType("nvarchar(1000)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CorrespondenceId");
-
-                    b.HasIndex("CorrespondenceId", "Key")
-                        .IsUnique();
-
-                    b.ToTable("CorrespondenceMetadata", "denarius");
                 });
 
             modelBuilder.Entity("DenariusAI.Domain.Entities.FinancialGroup", b =>
@@ -4325,17 +4280,6 @@ namespace DenariusAI.Infrastructure.Persistence.Migrations
                     b.Navigation("FinancialGroup");
                 });
 
-            modelBuilder.Entity("DenariusAI.Domain.Entities.CorrespondenceMetadata", b =>
-                {
-                    b.HasOne("DenariusAI.Domain.Entities.Correspondence", "Correspondence")
-                        .WithMany("Metadata")
-                        .HasForeignKey("CorrespondenceId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Correspondence");
-                });
-
             modelBuilder.Entity("DenariusAI.Domain.Entities.JournalEntry", b =>
                 {
                     b.HasOne("DenariusAI.Domain.Entities.Budget", "Budget")
@@ -4492,11 +4436,6 @@ namespace DenariusAI.Infrastructure.Persistence.Migrations
                     b.Navigation("BudgetLines");
 
                     b.Navigation("JournalEntryLines");
-                });
-
-            modelBuilder.Entity("DenariusAI.Domain.Entities.Correspondence", b =>
-                {
-                    b.Navigation("Metadata");
                 });
 
             modelBuilder.Entity("DenariusAI.Domain.Entities.FinancialGroup", b =>

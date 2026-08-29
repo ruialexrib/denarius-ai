@@ -39,7 +39,8 @@ public sealed class ApplicationSettingsService(DenariusDbContext dbContext, IOpt
             UpgradeDefault(Get(values, "Prompts.ReconciliationClassification", ApplicationSettingsDefaults.ReconciliationClassificationPrompt), ApplicationSettingsDefaults.LegacyReconciliationClassificationPrompt, ApplicationSettingsDefaults.ReconciliationClassificationPrompt),
             UpgradeDefault(Get(values, "Prompts.DashboardWelcome", ApplicationSettingsDefaults.DashboardWelcomePrompt), ApplicationSettingsDefaults.LegacyDashboardWelcomePrompt, ApplicationSettingsDefaults.DashboardWelcomePrompt),
             Get(values, "Prompts.FinancialAnalysis", ApplicationSettingsDefaults.FinancialAnalysisPrompt),
-            Get(values, "Prompts.ConnectionTest", ApplicationSettingsDefaults.ConnectionTestPrompt));
+            Get(values, "Prompts.ConnectionTest", ApplicationSettingsDefaults.ConnectionTestPrompt),
+            Get(values, "Prompts.CorrespondenceMetadata", ApplicationSettingsDefaults.CorrespondenceMetadataPrompt));
     }
 
     /// <summary>
@@ -62,7 +63,8 @@ public sealed class ApplicationSettingsService(DenariusDbContext dbContext, IOpt
             ["Prompts.ReconciliationExtraction"] = settings.ReconciliationExtractionPrompt.Trim(), ["Prompts.ReconciliationClassification"] = settings.ReconciliationClassificationPrompt.Trim(),
             ["Prompts.DashboardWelcome"] = settings.DashboardWelcomePrompt.Trim(),
             ["Prompts.FinancialAnalysis"] = settings.FinancialAnalysisPrompt.Trim(),
-            ["Prompts.ConnectionTest"] = settings.ConnectionTestPrompt.Trim()
+            ["Prompts.ConnectionTest"] = settings.ConnectionTestPrompt.Trim(),
+            ["Prompts.CorrespondenceMetadata"] = settings.CorrespondenceMetadataPrompt.Trim()
         };
         var existing = await dbContext.ApplicationSettings.ToDictionaryAsync(item => item.Key, cancellationToken);
         foreach (var pair in values)
@@ -80,7 +82,7 @@ public sealed class ApplicationSettingsService(DenariusDbContext dbContext, IOpt
     /// <exception cref="ArgumentException">Thrown when validation fails.</exception>
     private static void Validate(ApplicationSettingsDto value)
     {
-        if (string.IsNullOrWhiteSpace(value.MistralModel) || string.IsNullOrWhiteSpace(value.AssistantSystemPrompt) || string.IsNullOrWhiteSpace(value.JournalSuggestionSystemPrompt) || string.IsNullOrWhiteSpace(value.ReconciliationExtractionPrompt) || string.IsNullOrWhiteSpace(value.ReconciliationClassificationPrompt) || string.IsNullOrWhiteSpace(value.DashboardWelcomePrompt) || string.IsNullOrWhiteSpace(value.FinancialAnalysisPrompt) || string.IsNullOrWhiteSpace(value.ConnectionTestPrompt)) throw new ArgumentException("Modelo e prompts são obrigatórios.");
+        if (string.IsNullOrWhiteSpace(value.MistralModel) || string.IsNullOrWhiteSpace(value.AssistantSystemPrompt) || string.IsNullOrWhiteSpace(value.JournalSuggestionSystemPrompt) || string.IsNullOrWhiteSpace(value.ReconciliationExtractionPrompt) || string.IsNullOrWhiteSpace(value.ReconciliationClassificationPrompt) || string.IsNullOrWhiteSpace(value.DashboardWelcomePrompt) || string.IsNullOrWhiteSpace(value.FinancialAnalysisPrompt) || string.IsNullOrWhiteSpace(value.ConnectionTestPrompt) || string.IsNullOrWhiteSpace(value.CorrespondenceMetadataPrompt)) throw new ArgumentException("Modelo e prompts são obrigatórios.");
         if (!Uri.TryCreate(value.MistralBaseUrl, UriKind.Absolute, out var uri) || uri.Scheme != Uri.UriSchemeHttps) throw new ArgumentException("O endereço da Mistral deve ser um URL HTTPS válido.");
         if (value.MistralMaxTokens is < 64 or > 8192 || value.MistralTemperature is < 0 or > 1) throw new ArgumentException("Os parâmetros do modelo estão fora dos limites permitidos.");
         if (value.AssistantContextMonths is < 1 or > 60 || value.AssistantMaxTransactions is < 10 or > 1000 || value.AssistantHistoryMessages is < 0 or > 50 || value.JournalSuggestionHistoryMessages is < 0 or > 50) throw new ArgumentException("Os limites da aplicação estão fora dos intervalos permitidos.");

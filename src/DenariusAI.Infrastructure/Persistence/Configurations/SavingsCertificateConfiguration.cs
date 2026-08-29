@@ -27,5 +27,6 @@ internal sealed class SavingsCertificateConfiguration : IEntityTypeConfiguration
         builder.Property(item => item.NextCapitalization).HasColumnType("date");
         builder.HasIndex(item => item.SeriesNumber).IsUnique();
         builder.HasIndex(item => item.InvestmentDate);
+        builder.HasOne(item => item.Reminder).WithOne(item => item.SavingsCertificate).HasForeignKey<Reminder>(item => item.SavingsCertificateId).OnDelete(DeleteBehavior.Cascade);
     }
 }

@@ -7,6 +7,8 @@ description: Prepare and publish DenariusAI versions, commits, tags, GitHub rele
 
 Use this skill when preparing a version, release notes, tag, GitHub release, or the content displayed in **O que há de novo**.
 
+Ordinary implementation builds follow the `denarius-development-versioning` convention and display a `MAJOR.MINOR.PATCH-dev.N` version. A release replaces that temporary version with the final stable version.
+
 ## Version choice
 
 Use semantic version numbers `MAJOR.MINOR.PATCH` and inspect the changes since the latest release before choosing:
@@ -17,7 +19,7 @@ Use semantic version numbers `MAJOR.MINOR.PATCH` and inspect the changes since t
 
 If the user supplies an exact version, use it. Otherwise state the recommended version and the evidence for the classification before publishing.
 
-Update `Version`, `AssemblyVersion`, and `FileVersion` consistently in `Directory.Build.props`. Tags and GitHub release titles use the `vX.Y.Z` form.
+Update `Version`, `AssemblyVersion`, and `FileVersion` consistently in `Directory.Build.props`, remove the project-level development `Version` override, and confirm that the application displays the stable version without a `-dev.N` suffix. Tags and GitHub release titles use the `vX.Y.Z` form.
 
 ## Release notes
 
@@ -53,4 +55,3 @@ Every release must describe the delta from the preceding release in both Europea
 7. Verify the release page, published web and MCP container packages, and in-app version detection.
 
 Do not reuse an existing tag for different code and do not publish a release from an unverified or unintended commit.
-

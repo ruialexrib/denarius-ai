@@ -29,8 +29,15 @@ builder.Services.AddAuthorizationBuilder()
     .SetFallbackPolicy(new Microsoft.AspNetCore.Authorization.AuthorizationPolicyBuilder()
         .RequireAuthenticatedUser()
         .Build());
+var applicationAssembly = typeof(Program).Assembly;
+var applicationVersion = applicationAssembly
+    .GetCustomAttributes(typeof(System.Reflection.AssemblyInformationalVersionAttribute), false)
+    .OfType<System.Reflection.AssemblyInformationalVersionAttribute>()
+    .SingleOrDefault()?.InformationalVersion.Split('+')[0]
+    ?? applicationAssembly.GetName().Version?.ToString(3)
+    ?? "0.21.1";
 builder.Services.AddSingleton(new DenariusAI.Web.Models.ApplicationInfo(
-    Version: typeof(Program).Assembly.GetName().Version?.ToString(3) ?? "0.21.1",
+    Version: applicationVersion,
     Description: "O controlo do seu futuro financeiro começa aqui."));
 builder.Services.AddHealthChecks().AddDbContextCheck<DenariusDbContext>("sqlserver");
 

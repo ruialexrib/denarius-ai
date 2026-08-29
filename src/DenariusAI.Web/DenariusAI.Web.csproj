@@ -1,6 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
   <PropertyGroup>
-    <Version>0.21.1</Version>
     <UserSecretsId>DenariusAI-Web-Development</UserSecretsId>
   </PropertyGroup>
   <ItemGroup>

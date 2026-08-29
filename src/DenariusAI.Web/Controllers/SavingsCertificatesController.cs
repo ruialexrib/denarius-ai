@@ -64,7 +64,9 @@ public sealed class SavingsCertificatesController(DenariusDbContext dbContext) :
         if (!ModelState.IsValid) return View("Form", model);
         if (await dbContext.SavingsCertificates.AnyAsync(item => item.SeriesNumber == model.SeriesNumber.Trim(), cancellationToken))
         { ModelState.AddModelError(nameof(model.SeriesNumber), "Já existe um certificado com esta série/número."); return View("Form", model); }
-        var item = CreateEntity(model); item.CreatedBy = UserId(); dbContext.Add(item); await dbContext.SaveChangesAsync(cancellationToken);
+        var item = CreateEntity(model); item.CreatedBy = UserId();
+        var reminder = new Reminder(ReminderText(item), model.NextCapitalization, model.NoticeDays) { CreatedBy = UserId() }; reminder.LinkToSavingsCertificate(item.Id);
+        dbContext.AddRange(item, reminder); await dbContext.SaveChangesAsync(cancellationToken);
         TempData["SuccessMessage"] = "Certificado de Aforro adicionado."; return RedirectToAction(nameof(Index));
     }
 
@@ -77,7 +79,7 @@ public sealed class SavingsCertificatesController(DenariusDbContext dbContext) :
     [HttpGet]
     public async Task<IActionResult> Edit(Guid id, CancellationToken cancellationToken)
     {
-        var item = await dbContext.SavingsCertificates.FindAsync([id], cancellationToken); if (item is null) return NotFound();
+        var item = await dbContext.SavingsCertificates.Include(value => value.Reminder).SingleOrDefaultAsync(value => value.Id == id, cancellationToken); if (item is null) return NotFound();
         return View("Form", ToForm(item));
     }
 
@@ -92,11 +94,12 @@ public sealed class SavingsCertificatesController(DenariusDbContext dbContext) :
     public async Task<IActionResult> Edit(Guid id, SavingsCertificateFormViewModel model, CancellationToken cancellationToken)
     {
         if (id != model.Id) return BadRequest(); if (!ModelState.IsValid) return View("Form", model);
-        var item = await dbContext.SavingsCertificates.FindAsync([id], cancellationToken); if (item is null) return NotFound();
+        var item = await dbContext.SavingsCertificates.Include(value => value.Reminder).SingleOrDefaultAsync(value => value.Id == id, cancellationToken); if (item is null) return NotFound();
         if (await dbContext.SavingsCertificates.AnyAsync(other => other.Id != id && other.SeriesNumber == model.SeriesNumber.Trim(), cancellationToken))
         { ModelState.AddModelError(nameof(model.SeriesNumber), "Já existe um certificado com esta série/número."); return View("Form", model); }
         item.Update(model.InvestmentDate, model.SeriesNumber, model.Description, model.InvestmentValue, model.Rate, model.CurrentValue, model.NextCapitalization);
-        item.UpdatedBy = UserId(); await dbContext.SaveChangesAsync(cancellationToken); TempData["SuccessMessage"] = "Certificado atualizado."; return RedirectToAction(nameof(Index));
+        item.UpdatedBy = UserId(); item.Reminder.Update(ReminderText(item), model.NextCapitalization, model.NoticeDays); item.Reminder.UpdatedBy = UserId();
+        await dbContext.SaveChangesAsync(cancellationToken); TempData["SuccessMessage"] = "Certificado e lembrete atualizados."; return RedirectToAction(nameof(Index));
     }
 
     /// <summary>
@@ -131,7 +134,9 @@ public sealed class SavingsCertificatesController(DenariusDbContext dbContext) :
     /// </summary>
     /// <param name="item">The savings certificate entity.</param>
     /// <returns>A form view model populated with entity data.</returns>
-    private static SavingsCertificateFormViewModel ToForm(SavingsCertificate item) => new() { Id = item.Id, InvestmentDate = item.InvestmentDate, SeriesNumber = item.SeriesNumber, Description = item.Description, InvestmentValue = item.InvestmentValue, Rate = item.Rate, CurrentValue = item.CurrentValue, NextCapitalization = item.NextCapitalization };
+    private static SavingsCertificateFormViewModel ToForm(SavingsCertificate item) => new() { Id = item.Id, InvestmentDate = item.InvestmentDate, SeriesNumber = item.SeriesNumber, Description = item.Description, InvestmentValue = item.InvestmentValue, Rate = item.Rate, CurrentValue = item.CurrentValue, NextCapitalization = item.NextCapitalization, NoticeDays = item.Reminder.NoticeDays };
+
+    private static string ReminderText(SavingsCertificate item) => $"Capitalização do Certificado de Aforro {item.SeriesNumber}: {item.Description}";
     
     /// <summary>
     /// Converts a SavingsCertificate entity to a row view model with calculated values.

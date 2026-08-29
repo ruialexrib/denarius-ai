@@ -77,6 +77,10 @@ public sealed class DenariusDbContext(DbContextOptions<DenariusDbContext> option
     /// </summary>
     public DbSet<ReminderAcknowledgement> ReminderAcknowledgements => Set<ReminderAcknowledgement>();
 
+    public DbSet<Warranty> Warranties => Set<Warranty>();
+    public DbSet<Correspondence> Correspondence => Set<Correspondence>();
+    public DbSet<CorrespondenceMetadata> CorrespondenceMetadata => Set<CorrespondenceMetadata>();
+
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
     public DbSet<LoginHistory> LoginHistory => Set<LoginHistory>();
 
@@ -163,7 +167,7 @@ public sealed class DenariusDbContext(DbContextOptions<DenariusDbContext> option
         }
     }
 
-    private static bool IsSensitive(string name) => name is "PasswordHash" or "SecurityStamp" or "ConcurrencyStamp" or "AuthenticatorKey" or "Value" or "ProfileImageBase64";
+    private static bool IsSensitive(string name) => name is "PasswordHash" or "SecurityStamp" or "ConcurrencyStamp" or "AuthenticatorKey" or "Value" or "ProfileImageBase64" or "DocumentBase64";
 
     private static string? FindActor(Microsoft.EntityFrameworkCore.ChangeTracking.EntityEntry entry, string action) =>
         entry.Properties.FirstOrDefault(property => property.Metadata.Name == (action == "Created" ? "CreatedBy" : "UpdatedBy"))?.CurrentValue?.ToString()
@@ -171,7 +175,7 @@ public sealed class DenariusDbContext(DbContextOptions<DenariusDbContext> option
 
     private static string FindLabel(IReadOnlyDictionary<string, object?> values, string fallback)
     {
-        foreach (var name in new[] { "Name", "DisplayName", "Description", "Text", "Email", "SeriesNumber", "Reference", "Key", "Date" })
+        foreach (var name in new[] { "Name", "Subject", "DisplayName", "Description", "Text", "Email", "SeriesNumber", "Reference", "Key", "Date" })
             if (values.TryGetValue(name, out var value) && !string.IsNullOrWhiteSpace(value?.ToString())) return value!.ToString()!;
         return fallback;
     }

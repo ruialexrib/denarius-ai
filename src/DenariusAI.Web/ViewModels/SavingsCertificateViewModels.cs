@@ -20,6 +20,8 @@ public sealed class SavingsCertificateFormViewModel
     public decimal CurrentValue { get; set; }
     [Required, DataType(DataType.Date), Display(Name = "Próxima capitalização")]
     public DateOnly NextCapitalization { get; set; } = DateOnly.FromDateTime(DateTime.Today);
+    [Range(0, 3650), Display(Name = "Avisar com quantos dias de antecedência")]
+    public int NoticeDays { get; set; } = 7;
 }
 
 public sealed record SavingsCertificateRowViewModel(Guid Id, DateOnly InvestmentDate, int AgeDays,
