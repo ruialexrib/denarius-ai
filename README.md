@@ -32,7 +32,7 @@ _The demo runs on an Azure virtual machine and may be temporarily unavailable wh
 
 DenariusAI is a personal and family finance management platform built around double-entry accounting. It combines daily financial management with budgeting, bank reconciliation, savings, analytics and administrative organisation in one secure and consistent workspace.
 
-AI features assist with transaction entry, classification, financial questions, document analysis and Markdown report generation. Suggestions are always reviewed by the user before relevant data is saved.
+AI features assist with transaction entry, classification, financial questions, correspondence analysis and Markdown report generation. Suggestions are always reviewed by the user before relevant data is saved.
 
 ## Highlights
 
@@ -43,9 +43,9 @@ AI features assist with transaction entry, classification, financial questions, 
 - Portuguese Savings Certificates portfolio and projections
 - Document, correspondence and warranty management
 - Reminders and alerts for relevant dates and expirations
-- AI-assisted document analysis and metadata extraction
+- AI-assisted correspondence analysis and metadata extraction
 - Mistral-powered financial assistant and intelligent reports
-- Authentication, user roles, audit capabilities and configurable application settings
+- Authentication, user roles, administrative auditing and configurable application settings
 - Optional read-only MCP financial tools
 
 ## Technology
