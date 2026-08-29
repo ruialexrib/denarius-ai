@@ -44,7 +44,7 @@ AI features assist with transaction entry, classification, financial questions, 
 - Document, correspondence and warranty management
 - Reminders and alerts for relevant dates and expirations
 - AI-assisted correspondence analysis and metadata extraction
-- Mistral-powered financial assistant and intelligent reports
+- AI-powered financial assistant and intelligent reports
 - Authentication, user roles, administrative auditing and configurable application settings
 - Optional read-only MCP financial tools
 
