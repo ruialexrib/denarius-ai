@@ -134,7 +134,7 @@ if /i "!CHANGED:~0,8!"==".github/" exit /b 0
 if /i "!CHANGED:~0,8!"==".agents/" exit /b 0
 
 rem MCP-specific source changes rebuild the optional MCP image.
-if /i "!CHANGED:~0,18!"=="src/DenariusAI.Mcp/" (
+if /i not "!CHANGED:src/DenariusAI.Mcp/=!"=="!CHANGED!" (
     set "REBUILD_MCP=1"
     exit /b 0
 )
