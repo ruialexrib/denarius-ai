@@ -1,6 +1,6 @@
-# Denarius AI Roadmap
+# DenariusAI Roadmap
 
-This roadmap captures the current product direction for Denarius AI. Priorities may change as the application evolves and feedback is incorporated.
+This roadmap captures the current product direction for DenariusAI. Priorities may change as the application evolves and feedback is incorporated.
 
 ## Current foundation
 
