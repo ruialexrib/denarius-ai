@@ -4,6 +4,7 @@ using DenariusAI.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DenariusAI.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(DenariusDbContext))]
-    partial class DenariusDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260831203736_ConfigureStockMarketAnalysis")]
+    partial class ConfigureStockMarketAnalysis
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -3950,11 +3953,6 @@ namespace DenariusAI.Infrastructure.Persistence.Migrations
                     b.Property<string>("UpdatedBy")
                         .HasMaxLength(450)
                         .HasColumnType("nvarchar(450)");
-
-                    b.Property<bool>("WatchlistOnly")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(false);
 
                     b.HasKey("Id");
 

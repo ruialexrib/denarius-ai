@@ -66,6 +66,16 @@ public sealed class DenariusDbContext(DbContextOptions<DenariusDbContext> option
     /// Gets or sets the collection of savings certificates.
     /// </summary>
     public DbSet<SavingsCertificate> SavingsCertificates => Set<SavingsCertificate>();
+
+    /// <summary>
+    /// Gets or sets the collection of stock positions.
+    /// </summary>
+    public DbSet<StockPosition> StockPositions => Set<StockPosition>();
+
+    /// <summary>
+    /// Gets or sets the collection of stock price observations.
+    /// </summary>
+    public DbSet<StockPrice> StockPrices => Set<StockPrice>();
     
     /// <summary>
     /// Gets or sets the collection of reminders.
@@ -175,7 +185,7 @@ public sealed class DenariusDbContext(DbContextOptions<DenariusDbContext> option
 
     private static string FindLabel(IReadOnlyDictionary<string, object?> values, string fallback)
     {
-        foreach (var name in new[] { "Name", "Subject", "DisplayName", "Description", "Text", "Email", "SeriesNumber", "Reference", "Key", "Date" })
+        foreach (var name in new[] { "Name", "Ticker", "Subject", "DisplayName", "Description", "Text", "Email", "SeriesNumber", "Reference", "Key", "Date" })
             if (values.TryGetValue(name, out var value) && !string.IsNullOrWhiteSpace(value?.ToString())) return value!.ToString()!;
         return fallback;
     }

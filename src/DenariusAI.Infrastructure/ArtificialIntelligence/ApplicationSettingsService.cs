@@ -40,7 +40,9 @@ public sealed class ApplicationSettingsService(DenariusDbContext dbContext, IOpt
             UpgradeDefault(Get(values, "Prompts.DashboardWelcome", ApplicationSettingsDefaults.DashboardWelcomePrompt), ApplicationSettingsDefaults.LegacyDashboardWelcomePrompt, ApplicationSettingsDefaults.DashboardWelcomePrompt),
             Get(values, "Prompts.FinancialAnalysis", ApplicationSettingsDefaults.FinancialAnalysisPrompt),
             Get(values, "Prompts.ConnectionTest", ApplicationSettingsDefaults.ConnectionTestPrompt),
-            Get(values, "Prompts.CorrespondenceMetadata", ApplicationSettingsDefaults.CorrespondenceMetadataPrompt));
+            Get(values, "Prompts.CorrespondenceMetadata", ApplicationSettingsDefaults.CorrespondenceMetadataPrompt),
+            Get(values, "MarketData.Provider", "AlphaVantage"),
+            Get(values, "MarketData.BaseUrl", "https://www.alphavantage.co/query"));
     }
 
     /// <summary>
@@ -64,7 +66,9 @@ public sealed class ApplicationSettingsService(DenariusDbContext dbContext, IOpt
             ["Prompts.DashboardWelcome"] = settings.DashboardWelcomePrompt.Trim(),
             ["Prompts.FinancialAnalysis"] = settings.FinancialAnalysisPrompt.Trim(),
             ["Prompts.ConnectionTest"] = settings.ConnectionTestPrompt.Trim(),
-            ["Prompts.CorrespondenceMetadata"] = settings.CorrespondenceMetadataPrompt.Trim()
+            ["Prompts.CorrespondenceMetadata"] = settings.CorrespondenceMetadataPrompt.Trim(),
+            ["MarketData.Provider"] = settings.MarketDataProvider.Trim(),
+            ["MarketData.BaseUrl"] = settings.MarketDataBaseUrl.Trim()
         };
         var existing = await dbContext.ApplicationSettings.ToDictionaryAsync(item => item.Key, cancellationToken);
         foreach (var pair in values)
@@ -84,6 +88,8 @@ public sealed class ApplicationSettingsService(DenariusDbContext dbContext, IOpt
     {
         if (string.IsNullOrWhiteSpace(value.MistralModel) || string.IsNullOrWhiteSpace(value.AssistantSystemPrompt) || string.IsNullOrWhiteSpace(value.JournalSuggestionSystemPrompt) || string.IsNullOrWhiteSpace(value.ReconciliationExtractionPrompt) || string.IsNullOrWhiteSpace(value.ReconciliationClassificationPrompt) || string.IsNullOrWhiteSpace(value.DashboardWelcomePrompt) || string.IsNullOrWhiteSpace(value.FinancialAnalysisPrompt) || string.IsNullOrWhiteSpace(value.ConnectionTestPrompt) || string.IsNullOrWhiteSpace(value.CorrespondenceMetadataPrompt)) throw new ArgumentException("Modelo e prompts são obrigatórios.");
         if (!Uri.TryCreate(value.MistralBaseUrl, UriKind.Absolute, out var uri) || uri.Scheme != Uri.UriSchemeHttps) throw new ArgumentException("O endereço da Mistral deve ser um URL HTTPS válido.");
+        if (!string.Equals(value.MarketDataProvider, "AlphaVantage", StringComparison.OrdinalIgnoreCase)) throw new ArgumentException("O fornecedor gratuito suportado é Alpha Vantage.");
+        if (!Uri.TryCreate(value.MarketDataBaseUrl, UriKind.Absolute, out var marketUri) || marketUri.Scheme != Uri.UriSchemeHttps) throw new ArgumentException("O endereço do fornecedor de cotações deve ser um URL HTTPS válido.");
         if (value.MistralMaxTokens is < 64 or > 8192 || value.MistralTemperature is < 0 or > 1) throw new ArgumentException("Os parâmetros do modelo estão fora dos limites permitidos.");
         if (value.AssistantContextMonths is < 1 or > 60 || value.AssistantMaxTransactions is < 10 or > 1000 || value.AssistantHistoryMessages is < 0 or > 50 || value.JournalSuggestionHistoryMessages is < 0 or > 50) throw new ArgumentException("Os limites da aplicação estão fora dos intervalos permitidos.");
     }
@@ -117,4 +123,5 @@ public sealed class ApplicationSettingsService(DenariusDbContext dbContext, IOpt
     /// <param name="fallback">The fallback value to return if the key is not found or parsing fails.</param>
     /// <returns>The parsed double value or the fallback value.</returns>
     private static double GetDouble(IReadOnlyDictionary<string, string> values, string key, double fallback) => double.TryParse(values.GetValueOrDefault(key), CultureInfo.InvariantCulture, out var value) ? value : fallback;
+
 }

@@ -11,6 +11,7 @@ using Microsoft.Extensions.DependencyInjection;
 using DenariusAI.Infrastructure.ArtificialIntelligence;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.OAuth.Claims;
+using DenariusAI.Infrastructure.MarketData;
 
 namespace DenariusAI.Infrastructure;
 
@@ -99,6 +100,8 @@ public static class DependencyInjection
             client.BaseAddress = new Uri(options.BaseUrl);
             client.Timeout = TimeSpan.FromSeconds(60);
         });
+        services.AddHttpClient<IStockMarketDataService, AlphaVantageStockMarketDataService>(client => client.Timeout = TimeSpan.FromSeconds(60))
+            .RemoveAllLoggers();
 
         return services;
     }

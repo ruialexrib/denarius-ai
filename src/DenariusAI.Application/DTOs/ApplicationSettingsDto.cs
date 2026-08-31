@@ -34,4 +34,6 @@ public sealed record ApplicationSettingsDto(
     string DashboardWelcomePrompt = Application.Configuration.ApplicationSettingsDefaults.DashboardWelcomePrompt,
     string FinancialAnalysisPrompt = Application.Configuration.ApplicationSettingsDefaults.FinancialAnalysisPrompt,
     string ConnectionTestPrompt = Application.Configuration.ApplicationSettingsDefaults.ConnectionTestPrompt,
-    string CorrespondenceMetadataPrompt = Application.Configuration.ApplicationSettingsDefaults.CorrespondenceMetadataPrompt);
+    string CorrespondenceMetadataPrompt = Application.Configuration.ApplicationSettingsDefaults.CorrespondenceMetadataPrompt,
+    string MarketDataProvider = "AlphaVantage",
+    string MarketDataBaseUrl = "https://www.alphavantage.co/query");
