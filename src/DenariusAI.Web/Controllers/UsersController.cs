@@ -1,6 +1,7 @@
+using DenariusAI.Application.Common;
+using DenariusAI.Application.Users;
 using DenariusAI.Infrastructure.Identity;
-using DenariusAI.Infrastructure.Persistence;
-using DenariusAI.Web.ViewModels;
+using DenariusAI.Web.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -8,55 +9,47 @@ using Microsoft.EntityFrameworkCore;
 
 namespace DenariusAI.Web.Controllers;
 
-/// <summary>
-/// Provides administrative user provisioning, editing, and role management actions.
-/// </summary>
-/// <remarks>
-/// This controller handles all user management operations including creating, editing, and deleting users,
-/// as well as viewing login history. Access is restricted to users in the Administrator role.
-/// </remarks>
-/// <param name="userManager">The user manager for handling user operations.</param>
-/// <param name="dbContext">The database context for accessing login history.</param>
 [Authorize(Roles = ApplicationRoles.Administrator)]
-public sealed class UsersController(UserManager<ApplicationUser> userManager, DenariusDbContext dbContext) : Controller
+public sealed class UsersController(UserManager<ApplicationUser> userManager) : Controller
 {
-    /// <summary>
-    /// Displays a list of all users in the system with their roles.
-    /// </summary>
-    /// <returns>A view containing the list of users.</returns>
     public async Task<IActionResult> Index()
     {
-        var currentId = userManager.GetUserId(User); var rows = new List<UserListItemViewModel>();
-        foreach (var user in userManager.Users.OrderBy(item => item.DisplayName))
-        { var roles = await userManager.GetRolesAsync(user); rows.Add(new(user.Id, user.DisplayName, user.Email ?? string.Empty, roles.FirstOrDefault() ?? ApplicationRoles.User, user.Id == currentId)); }
-        return View(new UserIndexViewModel(rows));
+        var users = await userManager.Users.OrderBy(x => x.DisplayName).ThenBy(x => x.Email).ToListAsync();
+        var items = new List<UserListItemViewModel>();
+        foreach (var user in users)
+        {
+            var roles = await userManager.GetRolesAsync(user);
+            items.Add(new UserListItemViewModel(user.Id, user.DisplayName, user.Email ?? string.Empty, roles.FirstOrDefault() ?? ApplicationRoles.User));
+        }
+        return View(items);
     }
 
-    /// <summary>
-    /// Displays the login history with optional filtering and pagination.
-    /// </summary>
-    /// <param name="from">Optional start date filter.</param>
-    /// <param name="to">Optional end date filter.</param>
-    /// <param name="search">Optional search term for user name, email, or IP address.</param>
-    /// <param name="page">The page number (default is 1).</param>
-    /// <param name="pageSize">The number of items per page (default is 10).</param>
-    /// <param name="cancellationToken">Cancellation token for the async operation.</param>
-    /// <returns>A view containing the filtered login history.</returns>
-    [HttpGet]
-    public async Task<IActionResult> LoginHistory(DateOnly? from, DateOnly? to, string? search, int page = 1, int pageSize = 10, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> LoginHistory(DateTime? from, DateTime? to, string? search, int page = 1)
     {
-        var query = dbContext.LoginHistory.AsNoTracking().AsQueryable();
-        if (from.HasValue) query = query.Where(item => item.LoggedInAt >= new DateTimeOffset(from.Value.ToDateTime(TimeOnly.MinValue), TimeSpan.Zero));
-        if (to.HasValue) query = query.Where(item => item.LoggedInAt < new DateTimeOffset(to.Value.AddDays(1).ToDateTime(TimeOnly.MinValue), TimeSpan.Zero));
+        const int pageSize = 25;
+        page = Math.Max(1, page);
+        var query = userManager.Users.AsNoTracking();
         if (!string.IsNullOrWhiteSpace(search))
         {
             var term = search.Trim();
-            query = query.Where(item => item.User.DisplayName.Contains(term) || (item.User.Email != null && item.User.Email.Contains(term)) || item.IpAddress.Contains(term));
+            query = query.Where(x => x.DisplayName.Contains(term) || (x.Email != null && x.Email.Contains(term)));
         }
-        var total = await query.CountAsync(cancellationToken);
-        var pagination = PaginationViewModel.Create(total, page, pageSize);
-        var items = await query.OrderByDescending(item => item.LoggedInAt).Skip((pagination.Page - 1) * pagination.PageSize).Take(pagination.PageSize)
-            .Select(item => new UserLoginHistoryItemViewModel(item.User.DisplayName, item.User.Email ?? string.Empty, item.LoggedInAt, item.IpAddress)).ToListAsync(cancellationToken);
+        var users = await query.ToDictionaryAsync(x => x.Id);
+        var items = new List<UserLoginHistoryItemViewModel>();
+        foreach (var user in users.Values)
+        {
+            var logins = user.LoginHistory ?? [];
+            foreach (var login in logins)
+            {
+                if (from.HasValue && login.TimestampUtc < from.Value.ToUniversalTime()) continue;
+                if (to.HasValue && login.TimestampUtc >= to.Value.Date.AddDays(1).ToUniversalTime()) continue;
+                items.Add(new UserLoginHistoryItemViewModel(user.DisplayName, user.Email ?? string.Empty, login.TimestampUtc, login.IpAddress));
+            }
+        }
+        items = items.OrderByDescending(x => x.TimestampUtc).ToList();
+        var total = items.Count;
+        items = items.Skip((page - 1) * pageSize).Take(pageSize).ToList();
+        var pagination = new PaginationViewModel(page, pageSize, total);
         return View(new UserLoginHistoryViewModel(items, from, to, search, pagination));
     }
 
@@ -65,7 +58,7 @@ public sealed class UsersController(UserManager<ApplicationUser> userManager, De
     /// </summary>
     /// <returns>A view containing the user creation form.</returns>
     [HttpGet] public IActionResult Create() => View("Form", new UserFormViewModel());
-    
+
     /// <summary>
     /// Processes the creation of a new user.
     /// </summary>
@@ -97,14 +90,14 @@ public sealed class UsersController(UserManager<ApplicationUser> userManager, De
     /// <summary>
     /// Processes the update of an existing user.
     /// </summary>
-    /// <param name="id">The user ID.</param>
-    /// <param name="model">The updated user form data.</param>
+    /// <param name="model">The updated user form data, including the user ID.</param>
     /// <returns>Redirects to the user list if successful, otherwise returns to the form with errors.</returns>
     [HttpPost, ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(string id, UserFormViewModel model)
+    public async Task<IActionResult> Edit(UserFormViewModel model)
     {
-        if (id != model.Id) return BadRequest(); ValidateRole(model); if (!ModelState.IsValid) return View("Form", model);
-        var user = await userManager.FindByIdAsync(id); if (user is null) return NotFound(); var roles = await userManager.GetRolesAsync(user);
+        if (string.IsNullOrWhiteSpace(model.Id)) return BadRequest();
+        ValidateRole(model); if (!ModelState.IsValid) return View("Form", model);
+        var user = await userManager.FindByIdAsync(model.Id); if (user is null) return NotFound(); var roles = await userManager.GetRolesAsync(user);
         if (roles.Contains(ApplicationRoles.Administrator) && model.Role != ApplicationRoles.Administrator && await AdministratorCountAsync() == 1)
         { ModelState.AddModelError(nameof(model.Role), "Tem de existir pelo menos um administrador."); return View("Form", model); }
         user.DisplayName = model.DisplayName.Trim(); user.Email = user.UserName = model.Email.Trim(); var result = await userManager.UpdateAsync(user); if (!result.Succeeded) { AddErrors(result); return View("Form", model); }
@@ -127,21 +120,7 @@ public sealed class UsersController(UserManager<ApplicationUser> userManager, De
         var result = await userManager.DeleteAsync(user); TempData[result.Succeeded ? "SuccessMessage" : "ErrorMessage"] = result.Succeeded ? "Utilizador eliminado." : "Não foi possível eliminar o utilizador."; return RedirectToAction(nameof(Index));
     }
 
-    /// <summary>
-    /// Validates that the specified role is a valid application role.
-    /// </summary>
-    /// <param name="model">The user form model containing the role to validate.</param>
     private void ValidateRole(UserFormViewModel model) { if (!ApplicationRoles.All.Contains(model.Role)) ModelState.AddModelError(nameof(model.Role), "Selecione uma permissão válida."); }
-    
-    /// <summary>
-    /// Gets the count of users in the Administrator role.
-    /// </summary>
-    /// <returns>The number of administrators.</returns>
     private async Task<int> AdministratorCountAsync() => (await userManager.GetUsersInRoleAsync(ApplicationRoles.Administrator)).Count;
-    
-    /// <summary>
-    /// Adds Identity errors to the ModelState.
-    /// </summary>
-    /// <param name="result">The Identity result containing errors.</param>
     private void AddErrors(IdentityResult result) { foreach (var error in result.Errors) ModelState.AddModelError(string.Empty, error.Description); }
 }
