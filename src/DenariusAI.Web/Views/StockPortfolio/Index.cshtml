@@ -42,11 +42,11 @@
                         <input type="hidden" name="Id" value="@item.Id" />
                         <label><span>Cotação</span><input type="number" name="Price" value="@item.CurrentPrice.ToString(System.Globalization.CultureInfo.InvariantCulture)" min="0" step="0.000001" aria-label="Cotação de @item.Ticker" /></label>
                         <label><span>Data</span><input type="date" name="Date" value="@item.PriceDate.ToString("yyyy-MM-dd")" aria-label="Data da cotação de @item.Ticker" /></label>
-                        <button class="button secondary" type="submit">Atualizar</button>
+                        <button class="text-link" type="submit">Atualizar</button>
                     </form>
                     <div class="stock-card-actions">
-                        <a class="button secondary" asp-action="History" asp-route-id="@item.Id">Ver evolução</a>
-                        <a class="button secondary" asp-action="Edit" asp-route-id="@item.Id">Editar</a>
+                        <a class="text-link" asp-action="History" asp-route-id="@item.Id">Ver evolução</a>
+                        <a class="text-link" asp-action="Edit" asp-route-id="@item.Id">Editar</a>
                         @await Html.PartialAsync("_AuditLink", new AuditLinkViewModel("StockPosition", item.Id.ToString()))
                         <form asp-action="Delete" asp-route-id="@item.Id" method="post" onsubmit="return confirm('Remover esta ação e o histórico de cotações?')"><button class="text-link danger-link" type="submit">Remover</button></form>
                     </div>
@@ -72,8 +72,8 @@
                 <div><span class="stock-label">Histórico desde</span><strong>@item.HistoryStartDate.ToString("dd/MM/yyyy")</strong><small><span class="status @(item.ForecastEnabled ? "active" : "inactive")">Previsão @(item.ForecastEnabled ? "ativa" : "inativa")</span></small></div>
                 <div><span class="status @(item.WatchlistOnly ? "pending" : "active")">@(item.WatchlistOnly ? "Só watchlist" : "Na carteira")</span></div>
                 <div class="stock-card-actions">
-                    <a class="button secondary" asp-action="History" asp-route-id="@item.Id">Evolução</a>
-                    <form asp-action="ImportHistory" asp-route-id="@item.Id" method="post"><button class="button secondary" type="submit">Recolher</button></form>
+                    <a class="text-link" asp-action="History" asp-route-id="@item.Id">Evolução</a>
+                    <form asp-action="ImportHistory" asp-route-id="@item.Id" method="post"><button class="text-link" type="submit">Recolher</button></form>
                     <a class="text-link" asp-action="Edit" asp-route-id="@item.Id">Editar</a>
                     <form asp-action="Delete" asp-route-id="@item.Id" method="post" onsubmit="return confirm('Remover esta ação da watchlist e o respetivo histórico?')"><button class="text-link danger-link" type="submit">Remover</button></form>
                 </div>
