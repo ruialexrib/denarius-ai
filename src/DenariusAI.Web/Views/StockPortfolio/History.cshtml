@@ -42,10 +42,10 @@
         <p class="page-subtitle">@Model.Name · @Model.Currency</p>
     </div>
     <div class="page-header-actions stock-history-actions">
-        <a class="button secondary" asp-action="Index">Voltar</a>
         <form asp-action="ImportHistory" asp-route-id="@Model.Id" method="post">
             <button class="button" type="submit">Recolher novamente</button>
         </form>
+        <a class="button secondary" asp-action="Index">Voltar</a>
     </div>
 </div>
 
