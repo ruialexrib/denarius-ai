@@ -1,20 +1,85 @@
 @model StockPortfolioIndexViewModel
 @{ ViewData["Title"] = "Portfólio de ações"; }
 <link rel="stylesheet" href="~/css/stock-portfolio.css" asp-append-version="true" />
-<div class="page-header"><div><p class="eyebrow">Investimentos</p><h1>Portfólio e watchlist</h1><p class="page-subtitle">Acompanhe posições próprias e instrumentos que pretende apenas observar.</p></div><a class="button" asp-action="Create">Adicionar ação</a></div>
-<section class="certificate-totals" aria-label="Resumo do portfólio"><article class="certificate-investment"><span>Capital investido</span><strong>@Model.TotalCost.ToString("N2")</strong><small>Ao custo médio registado</small></article><article class="certificate-current"><span>Valor de mercado</span><strong>@Model.TotalMarketValue.ToString("N2")</strong><small>Com as últimas cotações</small></article><article class="certificate-yield"><span>Ganho / perda</span><strong class="@(Model.TotalGain < 0 ? "negative" : "positive")">@Model.TotalGain.ToString("N2")</strong><small>Não realizado</small></article></section>
-<section class="panel certificate-panel"><div class="table-wrap"><table class="entity-table certificate-table"><thead><tr><th>Ação</th><th>Mercado</th><th>Quantidade</th><th>Custo médio</th><th>Última cotação</th><th>Data</th><th>Investido</th><th>Valor atual</th><th>Ganho / perda</th><th class="actions">Ações</th></tr></thead><tbody>
-@foreach(var item in Model.PortfolioItems)
-{
-    <tr><td><strong>@item.Ticker</strong><br /><small>@item.Name</small>@if(item.ForecastEnabled){<br /><small>Previsão ativa · histórico desde @item.HistoryStartDate.ToString("dd/MM/yyyy")</small>}</td><td>@(item.Exchange ?? "—")<br /><small>@item.Currency</small></td><td class="amount">@item.Quantity.ToString("N4")</td><td class="amount">@item.AverageCost.ToString("N4") @item.Currency</td><td><form asp-action="UpdatePrice" method="post" class="stock-price-form"><input type="hidden" name="Id" value="@item.Id" /><input type="number" name="Price" value="@item.CurrentPrice.ToString(System.Globalization.CultureInfo.InvariantCulture)" min="0" step="0.000001" aria-label="Cotação de @item.Ticker" /><input type="date" name="Date" value="@item.PriceDate.ToString("yyyy-MM-dd")" aria-label="Data da cotação de @item.Ticker" /><button class="button secondary" type="submit">Atualizar</button></form></td><td class="nowrap">@item.PriceDate.ToString("dd/MM/yyyy")</td><td class="amount">@item.CostValue.ToString("N2") @item.Currency</td><td class="amount"><strong>@item.MarketValue.ToString("N2") @item.Currency</strong></td><td class="amount @(item.Gain < 0 ? "negative" : "positive")">@item.Gain.ToString("N2") @item.Currency<br /><small>@item.GainPercent.ToString("N2")%</small></td><td class="actions"><a class="text-link" asp-action="History" asp-route-id="@item.Id">Ver evolução</a><a class="text-link" asp-action="Edit" asp-route-id="@item.Id">Editar</a><form asp-action="Delete" asp-route-id="@item.Id" method="post" onsubmit="return confirm('Remover esta ação e o histórico de cotações?')"><button class="text-link danger-link" type="submit">Remover</button></form>@await Html.PartialAsync("_AuditLink", new AuditLinkViewModel("StockPosition", item.Id.ToString()))</td></tr>
-    @if(item.ForecastEnabled){<tr class="stock-forecast-row"><td colspan="10"><div class="stock-forecast"><div><strong>@(item.ForecastModel ?? "Previsão indisponível")</strong>@if(item.ForecastMaePercent.HasValue){<small>Erro médio de validação: @item.ForecastMaePercent.Value.ToString("N2")%</small>}else if(!string.IsNullOrWhiteSpace(item.ForecastMessage)){<small>@item.ForecastMessage</small>}</div>@foreach(var point in item.Forecasts){<article><span>@point.Days dias · @point.Date.ToString("dd/MM/yyyy")</span><strong>@point.Price.ToString("N2") @item.Currency</strong><small>Intervalo 95%: @point.LowerPrice.ToString("N2")–@point.UpperPrice.ToString("N2")</small></article>}</div></td></tr>}
-}
-@if(Model.PortfolioItems.Count==0){<tr><td colspan="10" class="empty-row">Ainda não existem ações no portfólio.</td></tr>}
-</tbody></table></div><p class="certificate-note">Os valores são calculados deterministicamente a partir da quantidade, custo médio e última cotação registada. Portfólios com várias moedas não são convertidos entre si.</p></section>
-<section class="panel certificate-panel"><div class="panel-header"><div><p class="eyebrow">A acompanhar</p><h2>Watchlist</h2><p>Todas as ações acompanhadas, incluindo as posições que fazem parte do portfólio.</p></div></div><div class="table-wrap"><table class="entity-table"><thead><tr><th>Ação</th><th>Mercado</th><th>Estado</th><th>Última cotação</th><th>Data</th><th>Histórico desde</th><th>Previsão</th><th class="actions">Ações</th></tr></thead><tbody>
-@foreach(var item in Model.WatchlistItems)
-{
-    <tr><td><strong>@item.Ticker</strong><br/><small>@item.Name</small></td><td>@(item.Exchange ?? "—")<br/><small>@item.Currency</small></td><td><span class="status @(item.WatchlistOnly ? "pending" : "active")">@(item.WatchlistOnly ? "Só watchlist" : "No portfólio")</span></td><td class="amount"><strong>@item.CurrentPrice.ToString("N4") @item.Currency</strong></td><td>@item.PriceDate.ToString("dd/MM/yyyy")</td><td>@item.HistoryStartDate.ToString("dd/MM/yyyy")</td><td><span class="status @(item.ForecastEnabled ? "active" : "inactive")">@(item.ForecastEnabled ? "Ativa" : "Inativa")</span></td><td class="actions"><a class="text-link" asp-action="History" asp-route-id="@item.Id">Ver evolução</a><form asp-action="ImportHistory" asp-route-id="@item.Id" method="post"><button class="text-link" type="submit">Recolher</button></form><a class="text-link" asp-action="Edit" asp-route-id="@item.Id">Editar</a><form asp-action="Delete" asp-route-id="@item.Id" method="post" onsubmit="return confirm('Remover esta ação da watchlist e o respetivo histórico?')"><button class="text-link danger-link" type="submit">Remover</button></form></td></tr>
-}
-@if(Model.WatchlistItems.Count==0){<tr><td colspan="8" class="empty-row">Ainda não existem ações na watchlist.</td></tr>}
-</tbody></table></div><p class="certificate-note">A recolha usa o Alpha Vantage configurado nas Definições. Para ações Euronext, indique no ticker o símbolo reconhecido pelo fornecedor.</p></section>
+
+<div class="page-header stock-portfolio-header">
+    <div>
+        <p class="eyebrow">Investimentos</p>
+        <h1>Portfólio de ações</h1>
+        <p class="page-subtitle">Acompanhe as suas posições e os instrumentos que mantém sob observação.</p>
+    </div>
+    <a class="button" asp-action="Create">Adicionar ação</a>
+</div>
+
+<section class="stock-portfolio-summary" aria-label="Resumo do portfólio">
+    <article class="stock-summary-invested"><span>Capital investido</span><strong>@Model.TotalCost.ToString("N2")</strong><small>Ao custo médio registado</small></article>
+    <article><span>Valor de mercado</span><strong>@Model.TotalMarketValue.ToString("N2")</strong><small>Com as últimas cotações</small></article>
+    <article><span>Ganho / perda</span><strong class="@(Model.TotalGain < 0 ? "negative" : "positive")">@Model.TotalGain.ToString("N2")</strong><small>Resultado não realizado</small></article>
+</section>
+
+<section class="panel stock-section">
+    <header class="stock-section-header">
+        <div><p class="eyebrow">Posições</p><h2>Em carteira</h2><p>Posições com quantidade registada e respetiva valorização.</p></div>
+        <span class="stock-section-count">@Model.PortfolioItems.Count posição@(Model.PortfolioItems.Count == 1 ? "" : "ões")</span>
+    </header>
+    <div class="stock-position-list">
+        @foreach(var item in Model.PortfolioItems)
+        {
+            <article class="stock-position-card">
+                <div class="stock-position-main">
+                    <div class="stock-identity"><div><strong>@item.Ticker</strong><span>@(item.Exchange ?? "—")</span></div><p>@item.Name · @item.Currency</p></div>
+                    <div class="stock-current-price"><span>Última cotação</span><strong>@item.CurrentPrice.ToString("N4") @item.Currency</strong><small>@item.PriceDate.ToString("dd/MM/yyyy")</small></div>
+                    <div class="stock-position-value"><span>Valor atual</span><strong>@item.MarketValue.ToString("N2") @item.Currency</strong><small>@item.Quantity.ToString("N4") ações</small></div>
+                    <div class="stock-position-gain"><span>Ganho / perda</span><strong class="@(item.Gain < 0 ? "negative" : "positive")">@item.Gain.ToString("N2") @item.Currency</strong><small class="@(item.Gain < 0 ? "negative" : "positive")">@item.GainPercent.ToString("N2")%</small></div>
+                </div>
+                <div class="stock-position-details">
+                    <div><span>Custo médio</span><strong>@item.AverageCost.ToString("N4") @item.Currency</strong></div>
+                    <div><span>Capital investido</span><strong>@item.CostValue.ToString("N2") @item.Currency</strong></div>
+                    @if(item.ForecastEnabled){<div><span>Previsão</span><strong>@(item.ForecastModel ?? "Ativa")</strong></div>}
+                </div>
+                <div class="stock-position-footer">
+                    <form asp-action="UpdatePrice" method="post" class="stock-price-form">
+                        <input type="hidden" name="Id" value="@item.Id" />
+                        <label><span>Cotação</span><input type="number" name="Price" value="@item.CurrentPrice.ToString(System.Globalization.CultureInfo.InvariantCulture)" min="0" step="0.000001" aria-label="Cotação de @item.Ticker" /></label>
+                        <label><span>Data</span><input type="date" name="Date" value="@item.PriceDate.ToString("yyyy-MM-dd")" aria-label="Data da cotação de @item.Ticker" /></label>
+                        <button class="button secondary" type="submit">Atualizar</button>
+                    </form>
+                    <div class="stock-card-actions">
+                        <a class="button secondary" asp-action="History" asp-route-id="@item.Id">Ver evolução</a>
+                        <a class="button secondary" asp-action="Edit" asp-route-id="@item.Id">Editar</a>
+                        @await Html.PartialAsync("_AuditLink", new AuditLinkViewModel("StockPosition", item.Id.ToString()))
+                        <form asp-action="Delete" asp-route-id="@item.Id" method="post" onsubmit="return confirm('Remover esta ação e o histórico de cotações?')"><button class="text-link danger-link" type="submit">Remover</button></form>
+                    </div>
+                </div>
+            </article>
+        }
+        @if(Model.PortfolioItems.Count==0){<div class="stock-empty-state"><strong>Ainda não existem posições no portfólio.</strong><span>Adicione uma ação para começar a acompanhar a sua carteira.</span></div>}
+    </div>
+    <p class="stock-section-note">Os valores são calculados deterministicamente a partir da quantidade, custo médio e última cotação registada. Valores em moedas diferentes não são convertidos entre si.</p>
+</section>
+
+<section class="panel stock-section stock-watchlist-section">
+    <header class="stock-section-header">
+        <div><p class="eyebrow">A acompanhar</p><h2>Watchlist</h2><p>Instrumentos observados, incluindo os que já fazem parte da carteira.</p></div>
+        <span class="stock-section-count">@Model.WatchlistItems.Count instrumento@(Model.WatchlistItems.Count == 1 ? "" : "s")</span>
+    </header>
+    <div class="stock-watchlist-list">
+        @foreach(var item in Model.WatchlistItems)
+        {
+            <article class="stock-watchlist-row">
+                <div class="stock-identity"><div><strong>@item.Ticker</strong><span>@(item.Exchange ?? "—")</span></div><p>@item.Name · @item.Currency</p></div>
+                <div><span class="stock-label">Última cotação</span><strong>@item.CurrentPrice.ToString("N4") @item.Currency</strong><small>@item.PriceDate.ToString("dd/MM/yyyy")</small></div>
+                <div><span class="stock-label">Histórico desde</span><strong>@item.HistoryStartDate.ToString("dd/MM/yyyy")</strong><small><span class="status @(item.ForecastEnabled ? "active" : "inactive")">Previsão @(item.ForecastEnabled ? "ativa" : "inativa")</span></small></div>
+                <div><span class="status @(item.WatchlistOnly ? "pending" : "active")">@(item.WatchlistOnly ? "Só watchlist" : "Na carteira")</span></div>
+                <div class="stock-card-actions">
+                    <a class="button secondary" asp-action="History" asp-route-id="@item.Id">Evolução</a>
+                    <form asp-action="ImportHistory" asp-route-id="@item.Id" method="post"><button class="button secondary" type="submit">Recolher</button></form>
+                    <a class="text-link" asp-action="Edit" asp-route-id="@item.Id">Editar</a>
+                    <form asp-action="Delete" asp-route-id="@item.Id" method="post" onsubmit="return confirm('Remover esta ação da watchlist e o respetivo histórico?')"><button class="text-link danger-link" type="submit">Remover</button></form>
+                </div>
+            </article>
+        }
+        @if(Model.WatchlistItems.Count==0){<div class="stock-empty-state"><strong>A watchlist está vazia.</strong><span>Adicione instrumentos que pretende acompanhar.</span></div>}
+    </div>
+    <p class="stock-section-note">A recolha usa o Alpha Vantage configurado nas Definições. Para ações Euronext, utilize o símbolo reconhecido pelo fornecedor.</p>
+</section>
