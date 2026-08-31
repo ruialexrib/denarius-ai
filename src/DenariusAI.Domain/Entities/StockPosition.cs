@@ -23,8 +23,12 @@ public sealed class StockPosition : AuditableEntity
     /// <param name="averageCost">The average acquisition cost per share.</param>
     /// <param name="currentPrice">The latest known market price per share.</param>
     /// <param name="priceDate">The date of the latest known price.</param>
-    public StockPosition(string ticker, string name, string? exchange, string currency, decimal quantity, decimal averageCost, decimal currentPrice, DateOnly priceDate)
-        => Update(ticker, name, exchange, currency, quantity, averageCost, currentPrice, priceDate);
+    public StockPosition(string ticker, string name, string? exchange, string currency, decimal quantity, decimal averageCost, decimal currentPrice, DateOnly priceDate, DateOnly historyStartDate, bool forecastEnabled, bool watchlistOnly = false)
+    {
+        Update(ticker, name, exchange, currency, quantity, averageCost, currentPrice, priceDate);
+        ConfigureMarketAnalysis(historyStartDate, forecastEnabled);
+        SetWatchlistOnly(watchlistOnly);
+    }
 
     /// <summary>Gets the market ticker.</summary>
     public string Ticker { get; private set; } = string.Empty;
@@ -42,6 +46,12 @@ public sealed class StockPosition : AuditableEntity
     public decimal CurrentPrice { get; private set; }
     /// <summary>Gets the date of the latest known market price.</summary>
     public DateOnly PriceDate { get; private set; }
+    /// <summary>Gets the first date requested when importing market history.</summary>
+    public DateOnly HistoryStartDate { get; private set; }
+    /// <summary>Gets a value indicating whether time-series forecasts are enabled.</summary>
+    public bool ForecastEnabled { get; private set; }
+    /// <summary>Gets a value indicating whether the instrument is tracked without being part of the owned portfolio.</summary>
+    public bool WatchlistOnly { get; private set; }
 
     /// <summary>
     /// Updates the holding and its latest known price.
@@ -73,4 +83,22 @@ public sealed class StockPosition : AuditableEntity
         if (price < 0) throw new ArgumentOutOfRangeException(nameof(price));
         CurrentPrice = price; PriceDate = date;
     }
+
+    /// <summary>Configures historical collection and time-series forecasts.</summary>
+    /// <param name="historyStartDate">The first date to request from the market-data provider.</param>
+    /// <param name="forecastEnabled">Whether forecasts should be calculated for this instrument.</param>
+    public void ConfigureMarketAnalysis(DateOnly historyStartDate, bool forecastEnabled)
+    {
+        if (historyStartDate > DateOnly.FromDateTime(DateTime.Today))
+        {
+            throw new ArgumentOutOfRangeException(nameof(historyStartDate));
+        }
+
+        HistoryStartDate = historyStartDate;
+        ForecastEnabled = forecastEnabled;
+    }
+
+    /// <summary>Moves the instrument between the watchlist and the owned portfolio.</summary>
+    /// <param name="watchlistOnly">Whether the instrument should be excluded from portfolio totals.</param>
+    public void SetWatchlistOnly(bool watchlistOnly) => WatchlistOnly = watchlistOnly;
 }

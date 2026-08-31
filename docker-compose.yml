@@ -35,6 +35,7 @@ services:
       DataProtection__KeyPath: /app/keys
       Mistral__ApiKey: ${MISTRAL_API_KEY:-}
       Mistral__Model: mistral-small-2603
+      MarketData__ApiKey: ${MARKET_DATA_API_KEY:-}
       Authentication__Google__ClientId: ${GOOGLE_CLIENT_ID:-}
       Authentication__Google__ClientSecret: ${GOOGLE_CLIENT_SECRET:-}
     ports:

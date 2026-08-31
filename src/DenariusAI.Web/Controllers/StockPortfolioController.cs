@@ -1,5 +1,7 @@
 using System.Security.Claims;
 using DenariusAI.Domain.Entities;
+using DenariusAI.Application.Abstractions.Services;
+using DenariusAI.Application.DTOs;
 using DenariusAI.Infrastructure.Persistence;
 using DenariusAI.Web.ViewModels;
 using Microsoft.AspNetCore.Authorization;
@@ -12,7 +14,7 @@ namespace DenariusAI.Web.Controllers;
 /// Manages tracked stock holdings and their market values.
 /// </summary>
 [Authorize]
-public sealed class StockPortfolioController(DenariusDbContext dbContext) : Controller
+public sealed class StockPortfolioController(DenariusDbContext dbContext, IStockForecastService forecastService, IStockMarketDataService marketDataService, ILogger<StockPortfolioController> logger) : Controller
 {
     /// <summary>
     /// Displays the current stock portfolio.
@@ -25,13 +27,54 @@ public sealed class StockPortfolioController(DenariusDbContext dbContext) : Cont
             .AsNoTracking()
             .OrderBy(x => x.Ticker)
             .ToListAsync(cancellationToken);
-        var rows = positions.Select(ToRow).ToList();
+        var positionIds = positions.Select(x => x.Id).ToArray();
+        var history = await dbContext.StockPrices
+            .AsNoTracking()
+            .Where(x => positionIds.Contains(x.StockPositionId))
+            .OrderBy(x => x.Date)
+            .ToListAsync(cancellationToken);
+        var historyByPosition = history.ToLookup(x => x.StockPositionId);
+        var rows = positions.Select(position => ToRow(position, historyByPosition[position.Id])).ToList();
 
+        var portfolioRows = rows.Where(x => !x.WatchlistOnly).ToList();
         return View(new StockPortfolioIndexViewModel(
+            portfolioRows,
             rows,
-            rows.Sum(x => x.CostValue),
-            rows.Sum(x => x.MarketValue),
-            rows.Sum(x => x.Gain)));
+            portfolioRows.Sum(x => x.CostValue),
+            portfolioRows.Sum(x => x.MarketValue),
+            portfolioRows.Sum(x => x.Gain)));
+    }
+
+    /// <summary>Displays the imported price evolution and configured forecasts for one instrument.</summary>
+    /// <param name="id">The stock position identifier.</param>
+    /// <param name="cancellationToken">Token used to cancel database access.</param>
+    /// <returns>The history page or not found.</returns>
+    [HttpGet]
+    public async Task<IActionResult> History(Guid id, CancellationToken cancellationToken)
+    {
+        var position = await dbContext.StockPositions.AsNoTracking().SingleOrDefaultAsync(x => x.Id == id, cancellationToken);
+        if (position is null) return NotFound();
+
+        var prices = await dbContext.StockPrices.AsNoTracking()
+            .Where(x => x.StockPositionId == id)
+            .OrderBy(x => x.Date)
+            .ToListAsync(cancellationToken);
+        var forecast = position.ForecastEnabled
+            ? forecastService.Forecast(prices.Select(x => new StockPriceObservationDto(x.Date, x.Price)).ToArray())
+            : null;
+
+        return View(new StockHistoryViewModel(
+            position.Id,
+            position.Ticker,
+            position.Name,
+            position.Exchange,
+            position.Currency,
+            position.ForecastEnabled,
+            forecast?.Model,
+            forecast?.ValidationMaePercent,
+            forecast?.Message,
+            prices.Select(x => new StockHistoryPointViewModel(x.Date, x.Price)).ToArray(),
+            forecast?.Points.Select(x => new StockForecastPointViewModel(x.Days, x.Date, x.Price, x.LowerPrice, x.UpperPrice)).ToArray() ?? []));
     }
 
     /// <summary>
@@ -51,6 +94,7 @@ public sealed class StockPortfolioController(DenariusDbContext dbContext) : Cont
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(StockPositionFormViewModel model, CancellationToken cancellationToken)
     {
+        ValidateMarketAnalysis(model);
         if (!ModelState.IsValid)
         {
             return View("Form", model);
@@ -79,7 +123,10 @@ public sealed class StockPortfolioController(DenariusDbContext dbContext) : Cont
             model.Quantity,
             model.AverageCost,
             model.CurrentPrice,
-            model.PriceDate)
+            model.PriceDate,
+            model.HistoryStartDate,
+            model.ForecastEnabled,
+            model.WatchlistOnly)
         {
             CreatedBy = UserId(),
         };
@@ -118,6 +165,9 @@ public sealed class StockPortfolioController(DenariusDbContext dbContext) : Cont
             AverageCost = position.AverageCost,
             CurrentPrice = position.CurrentPrice,
             PriceDate = position.PriceDate,
+            HistoryStartDate = position.HistoryStartDate,
+            ForecastEnabled = position.ForecastEnabled,
+            WatchlistOnly = position.WatchlistOnly,
         });
     }
 
@@ -137,6 +187,7 @@ public sealed class StockPortfolioController(DenariusDbContext dbContext) : Cont
             return BadRequest();
         }
 
+        ValidateMarketAnalysis(model);
         if (!ModelState.IsValid)
         {
             return View("Form", model);
@@ -173,6 +224,8 @@ public sealed class StockPortfolioController(DenariusDbContext dbContext) : Cont
             model.AverageCost,
             model.CurrentPrice,
             model.PriceDate);
+        position.ConfigureMarketAnalysis(model.HistoryStartDate, model.ForecastEnabled);
+        position.SetWatchlistOnly(model.WatchlistOnly);
         position.UpdatedBy = UserId();
 
         if (priceChanged && !await dbContext.StockPrices.AnyAsync(
@@ -230,6 +283,49 @@ public sealed class StockPortfolioController(DenariusDbContext dbContext) : Cont
         return RedirectToAction(nameof(Index));
     }
 
+    /// <summary>Imports the configured daily market history for a tracked instrument.</summary>
+    /// <param name="id">The stock position identifier.</param>
+    /// <param name="cancellationToken">Token used to cancel the provider request.</param>
+    /// <returns>The refreshed portfolio view.</returns>
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ImportHistory(Guid id, CancellationToken cancellationToken)
+    {
+        var position = await dbContext.StockPositions.FindAsync([id], cancellationToken);
+        if (position is null) return NotFound();
+
+        try
+        {
+            var imported = await marketDataService.GetDailyHistoryAsync(position.Ticker, position.HistoryStartDate, cancellationToken);
+            if (imported.Count == 0)
+            {
+                TempData["ErrorMessage"] = $"Não foram encontradas cotações para {position.Ticker} desde {position.HistoryStartDate:dd/MM/yyyy}.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            var existing = await dbContext.StockPrices.Where(x => x.StockPositionId == id && x.Date >= position.HistoryStartDate).ToDictionaryAsync(x => x.Date, cancellationToken);
+            foreach (var observation in imported)
+            {
+                if (existing.TryGetValue(observation.Date, out var previous)) dbContext.StockPrices.Remove(previous);
+                dbContext.StockPrices.Add(new StockPrice(id, observation.Date, observation.Price));
+            }
+
+            var latest = imported[^1];
+            position.UpdatePrice(latest.Price, latest.Date);
+            position.UpdatedBy = UserId();
+            await dbContext.SaveChangesAsync(cancellationToken);
+            TempData["SuccessMessage"] = $"Foram recolhidas {imported.Count} cotações de {position.Ticker}.";
+            return RedirectToAction(nameof(History), new { id });
+        }
+        catch (Exception exception) when (exception is HttpRequestException or InvalidOperationException or TaskCanceledException)
+        {
+            logger.LogWarning(exception, "Stock history import failed for position {PositionId}.", id);
+            TempData["ErrorMessage"] = exception is InvalidOperationException ? exception.Message : "Não foi possível contactar o fornecedor de cotações.";
+        }
+
+        return RedirectToAction(nameof(Index));
+    }
+
     /// <summary>
     /// Removes a stock holding and its price history.
     /// </summary>
@@ -260,17 +356,31 @@ public sealed class StockPortfolioController(DenariusDbContext dbContext) : Cont
         => User.FindFirstValue(ClaimTypes.NameIdentifier)
            ?? throw new InvalidOperationException("Utilizador não identificado.");
 
+    /// <summary>Validates the historical collection settings submitted for a stock.</summary>
+    /// <param name="model">The submitted stock form.</param>
+    private void ValidateMarketAnalysis(StockPositionFormViewModel model)
+    {
+        if (model.HistoryStartDate > DateOnly.FromDateTime(DateTime.Today))
+        {
+            ModelState.AddModelError(nameof(model.HistoryStartDate), "A data inicial do histórico não pode estar no futuro.");
+        }
+    }
+
     /// <summary>
     /// Creates a deterministic portfolio row.
     /// </summary>
     /// <param name="position">Stock position.</param>
     /// <returns>Calculated portfolio values.</returns>
-    private static StockPositionRowViewModel ToRow(StockPosition position)
+    private StockPositionRowViewModel ToRow(StockPosition position, IEnumerable<StockPrice> history)
     {
         var cost = position.Quantity * position.AverageCost;
         var market = position.Quantity * position.CurrentPrice;
         var gain = market - cost;
         var percent = cost == 0 ? 0 : gain / cost * 100m;
+
+        var forecast = position.ForecastEnabled
+            ? forecastService.Forecast(history.Select(x => new StockPriceObservationDto(x.Date, x.Price)).ToArray())
+            : null;
 
         return new StockPositionRowViewModel(
             position.Id,
@@ -285,6 +395,13 @@ public sealed class StockPortfolioController(DenariusDbContext dbContext) : Cont
             cost,
             market,
             gain,
-            percent);
+            percent,
+            position.HistoryStartDate,
+            position.ForecastEnabled,
+            position.WatchlistOnly,
+            forecast?.Model,
+            forecast?.ValidationMaePercent,
+            forecast?.Message,
+            forecast?.Points.Select(x => new StockForecastPointViewModel(x.Days, x.Date, x.Price, x.LowerPrice, x.UpperPrice)).ToArray() ?? []);
     }
 }
