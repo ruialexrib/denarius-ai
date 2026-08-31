@@ -60,17 +60,8 @@ public sealed class UsersController(UserManager<ApplicationUser> userManager, De
         return View(new UserLoginHistoryViewModel(items, from, to, search, pagination));
     }
 
-    /// <summary>
-    /// Displays the form for creating a new user.
-    /// </summary>
-    /// <returns>A view containing the user creation form.</returns>
     [HttpGet] public IActionResult Create() => View("Form", new UserFormViewModel());
-    
-    /// <summary>
-    /// Processes the creation of a new user.
-    /// </summary>
-    /// <param name="model">The user form data.</param>
-    /// <returns>Redirects to the user list if successful, otherwise returns to the form with errors.</returns>
+
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(UserFormViewModel model)
     {
@@ -82,11 +73,6 @@ public sealed class UsersController(UserManager<ApplicationUser> userManager, De
         TempData["SuccessMessage"] = "Utilizador criado."; return RedirectToAction(nameof(Index));
     }
 
-    /// <summary>
-    /// Displays the form for editing an existing user.
-    /// </summary>
-    /// <param name="id">The user ID.</param>
-    /// <returns>A view containing the user edit form, or NotFound if the user doesn't exist.</returns>
     [HttpGet]
     public async Task<IActionResult> Edit(string id)
     {
@@ -94,17 +80,12 @@ public sealed class UsersController(UserManager<ApplicationUser> userManager, De
         return View("Form", new UserFormViewModel { Id = user.Id, DisplayName = user.DisplayName, Email = user.Email ?? string.Empty, Role = roles.FirstOrDefault() ?? ApplicationRoles.User });
     }
 
-    /// <summary>
-    /// Processes the update of an existing user.
-    /// </summary>
-    /// <param name="id">The user ID.</param>
-    /// <param name="model">The updated user form data.</param>
-    /// <returns>Redirects to the user list if successful, otherwise returns to the form with errors.</returns>
     [HttpPost, ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(string id, UserFormViewModel model)
+    public async Task<IActionResult> Edit(UserFormViewModel model)
     {
-        if (id != model.Id) return BadRequest(); ValidateRole(model); if (!ModelState.IsValid) return View("Form", model);
-        var user = await userManager.FindByIdAsync(id); if (user is null) return NotFound(); var roles = await userManager.GetRolesAsync(user);
+        if (string.IsNullOrWhiteSpace(model.Id)) return BadRequest();
+        ValidateRole(model); if (!ModelState.IsValid) return View("Form", model);
+        var user = await userManager.FindByIdAsync(model.Id); if (user is null) return NotFound(); var roles = await userManager.GetRolesAsync(user);
         if (roles.Contains(ApplicationRoles.Administrator) && model.Role != ApplicationRoles.Administrator && await AdministratorCountAsync() == 1)
         { ModelState.AddModelError(nameof(model.Role), "Tem de existir pelo menos um administrador."); return View("Form", model); }
         user.DisplayName = model.DisplayName.Trim(); user.Email = user.UserName = model.Email.Trim(); var result = await userManager.UpdateAsync(user); if (!result.Succeeded) { AddErrors(result); return View("Form", model); }
@@ -113,11 +94,6 @@ public sealed class UsersController(UserManager<ApplicationUser> userManager, De
         TempData["SuccessMessage"] = "Utilizador atualizado."; return RedirectToAction(nameof(Index));
     }
 
-    /// <summary>
-    /// Deletes a user from the system.
-    /// </summary>
-    /// <param name="id">The user ID to delete.</param>
-    /// <returns>Redirects to the user list with a success or error message.</returns>
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> Delete(string id)
     {
@@ -127,21 +103,7 @@ public sealed class UsersController(UserManager<ApplicationUser> userManager, De
         var result = await userManager.DeleteAsync(user); TempData[result.Succeeded ? "SuccessMessage" : "ErrorMessage"] = result.Succeeded ? "Utilizador eliminado." : "Não foi possível eliminar o utilizador."; return RedirectToAction(nameof(Index));
     }
 
-    /// <summary>
-    /// Validates that the specified role is a valid application role.
-    /// </summary>
-    /// <param name="model">The user form model containing the role to validate.</param>
     private void ValidateRole(UserFormViewModel model) { if (!ApplicationRoles.All.Contains(model.Role)) ModelState.AddModelError(nameof(model.Role), "Selecione uma permissão válida."); }
-    
-    /// <summary>
-    /// Gets the count of users in the Administrator role.
-    /// </summary>
-    /// <returns>The number of administrators.</returns>
     private async Task<int> AdministratorCountAsync() => (await userManager.GetUsersInRoleAsync(ApplicationRoles.Administrator)).Count;
-    
-    /// <summary>
-    /// Adds Identity errors to the ModelState.
-    /// </summary>
-    /// <param name="result">The Identity result containing errors.</param>
     private void AddErrors(IdentityResult result) { foreach (var error in result.Errors) ModelState.AddModelError(string.Empty, error.Description); }
 }
