@@ -6,6 +6,9 @@
     var points = Model.History.OrderBy(x => x.Date).ToArray();
     var minimum = points.Length == 0 ? 0m : points.Min(x => x.Price);
     var maximum = points.Length == 0 ? 0m : points.Max(x => x.Price);
+    var latest = points.Length == 0 ? 0m : points[^1].Price;
+    var first = points.Length == 0 ? 0m : points[0].Price;
+    var variation = points.Length == 0 || first == 0 ? 0m : (latest - first) / first * 100m;
     var range = maximum - minimum;
     var coordinates = points.Select((point, index) =>
     {
@@ -23,8 +26,116 @@
 <link rel="stylesheet" href="~/css/stock-history.css" asp-append-version="true" />
 <script src="~/js/stock-history.js" asp-append-version="true" defer></script>
 <script id="stock-chart-data" type="application/json">@Html.Raw(chartData)</script>
-<div class="page-header"><div><p class="eyebrow">Investimentos · Evolução</p><h1>@Model.Ticker</h1><p class="page-subtitle">@Model.Name · @(Model.Exchange ?? "Mercado não indicado") · @Model.Currency</p></div><div class="page-header-actions"><form asp-action="ImportHistory" asp-route-id="@Model.Id" method="post"><button class="button" type="submit">Recolher novamente</button></form><a class="button secondary" asp-action="Index">Voltar</a></div></div>
-<section class="stock-history-summary"><article><span>Observações</span><strong>@points.Length</strong><small>@(points.Length == 0 ? "Sem histórico" : $"{points[0].Date:dd/MM/yyyy}–{points[^1].Date:dd/MM/yyyy}")</small></article><article><span>Mínimo</span><strong>@minimum.ToString("N4") @Model.Currency</strong><small>Fecho diário importado</small></article><article><span>Máximo</span><strong>@maximum.ToString("N4") @Model.Currency</strong><small>Fecho diário importado</small></article></section>
-<section class="panel stock-chart-panel"><header><div><p class="eyebrow">Histórico e previsão</p><h2>Evolução da cotação</h2></div>@if(points.Length>0){<span>Último fecho: <strong>@points[^1].Price.ToString("N4") @Model.Currency</strong></span>}</header>@if(points.Length==0){<div class="stock-history-empty">Ainda não existem cotações importadas.</div>}else{<div class="stock-chart" data-stock-chart role="img" aria-label="Gráfico da evolução e previsão de @Model.Ticker"><div class="stock-chart-legend"><span class="observed">Histórico observado</span>@if(Model.Forecasts.Count>0){<span class="projected">Previsão selecionada</span>}</div><svg viewBox="0 0 900 260" preserveAspectRatio="none"><defs><linearGradient id="stockArea" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#159a70" stop-opacity=".28"/><stop offset="1" stop-color="#159a70" stop-opacity=".02"/></linearGradient><linearGradient id="forecastArea" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d48a18" stop-opacity=".24"/><stop offset="1" stop-color="#d48a18" stop-opacity=".03"/></linearGradient></defs><line x1="24" y1="34" x2="876" y2="34"/><line x1="24" y1="135" x2="876" y2="135"/><line x1="24" y1="236" x2="876" y2="236"/><polygon class="stock-chart-area" points="24,236 @string.Join(" ", coordinates) 876,236"/><polyline class="stock-chart-line" points="@string.Join(" ", coordinates)"/><polygon class="stock-forecast-band" points=""/><polyline class="stock-forecast-line" points=""/><circle class="stock-forecast-point" r="5" cx="0" cy="0"/></svg><div class="stock-chart-axis"><span>@points[0].Date.ToString("dd/MM/yyyy")</span><span data-chart-end>@points[^1].Date.ToString("dd/MM/yyyy")</span></div></div>}</section>
-<section class="panel stock-forecast-panel"><header><div><p class="eyebrow">Modelo temporal</p><h2>Previsão</h2></div>@if(Model.ForecastMaePercent.HasValue){<span>Erro médio de validação: <strong>@Model.ForecastMaePercent.Value.ToString("N2")%</strong></span>}</header>@if(!Model.ForecastEnabled){<div class="stock-history-empty">Ative a previsão na edição desta ação.</div>}else if(Model.Forecasts.Count==0){<div class="stock-history-empty">@(Model.ForecastMessage ?? "A previsão ainda não está disponível.")</div>}else{<p class="stock-model-note">@Model.ForecastModel · selecione um horizonte para o destacar no gráfico.</p><div class="stock-forecast-cards">@foreach(var item in Model.Forecasts){<button type="button" data-forecast-days="@item.Days" aria-pressed="false"><span>@item.Days dias</span><strong>@item.Price.ToString("N4") @Model.Currency</strong><small>@item.Date.ToString("dd/MM/yyyy")</small><p>Intervalo 95%: @item.LowerPrice.ToString("N4")–@item.UpperPrice.ToString("N4") @Model.Currency</p></button>}</div>}</section>
-<section class="panel stock-history-table"><header><div><p class="eyebrow">Dados</p><h2>Cotações importadas</h2></div></header><div class="table-wrap"><table class="entity-table"><thead><tr><th>Data</th><th class="amount">Fecho</th></tr></thead><tbody>@foreach(var item in points.Reverse()){<tr><td>@item.Date.ToString("dd/MM/yyyy")</td><td class="amount"><strong>@item.Price.ToString("N6") @Model.Currency</strong></td></tr>}@if(points.Length==0){<tr><td colspan="2" class="empty-row">Sem dados.</td></tr>}</tbody></table></div></section>
+
+<div class="page-header stock-history-header">
+    <div class="stock-history-identity">
+        <p class="eyebrow">Investimentos · Evolução</p>
+        <div class="stock-history-title-row">
+            <h1>@Model.Ticker</h1>
+            @if (Model.Exchange is not null)
+            {
+                <span class="stock-market-badge">@Model.Exchange</span>
+            }
+        </div>
+        <p class="page-subtitle">@Model.Name · @Model.Currency</p>
+    </div>
+    <div class="page-header-actions">
+        <form asp-action="ImportHistory" asp-route-id="@Model.Id" method="post">
+            <button class="button" type="submit">Recolher novamente</button>
+        </form>
+        <a class="button secondary" asp-action="Index">Voltar</a>
+    </div>
+</div>
+
+<section class="stock-history-summary" aria-label="Resumo da cotação">
+    <article class="stock-summary-primary">
+        <span>Último fecho</span>
+        <strong>@(points.Length == 0 ? "—" : $"{latest:N4} {Model.Currency}")</strong>
+        <small>@(points.Length == 0 ? "Sem histórico" : points[^1].Date.ToString("dd/MM/yyyy"))</small>
+    </article>
+    <article>
+        <span>Variação no período</span>
+        <strong class="@(variation > 0 ? "positive" : variation < 0 ? "negative" : string.Empty)">@(points.Length == 0 ? "—" : $"{variation:+0.00;-0.00;0.00}%")</strong>
+        <small>@(points.Length == 0 ? "Sem histórico" : $"Desde {points[0].Date:dd/MM/yyyy}")</small>
+    </article>
+    <article>
+        <span>Mínimo</span>
+        <strong>@(points.Length == 0 ? "—" : $"{minimum:N4} {Model.Currency}")</strong>
+        <small>Fecho diário</small>
+    </article>
+    <article>
+        <span>Máximo</span>
+        <strong>@(points.Length == 0 ? "—" : $"{maximum:N4} {Model.Currency}")</strong>
+        <small>Fecho diário</small>
+    </article>
+</section>
+
+<section class="panel stock-chart-panel">
+    <header>
+        <div>
+            <p class="eyebrow">Mercado</p>
+            <h2>Evolução da cotação</h2>
+            <p class="panel-description">Histórico observado e projeção temporal para os horizontes disponíveis.</p>
+        </div>
+        <div class="stock-observation-count"><strong>@points.Length</strong><span>observações</span></div>
+    </header>
+    @if (points.Length == 0)
+    {
+        <div class="stock-history-empty">Ainda não existem cotações importadas.</div>
+    }
+    else
+    {
+        <div class="stock-chart" data-stock-chart role="img" aria-label="Gráfico da evolução e previsão de @Model.Ticker">
+            <div class="stock-chart-legend"><span class="observed">Histórico observado</span>@if(Model.Forecasts.Count>0){<span class="projected">Previsão selecionada</span>}</div>
+            <svg viewBox="0 0 900 260" preserveAspectRatio="none">
+                <defs><linearGradient id="stockArea" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#159a70" stop-opacity=".28"/><stop offset="1" stop-color="#159a70" stop-opacity=".02"/></linearGradient><linearGradient id="forecastArea" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d48a18" stop-opacity=".24"/><stop offset="1" stop-color="#d48a18" stop-opacity=".03"/></linearGradient></defs>
+                <line x1="24" y1="34" x2="876" y2="34"/><line x1="24" y1="135" x2="876" y2="135"/><line x1="24" y1="236" x2="876" y2="236"/>
+                <polygon class="stock-chart-area" points="24,236 @string.Join(" ", coordinates) 876,236"/><polyline class="stock-chart-line" points="@string.Join(" ", coordinates)"/><polygon class="stock-forecast-band" points=""/><polyline class="stock-forecast-line" points=""/><circle class="stock-forecast-point" r="5" cx="0" cy="0"/>
+            </svg>
+            <div class="stock-chart-axis"><span>@points[0].Date.ToString("dd/MM/yyyy")</span><span data-chart-end>@points[^1].Date.ToString("dd/MM/yyyy")</span></div>
+        </div>
+    }
+</section>
+
+<section class="panel stock-forecast-panel">
+    <header>
+        <div>
+            <p class="eyebrow">Modelo temporal</p>
+            <h2>Previsão</h2>
+            <p class="panel-description">Valores indicativos calculados a partir do histórico, com intervalo de confiança de 95%.</p>
+        </div>
+        @if(Model.ForecastMaePercent.HasValue){<div class="stock-model-quality"><span>Erro médio</span><strong>@Model.ForecastMaePercent.Value.ToString("N2")%</strong></div>}
+    </header>
+    @if(!Model.ForecastEnabled)
+    {
+        <div class="stock-history-empty">Ative a previsão na edição desta ação.</div>
+    }
+    else if(Model.Forecasts.Count==0)
+    {
+        <div class="stock-history-empty">@(Model.ForecastMessage ?? "A previsão ainda não está disponível.")</div>
+    }
+    else
+    {
+        <div class="stock-model-strip"><span>@Model.ForecastModel</span><small>Selecione um horizonte para o destacar no gráfico.</small></div>
+        <div class="stock-forecast-cards">
+            @foreach(var item in Model.Forecasts)
+            {
+                <button type="button" data-forecast-days="@item.Days" aria-pressed="false">
+                    <span>@item.Days dias</span>
+                    <strong>@item.Price.ToString("N4") @Model.Currency</strong>
+                    <small>@item.Date.ToString("dd/MM/yyyy")</small>
+                    <p><b>@item.LowerPrice.ToString("N4")</b>–<b>@item.UpperPrice.ToString("N4")</b> @Model.Currency</p>
+                    <em>Intervalo de confiança 95%</em>
+                </button>
+            }
+        </div>
+    }
+</section>
+
+<section class="panel stock-history-table">
+    <header>
+        <div><p class="eyebrow">Dados</p><h2>Cotações importadas</h2><p class="panel-description">Série cronológica utilizada na análise e nas previsões.</p></div>
+        @if (points.Length > 0) { <span class="stock-table-period">@points[0].Date.ToString("dd/MM/yyyy") — @points[^1].Date.ToString("dd/MM/yyyy")</span> }
+    </header>
+    <div class="table-wrap"><table class="entity-table"><thead><tr><th>Data</th><th class="amount">Fecho</th></tr></thead><tbody>@foreach(var item in points.Reverse()){<tr><td>@item.Date.ToString("dd/MM/yyyy")</td><td class="amount"><strong>@item.Price.ToString("N6") @Model.Currency</strong></td></tr>}@if(points.Length==0){<tr><td colspan="2" class="empty-row">Sem dados.</td></tr>}</tbody></table></div>
+</section>
