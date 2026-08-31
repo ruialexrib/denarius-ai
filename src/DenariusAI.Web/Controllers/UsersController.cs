@@ -1,7 +1,6 @@
-using DenariusAI.Application.Common;
-using DenariusAI.Application.Users;
 using DenariusAI.Infrastructure.Identity;
-using DenariusAI.Web.Models;
+using DenariusAI.Infrastructure.Persistence;
+using DenariusAI.Web.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -53,64 +52,67 @@ public sealed class UsersController(UserManager<ApplicationUser> userManager) : 
         return View(new UserLoginHistoryViewModel(items, from, to, search, pagination));
     }
 
-    /// <summary>
-    /// Displays the form for creating a new user.
-    /// </summary>
-    /// <returns>A view containing the user creation form.</returns>
-    [HttpGet] public IActionResult Create() => View("Form", new UserFormViewModel());
+    [HttpGet]
+    public IActionResult Create() => View("Form", new UserFormViewModel());
 
-    /// <summary>
-    /// Processes the creation of a new user.
-    /// </summary>
-    /// <param name="model">The user form data.</param>
-    /// <returns>Redirects to the user list if successful, otherwise returns to the form with errors.</returns>
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(UserFormViewModel model)
     {
-        ValidateRole(model); if (string.IsNullOrWhiteSpace(model.Password)) ModelState.AddModelError(nameof(model.Password), "Introduza uma palavra-passe inicial.");
+        ValidateRole(model);
+        if (string.IsNullOrWhiteSpace(model.Password)) ModelState.AddModelError(nameof(model.Password), "Introduza uma palavra-passe inicial.");
         if (!ModelState.IsValid) return View("Form", model);
         var user = new ApplicationUser { DisplayName = model.DisplayName.Trim(), UserName = model.Email.Trim(), Email = model.Email.Trim(), EmailConfirmed = true };
-        var result = await userManager.CreateAsync(user, model.Password!); if (!result.Succeeded) { AddErrors(result); return View("Form", model); }
-        result = await userManager.AddToRoleAsync(user, model.Role); if (!result.Succeeded) { await userManager.DeleteAsync(user); AddErrors(result); return View("Form", model); }
-        TempData["SuccessMessage"] = "Utilizador criado."; return RedirectToAction(nameof(Index));
+        var result = await userManager.CreateAsync(user, model.Password!);
+        if (!result.Succeeded) { AddErrors(result); return View("Form", model); }
+        result = await userManager.AddToRoleAsync(user, model.Role);
+        if (!result.Succeeded) { await userManager.DeleteAsync(user); AddErrors(result); return View("Form", model); }
+        TempData["SuccessMessage"] = "Utilizador criado.";
+        return RedirectToAction(nameof(Index));
     }
 
-    /// <summary>
-    /// Displays the form for editing an existing user.
-    /// </summary>
-    /// <param name="id">The user ID.</param>
-    /// <returns>A view containing the user edit form, or NotFound if the user doesn't exist.</returns>
     [HttpGet]
     public async Task<IActionResult> Edit(string id)
     {
-        var user = await userManager.FindByIdAsync(id); if (user is null) return NotFound(); var roles = await userManager.GetRolesAsync(user);
+        var user = await userManager.FindByIdAsync(id);
+        if (user is null) return NotFound();
+        var roles = await userManager.GetRolesAsync(user);
         return View("Form", new UserFormViewModel { Id = user.Id, DisplayName = user.DisplayName, Email = user.Email ?? string.Empty, Role = roles.FirstOrDefault() ?? ApplicationRoles.User });
     }
 
-    /// <summary>
-    /// Processes the update of an existing user.
-    /// </summary>
-    /// <param name="model">The updated user form data, including the user ID.</param>
-    /// <returns>Redirects to the user list if successful, otherwise returns to the form with errors.</returns>
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit(UserFormViewModel model)
     {
         if (string.IsNullOrWhiteSpace(model.Id)) return BadRequest();
-        ValidateRole(model); if (!ModelState.IsValid) return View("Form", model);
-        var user = await userManager.FindByIdAsync(model.Id); if (user is null) return NotFound(); var roles = await userManager.GetRolesAsync(user);
+        ValidateRole(model);
+        if (!ModelState.IsValid) return View("Form", model);
+        var user = await userManager.FindByIdAsync(model.Id);
+        if (user is null) return NotFound();
+        var roles = await userManager.GetRolesAsync(user);
         if (roles.Contains(ApplicationRoles.Administrator) && model.Role != ApplicationRoles.Administrator && await AdministratorCountAsync() == 1)
-        { ModelState.AddModelError(nameof(model.Role), "Tem de existir pelo menos um administrador."); return View("Form", model); }
-        user.DisplayName = model.DisplayName.Trim(); user.Email = user.UserName = model.Email.Trim(); var result = await userManager.UpdateAsync(user); if (!result.Succeeded) { AddErrors(result); return View("Form", model); }
-        if (!roles.Contains(model.Role)) { result = await userManager.RemoveFromRolesAsync(user, roles); if (result.Succeeded) result = await userManager.AddToRoleAsync(user, model.Role); if (!result.Succeeded) { AddErrors(result); return View("Form", model); } }
-        if (!string.IsNullOrWhiteSpace(model.Password)) { var token = await userManager.GeneratePasswordResetTokenAsync(user); result = await userManager.ResetPasswordAsync(user, token, model.Password); if (!result.Succeeded) { AddErrors(result); return View("Form", model); } }
-        TempData["SuccessMessage"] = "Utilizador atualizado."; return RedirectToAction(nameof(Index));
+        {
+            ModelState.AddModelError(nameof(model.Role), "Tem de existir pelo menos um administrador.");
+            return View("Form", model);
+        }
+        user.DisplayName = model.DisplayName.Trim();
+        user.Email = user.UserName = model.Email.Trim();
+        var result = await userManager.UpdateAsync(user);
+        if (!result.Succeeded) { AddErrors(result); return View("Form", model); }
+        if (!roles.Contains(model.Role))
+        {
+            result = await userManager.RemoveFromRolesAsync(user, roles);
+            if (result.Succeeded) result = await userManager.AddToRoleAsync(user, model.Role);
+            if (!result.Succeeded) { AddErrors(result); return View("Form", model); }
+        }
+        if (!string.IsNullOrWhiteSpace(model.Password))
+        {
+            var token = await userManager.GeneratePasswordResetTokenAsync(user);
+            result = await userManager.ResetPasswordAsync(user, token, model.Password);
+            if (!result.Succeeded) { AddErrors(result); return View("Form", model); }
+        }
+        TempData["SuccessMessage"] = "Utilizador atualizado.";
+        return RedirectToAction(nameof(Index));
     }
 
-    /// <summary>
-    /// Deletes a user from the system.
-    /// </summary>
-    /// <param name="id">The user ID to delete.</param>
-    /// <returns>Redirects to the user list with a success or error message.</returns>
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> Delete(string id)
     {
