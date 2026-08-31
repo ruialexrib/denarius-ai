@@ -4,8 +4,10 @@
 @{
     ViewData["Title"] = $"Evolução de {Model.Ticker}";
     var points = Model.History.OrderBy(x => x.Date).ToArray();
-    var minimum = points.Length == 0 ? 0m : points.Min(x => x.Price);
-    var maximum = points.Length == 0 ? 0m : points.Max(x => x.Price);
+    var minimumPoint = points.Length == 0 ? null : points.MinBy(x => x.Price);
+    var maximumPoint = points.Length == 0 ? null : points.MaxBy(x => x.Price);
+    var minimum = minimumPoint?.Price ?? 0m;
+    var maximum = maximumPoint?.Price ?? 0m;
     var latest = points.Length == 0 ? 0m : points[^1].Price;
     var first = points.Length == 0 ? 0m : points[0].Price;
     var variation = points.Length == 0 || first == 0 ? 0m : (latest - first) / first * 100m;
@@ -39,11 +41,11 @@
         </div>
         <p class="page-subtitle">@Model.Name · @Model.Currency</p>
     </div>
-    <div class="page-header-actions">
+    <div class="page-header-actions stock-history-actions">
+        <a class="button secondary" asp-action="Index">Voltar</a>
         <form asp-action="ImportHistory" asp-route-id="@Model.Id" method="post">
             <button class="button" type="submit">Recolher novamente</button>
         </form>
-        <a class="button secondary" asp-action="Index">Voltar</a>
     </div>
 </div>
 
@@ -60,13 +62,13 @@
     </article>
     <article>
         <span>Mínimo</span>
-        <strong>@(points.Length == 0 ? "—" : $"{minimum:N4} {Model.Currency}")</strong>
-        <small>Fecho diário</small>
+        <strong>@(minimumPoint is null ? "—" : $"{minimum:N4} {Model.Currency}")</strong>
+        <small>@(minimumPoint is null ? "Sem histórico" : $"Em {minimumPoint.Date:dd/MM/yyyy}")</small>
     </article>
     <article>
         <span>Máximo</span>
-        <strong>@(points.Length == 0 ? "—" : $"{maximum:N4} {Model.Currency}")</strong>
-        <small>Fecho diário</small>
+        <strong>@(maximumPoint is null ? "—" : $"{maximum:N4} {Model.Currency}")</strong>
+        <small>@(maximumPoint is null ? "Sem histórico" : $"Em {maximumPoint.Date:dd/MM/yyyy}")</small>
     </article>
 </section>
 
