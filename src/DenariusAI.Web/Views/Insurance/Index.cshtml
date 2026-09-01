@@ -2,6 +2,7 @@
 @using DenariusAI.Domain.Enums
 @{ ViewData["Title"] = "Seguros"; }
 <link rel="stylesheet" href="~/css/insurance.css" asp-append-version="true" />
+<link rel="stylesheet" href="~/css/cards.css" asp-append-version="true" />
 <div class="page-header"><div><p class="eyebrow">Proteção</p><h1>Carteira de seguros</h1><p class="page-subtitle">Acompanhe apólices, encargos, pagamentos e renovações num único lugar.</p></div><a class="button" asp-action="Create">Nova apólice</a></div>
 <section class="insurance-totals" aria-label="Resumo da carteira de seguros">
     <article class="insurance-primary"><span>Custo no ano</span><strong>@Model.AnnualCost.ToString("N2") €</strong><small>Prémios registados no ano atual</small></article>

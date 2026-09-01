@@ -3,6 +3,7 @@
 <link rel="stylesheet" href="~/css/dashboard.css" asp-append-version="true" />
 <link rel="stylesheet" href="~/css/financial-enhancements.css" asp-append-version="true" />
 <link rel="stylesheet" href="~/css/reminders.css" asp-append-version="true" />
+<link rel="stylesheet" href="~/css/cards.css" asp-append-version="true" />
 @{ ViewData["Title"] = "Dashboard"; var dashboard = Model.Dashboard; var culture = CultureInfo.GetCultureInfo("pt-PT"); var periodName = new DateTime(dashboard.Year, dashboard.Month, 1).ToString("MMMM yyyy", culture); var categoryMax = Math.Max(dashboard.Categories.Select(item => Math.Max(item.Actual, item.Budgeted)).DefaultIfEmpty(0m).Max(), 1m); var evolutionMax = Math.Max(dashboard.Evolution.Select(item => Math.Max(item.Income, item.Expenses)).DefaultIfEmpty(0m).Max(), 1m); var budgetProgress = Math.Clamp(dashboard.BudgetExecution ?? 0m, 0m, 100m); }
 <div class="page-header"><div><p class="eyebrow">Visão geral</p><h1>Dashboard</h1><p class="page-subtitle">Acompanhe o desempenho financeiro, os saldos e a execução do orçamento do período.</p></div><form method="get" class="dashboard-period"><select name="year" asp-items="Model.Years" aria-label="Ano"></select><select name="month" asp-items="Model.Months" aria-label="Mês"></select><button class="button secondary" type="submit">Aplicar</button></form></div>
 <section class="dashboard-kpis" aria-label="Indicadores principais">

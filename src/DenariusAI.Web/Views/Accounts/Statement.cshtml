@@ -1,6 +1,7 @@
 @model AccountStatementViewModel
 @using DenariusAI.Web.Controllers
 @{ ViewData["Title"] = $"Extrato · {Model.Account.Name}"; }
+<link rel="stylesheet" href="~/css/cards.css" asp-append-version="true" />
 <div class="page-header account-statement-header">
     <div><p class="eyebrow">Finanças · Extrato</p><h1>@Model.Account.Name</h1><p class="page-subtitle">Acompanhe os movimentos, a evolução do saldo e o estado de reconciliação desta conta.</p></div>
     <div class="form-actions"><a class="button secondary" asp-action="Details" asp-route-id="@Model.Account.Id">← Voltar à conta</a></div>

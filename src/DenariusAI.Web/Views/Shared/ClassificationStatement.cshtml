@@ -1,4 +1,5 @@
 @model ClassificationStatementViewModel
+<link rel="stylesheet" href="~/css/cards.css" asp-append-version="true" />
 @{ ViewData["Title"] = $"Extrato · {Model.Name}"; var controller = Model.EntityType == "Grupo" ? "FinancialGroups" : "Categories"; var kindName = Model.Kind == DenariusAI.Domain.Enums.FinancialGroupKind.Asset ? "Património" : Model.Kind == DenariusAI.Domain.Enums.FinancialGroupKind.Income ? "Rendimento" : "Despesa"; }
 <div class="page-header account-statement-header"><div><p class="eyebrow">Finanças · Extrato de @Model.EntityType.ToLowerInvariant()</p><h1>@Model.Name</h1><p class="page-subtitle">Acompanhe os movimentos classificados, a evolução do saldo e as contas relacionadas.</p></div><a class="button secondary" asp-controller="@controller" asp-action="Index">← Voltar a @Model.EntityType.ToLowerInvariant()s</a></div>
 <section class="statement-summary classification-summary">

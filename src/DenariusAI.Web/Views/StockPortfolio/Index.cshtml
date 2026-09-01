@@ -1,6 +1,7 @@
 @model StockPortfolioIndexViewModel
 @{ ViewData["Title"] = "Portfólio de ações"; }
 <link rel="stylesheet" href="~/css/stock-portfolio.css" asp-append-version="true" />
+<link rel="stylesheet" href="~/css/cards.css" asp-append-version="true" />
 
 <div class="page-header stock-portfolio-header"><div><p class="eyebrow">Investimentos</p><h1>Portfólio de ações</h1><p class="page-subtitle">Acompanhe as suas posições e os instrumentos que mantém sob observação.</p></div><a class="button" asp-action="Create">Adicionar ação</a></div>
 <section class="stock-portfolio-summary" aria-label="Resumo do portfólio"><article class="stock-summary-invested"><span>Capital investido</span><strong>@Model.TotalCost.ToString("N2")</strong><small>Ao custo médio registado</small></article><article><span>Valor de mercado</span><strong>@Model.TotalMarketValue.ToString("N2")</strong><small>Com as últimas cotações</small></article><article><span>Ganho / perda</span><strong class="@(Model.TotalGain < 0 ? "negative" : "positive")">@Model.TotalGain.ToString("N2")</strong><small>Resultado não realizado</small></article></section>
