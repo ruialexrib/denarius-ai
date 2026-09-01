@@ -11,7 +11,7 @@
 </section>
 <section class="panel insurance-panel">
     <header class="insurance-panel-header"><div><p class="eyebrow">Apólices</p><h2>Proteções registadas</h2></div><span>@Model.Pagination.TotalItems registo@(Model.Pagination.TotalItems == 1 ? "" : "s")</span></header>
-    <form id="insurance-filters" method="get" class="filterbar">
+    <form id="insurance-filters" method="get" class="filterbar insurance-filters">
         <select name="type" aria-label="Tipo de seguro">
             <option value="">Todos os tipos</option>
             <option value="Home" selected="@(Model.Type == InsurancePolicyType.Home)">Habitação</option>
@@ -40,5 +40,5 @@
     }
     @if (Model.Policies.Count == 0) { <tr><td colspan="6" class="empty-row"><strong>Não foram encontradas apólices.</strong><small>Altere os filtros ou registe uma nova apólice.</small></td></tr> }
     </tbody></table></div>
-    <nav class="pagination" aria-label="Paginação"><span>@Model.Pagination.FirstItem–@Model.Pagination.LastItem de @Model.Pagination.TotalItems</span><div><button class="pager-link" type="submit" form="insurance-filters" name="page" value="@(Model.Pagination.Page - 1)" disabled="@(!Model.Pagination.HasPreviousPage)">Anterior</button><span>Página @Model.Pagination.Page de @Model.Pagination.TotalPages</span><button class="pager-link" type="submit" form="insurance-filters" name="page" value="@(Model.Pagination.Page + 1)" disabled="@(!Model.Pagination.HasNextPage)">Seguinte</button></div></nav>
+    <nav class="pagination insurance-pagination" aria-label="Paginação"><span>@Model.Pagination.FirstItem–@Model.Pagination.LastItem de @Model.Pagination.TotalItems</span><div><button class="pager-link" type="submit" form="insurance-filters" name="page" value="@(Model.Pagination.Page - 1)" disabled="@(!Model.Pagination.HasPreviousPage)">Anterior</button><span>Página @Model.Pagination.Page de @Model.Pagination.TotalPages</span><button class="pager-link" type="submit" form="insurance-filters" name="page" value="@(Model.Pagination.Page + 1)" disabled="@(!Model.Pagination.HasNextPage)">Seguinte</button></div></nav>
 </section>
