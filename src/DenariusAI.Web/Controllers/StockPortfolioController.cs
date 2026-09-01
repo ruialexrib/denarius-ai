@@ -14,8 +14,9 @@ namespace DenariusAI.Web.Controllers;
 [Authorize]
 public sealed class StockPortfolioController(DenariusDbContext dbContext, IStockForecastService forecastService, IStockMarketDataService marketDataService, ILogger<StockPortfolioController> logger) : Controller
 {
-    /// <summary>Displays the current stock portfolio with filters and independent portfolio/watchlist pagination.</summary><param name="search">Optional ticker or instrument-name filter.</param><param name="currency">Optional trading-currency filter.</param><param name="exchange">Optional exchange filter.</param><param name="portfolioPage">Portfolio page number.</param><param name="watchlistPage">Watchlist page number.</param><param name="pageSize">Number of items per section page.</param><param name="cancellationToken">Cancellation token.</param><returns>The portfolio view.</returns>
-    public async Task<IActionResult> Index(string? search, string? currency, string? exchange, int portfolioPage = 1, int watchlistPage = 1, int pageSize = 10, CancellationToken cancellationToken = default)
+    /// <summary>Displays the current stock portfolio with independent portfolio and watchlist filters and pagination.</summary>
+    /// <param name="portfolioSearch">Optional portfolio ticker or instrument-name filter.</param><param name="portfolioCurrency">Optional portfolio trading-currency filter.</param><param name="portfolioExchange">Optional portfolio exchange filter.</param><param name="portfolioPage">Portfolio page number.</param><param name="portfolioPageSize">Number of portfolio items per page.</param><param name="watchlistSearch">Optional watchlist ticker or instrument-name filter.</param><param name="watchlistCurrency">Optional watchlist trading-currency filter.</param><param name="watchlistExchange">Optional watchlist exchange filter.</param><param name="watchlistPage">Watchlist page number.</param><param name="watchlistPageSize">Number of watchlist items per page.</param><param name="cancellationToken">Cancellation token.</param><returns>The portfolio view.</returns>
+    public async Task<IActionResult> Index(string? portfolioSearch, string? portfolioCurrency, string? portfolioExchange, int portfolioPage = 1, int portfolioPageSize = 10, string? watchlistSearch = null, string? watchlistCurrency = null, string? watchlistExchange = null, int watchlistPage = 1, int watchlistPageSize = 10, CancellationToken cancellationToken = default)
     {
         var positions = await dbContext.StockPositions.AsNoTracking().OrderBy(x => x.Ticker).ToListAsync(cancellationToken);
         var positionIds = positions.Select(x => x.Id).ToArray();
@@ -26,24 +27,14 @@ public sealed class StockPortfolioController(DenariusDbContext dbContext, IStock
         var currencies = rows.Select(x => x.Currency).Where(x => !string.IsNullOrWhiteSpace(x)).Distinct(StringComparer.OrdinalIgnoreCase).OrderBy(x => x).ToArray();
         var exchanges = rows.Select(x => x.Exchange).Where(x => !string.IsNullOrWhiteSpace(x)).Select(x => x!).Distinct(StringComparer.OrdinalIgnoreCase).OrderBy(x => x).ToArray();
 
-        IEnumerable<StockPositionRowViewModel> filteredRows = rows;
-        if (!string.IsNullOrWhiteSpace(search))
-        {
-            var term = search.Trim();
-            filteredRows = filteredRows.Where(x => x.Ticker.Contains(term, StringComparison.OrdinalIgnoreCase) || x.Name.Contains(term, StringComparison.OrdinalIgnoreCase));
-        }
-        if (!string.IsNullOrWhiteSpace(currency)) filteredRows = filteredRows.Where(x => string.Equals(x.Currency, currency, StringComparison.OrdinalIgnoreCase));
-        if (!string.IsNullOrWhiteSpace(exchange)) filteredRows = filteredRows.Where(x => string.Equals(x.Exchange, exchange, StringComparison.OrdinalIgnoreCase));
-
-        var filtered = filteredRows.ToList();
-        var portfolioRows = filtered.Where(x => !x.WatchlistOnly).ToList();
-        var watchlistRows = filtered;
-        var portfolioPagination = PaginationViewModel.Create(portfolioRows.Count, portfolioPage, pageSize);
-        var watchlistPagination = PaginationViewModel.Create(watchlistRows.Count, watchlistPage, pageSize);
+        var portfolioRows = ApplyFilters(rows.Where(x => !x.WatchlistOnly), portfolioSearch, portfolioCurrency, portfolioExchange).ToList();
+        var watchlistRows = ApplyFilters(rows, watchlistSearch, watchlistCurrency, watchlistExchange).ToList();
+        var portfolioPagination = PaginationViewModel.Create(portfolioRows.Count, portfolioPage, portfolioPageSize);
+        var watchlistPagination = PaginationViewModel.Create(watchlistRows.Count, watchlistPage, watchlistPageSize);
         var portfolioItems = portfolioRows.Skip((portfolioPagination.Page - 1) * portfolioPagination.PageSize).Take(portfolioPagination.PageSize).ToList();
         var watchlistItems = watchlistRows.Skip((watchlistPagination.Page - 1) * watchlistPagination.PageSize).Take(watchlistPagination.PageSize).ToList();
 
-        return View(new StockPortfolioIndexViewModel(portfolioItems, watchlistItems, completePortfolio.Sum(x => x.CostValue), completePortfolio.Sum(x => x.MarketValue), completePortfolio.Sum(x => x.Gain), search, currency, exchange, currencies, exchanges, portfolioPagination, watchlistPagination));
+        return View(new StockPortfolioIndexViewModel(portfolioItems, watchlistItems, completePortfolio.Sum(x => x.CostValue), completePortfolio.Sum(x => x.MarketValue), completePortfolio.Sum(x => x.Gain), currencies, exchanges, new StockListFilterViewModel(portfolioSearch, portfolioCurrency, portfolioExchange, portfolioPagination), new StockListFilterViewModel(watchlistSearch, watchlistCurrency, watchlistExchange, watchlistPagination)));
     }
 
     /// <summary>Displays the imported price evolution and configured forecasts for one instrument.</summary><param name="id">The stock position identifier.</param><param name="cancellationToken">Token used to cancel database access.</param><returns>The history page or not found.</returns>
@@ -89,7 +80,7 @@ public sealed class StockPortfolioController(DenariusDbContext dbContext, IStock
         var ticker=model.Ticker.Trim().ToUpperInvariant(); var exchange=string.IsNullOrWhiteSpace(model.Exchange)?null:model.Exchange.Trim().ToUpperInvariant();
         if(await dbContext.StockPositions.AnyAsync(candidate=>candidate.Id!=id&&candidate.Ticker==ticker&&candidate.Exchange==exchange,cancellationToken)){ModelState.AddModelError(nameof(model.Ticker),"Esta ação já existe no portfólio para o mercado indicado.");return View("Form",model);}
         var priceChanged=position.CurrentPrice!=model.CurrentPrice||position.PriceDate!=model.PriceDate; position.Update(ticker,model.Name,exchange,model.Currency,model.Quantity,model.AverageCost,model.CurrentPrice,model.PriceDate); position.ConfigureMarketAnalysis(model.HistoryStartDate,model.ForecastEnabled); position.SetWatchlistOnly(model.WatchlistOnly); position.UpdatedBy=UserId();
-        if(priceChanged&&!await dbContext.StockPrices.AnyAsync(price=>price.StockPositionId==id&&price.Date==model.PriceDate,cancellationToken))dbContext.StockPrices.Add(new StockPrice(id,model.PriceDate,model.CurrentPrice));
+        if(priceChanged&&!await dbContext.StockPrices.AnyAsync(price=>price.StockPositionId==id&&price.Date==model.PriceDate,cancellationToken))dbContext.StockPrices.Add(new StockPrice(id,model.Date,model.CurrentPrice));
         await dbContext.SaveChangesAsync(cancellationToken); TempData["SuccessMessage"]="Posição atualizada."; return RedirectToAction(nameof(Index));
     }
 
@@ -110,6 +101,15 @@ public sealed class StockPortfolioController(DenariusDbContext dbContext, IStock
     /// <summary>Removes a stock holding and its price history.</summary><param name="id">Position identifier.</param><param name="cancellationToken">Cancellation token.</param><returns>The portfolio view.</returns>
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> Delete(Guid id,CancellationToken cancellationToken){var position=await dbContext.StockPositions.FindAsync([id],cancellationToken);if(position is null)return NotFound();dbContext.StockPositions.Remove(position);await dbContext.SaveChangesAsync(cancellationToken);TempData["SuccessMessage"]="Ação removida do portfólio.";return RedirectToAction(nameof(Index));}
+
+    /// <summary>Applies stock-list filters without changing the source collection.</summary><param name="source">The source rows.</param><param name="search">Optional ticker or instrument-name filter.</param><param name="currency">Optional trading-currency filter.</param><param name="exchange">Optional exchange filter.</param><returns>The filtered rows.</returns>
+    private static IEnumerable<StockPositionRowViewModel> ApplyFilters(IEnumerable<StockPositionRowViewModel> source, string? search, string? currency, string? exchange)
+    {
+        if (!string.IsNullOrWhiteSpace(search)) { var term = search.Trim(); source = source.Where(x => x.Ticker.Contains(term, StringComparison.OrdinalIgnoreCase) || x.Name.Contains(term, StringComparison.OrdinalIgnoreCase)); }
+        if (!string.IsNullOrWhiteSpace(currency)) source = source.Where(x => string.Equals(x.Currency, currency, StringComparison.OrdinalIgnoreCase));
+        if (!string.IsNullOrWhiteSpace(exchange)) source = source.Where(x => string.Equals(x.Exchange, exchange, StringComparison.OrdinalIgnoreCase));
+        return source;
+    }
 
     /// <summary>Gets the authenticated user identifier.</summary><returns>The user identifier.</returns>
     private string UserId()=>User.FindFirstValue(ClaimTypes.NameIdentifier)??throw new InvalidOperationException("Utilizador não identificado.");
