@@ -22,7 +22,9 @@ Introduce a dedicated insurance portfolio so households can register and monitor
 #### Premium management
 
 - Treat each insurance premium as a separate record belonging to a policy, preserving the history of premiums over time.
-- Record the premium amount, period covered, due date, payment date, payment status, and optional reference.
+- Record the premium amount, period covered, due date, and optional reference as facts of the premium obligation.
+- When a premium is linked to an active financial movement, derive its paid status and effective payment date from that movement instead of storing independent payment facts that can become stale.
+- If the linked movement is cancelled or its effective date changes, the premium payment state must immediately reflect the current accounting state because the movement remains the source of truth.
 - Support recurring premiums according to the policy payment frequency without assuming that a scheduled premium has been paid.
 - Provide consolidated periodic and annual insurance costs calculated deterministically by the application.
 
