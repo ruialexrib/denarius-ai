@@ -41,9 +41,13 @@ public sealed record StockPositionRowViewModel(Guid Id,string Ticker,string Name
 /// <param name="Days">The forecast horizon in calendar days.</param><param name="Date">The target date.</param><param name="Price">The projected price.</param><param name="LowerPrice">The lower 95 percent confidence bound.</param><param name="UpperPrice">The upper 95 percent confidence bound.</param>
 public sealed record StockForecastPointViewModel(int Days, DateOnly Date, decimal Price, decimal LowerPrice, decimal UpperPrice);
 
-/// <summary>Contains the stock portfolio overview.</summary>
-/// <param name="PortfolioItems">The positions displayed in the portfolio.</param><param name="WatchlistItems">The instruments displayed in the watchlist.</param><param name="TotalCost">The total acquisition cost.</param><param name="TotalMarketValue">The total current market value.</param><param name="TotalGain">The total unrealised gain or loss.</param>
-public sealed record StockPortfolioIndexViewModel(IReadOnlyList<StockPositionRowViewModel> PortfolioItems,IReadOnlyList<StockPositionRowViewModel> WatchlistItems,decimal TotalCost,decimal TotalMarketValue,decimal TotalGain);
+/// <summary>Contains independent filtering and pagination state for one stock-list section.</summary>
+/// <param name="Search">The free-text filter.</param><param name="Currency">The selected currency filter.</param><param name="Exchange">The selected exchange filter.</param><param name="Pagination">The pagination state.</param>
+public sealed record StockListFilterViewModel(string? Search, string? Currency, string? Exchange, PaginationViewModel Pagination);
+
+/// <summary>Contains the stock portfolio overview and independent portfolio/watchlist list state.</summary>
+/// <param name="PortfolioItems">The positions displayed on the current portfolio page.</param><param name="WatchlistItems">The instruments displayed on the current watchlist page.</param><param name="TotalCost">The total acquisition cost of the complete portfolio.</param><param name="TotalMarketValue">The total current market value of the complete portfolio.</param><param name="TotalGain">The total unrealised gain or loss of the complete portfolio.</param><param name="Currencies">Currencies available for filtering.</param><param name="Exchanges">Exchanges available for filtering.</param><param name="PortfolioFilter">Independent filter and pagination state for portfolio positions.</param><param name="WatchlistFilter">Independent filter and pagination state for watchlist instruments.</param>
+public sealed record StockPortfolioIndexViewModel(IReadOnlyList<StockPositionRowViewModel> PortfolioItems,IReadOnlyList<StockPositionRowViewModel> WatchlistItems,decimal TotalCost,decimal TotalMarketValue,decimal TotalGain,IReadOnlyList<string> Currencies,IReadOnlyList<string> Exchanges,StockListFilterViewModel PortfolioFilter,StockListFilterViewModel WatchlistFilter);
 
 /// <summary>Contains a dated stock price update submitted by the user.</summary>
 public sealed class StockPriceUpdateViewModel
