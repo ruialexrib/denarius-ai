@@ -1,0 +1,50 @@
+name: Generate insurance migration
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  generate:
+    name: Generate EF Core migration
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+
+      - name: Restore tools and dependencies
+        run: |
+          dotnet tool restore
+          dotnet restore DenariusAI.slnx
+
+      - name: Generate migration
+        run: >-
+          dotnet ef migrations add AddInsurancePortfolio
+          --project src/DenariusAI.Infrastructure/DenariusAI.Infrastructure.csproj
+          --startup-project src/DenariusAI.Web/DenariusAI.Web.csproj
+          --context DenariusDbContext
+
+      - name: Verify synchronized model
+        run: >-
+          dotnet ef migrations has-pending-model-changes
+          --project src/DenariusAI.Infrastructure/DenariusAI.Infrastructure.csproj
+          --startup-project src/DenariusAI.Web/DenariusAI.Web.csproj
+          --context DenariusDbContext
+
+      - name: Upload generated migration
+        uses: actions/upload-artifact@v7
+        with:
+          name: insurance-migration
+          path: src/DenariusAI.Infrastructure/Persistence/Migrations/
+          if-no-files-found: error
+          retention-days: 1
