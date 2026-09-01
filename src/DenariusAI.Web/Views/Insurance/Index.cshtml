@@ -1,18 +1,23 @@
 @model DenariusAI.Web.ViewModels.InsurancePortfolioViewModel
 @using DenariusAI.Domain.Enums
 @{ ViewData["Title"] = "Seguros"; }
-
-<div class="d-flex justify-content-between align-items-start gap-3 mb-4">
-    <div><div class="text-uppercase small text-muted fw-semibold">Património · Seguros</div><h1 class="h2 mb-1">Carteira de seguros</h1><p class="text-muted mb-0">Acompanhe apólices, renovações e prémios pagos ou por pagar.</p></div>
-    <a asp-action="Create" class="btn btn-primary">Nova apólice</a>
-</div>
-<div class="row g-3 mb-4">
-    <div class="col-md-3"><div class="card h-100"><div class="card-body"><div class="text-muted small">Apólices ativas</div><div class="fs-3 fw-semibold">@Model.ActivePolicies</div></div></div></div>
-    <div class="col-md-3"><div class="card h-100"><div class="card-body"><div class="text-muted small">Custo no ano</div><div class="fs-3 fw-semibold">@Model.AnnualCost.ToString("N2") €</div></div></div></div>
-    <div class="col-md-3"><div class="card h-100"><div class="card-body"><div class="text-muted small">Prémios vencidos</div><div class="fs-3 fw-semibold">@Model.OutstandingPremiums</div></div></div></div>
-    <div class="col-md-3"><div class="card h-100"><div class="card-body"><div class="text-muted small">Renovações · 30 dias</div><div class="fs-3 fw-semibold">@Model.UpcomingRenewals</div></div></div></div>
-</div>
-<div class="card"><div class="table-responsive"><table class="table align-middle mb-0"><thead><tr><th>Apólice</th><th>Seguradora</th><th>Tipo</th><th>Renovação</th><th>Estado</th><th class="text-end">Ações</th></tr></thead><tbody>
-@foreach (var item in Model.Policies) { <tr><td><strong>@item.Name</strong><div class="small text-muted">@item.PolicyNumber</div></td><td>@item.Insurer</td><td>@item.Type</td><td>@(item.RenewalDate?.ToString("dd/MM/yyyy") ?? "—")</td><td>@item.Status</td><td class="text-end"><a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary">Ver</a> <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-secondary">Editar</a></td></tr> }
-@if (Model.Policies.Count == 0) { <tr><td colspan="6" class="text-center text-muted py-5">Ainda não existem apólices registadas.</td></tr> }
-</tbody></table></div></div>
+<link rel="stylesheet" href="~/css/insurance.css" asp-append-version="true" />
+<div class="page-header"><div><p class="eyebrow">Proteção</p><h1>Carteira de seguros</h1><p class="page-subtitle">Acompanhe apólices, encargos, pagamentos e renovações num único lugar.</p></div><a class="button" asp-action="Create">Nova apólice</a></div>
+<section class="insurance-totals" aria-label="Resumo da carteira de seguros">
+    <article class="insurance-primary"><span>Custo no ano</span><strong>@Model.AnnualCost.ToString("N2") €</strong><small>Prémios registados no ano atual</small></article>
+    <article class="insurance-active"><span>Apólices ativas</span><strong>@Model.ActivePolicies</strong><small>Coberturas atualmente em vigor</small></article>
+    <article class="insurance-overdue"><span>Prémios vencidos</span><strong>@Model.OutstandingPremiums</strong><small>Pagamentos por regularizar</small></article>
+    <article class="insurance-renewals"><span>Próximas renovações</span><strong>@Model.UpcomingRenewals</strong><small>Nos próximos 30 dias</small></article>
+</section>
+<section class="panel insurance-panel">
+    <header class="insurance-panel-header"><div><p class="eyebrow">Apólices</p><h2>Proteções registadas</h2></div><span>@Model.Policies.Count registo@(Model.Policies.Count == 1 ? "" : "s")</span></header>
+    <div class="table-wrap"><table class="entity-table insurance-table"><thead><tr><th>Apólice</th><th>Seguradora</th><th>Tipo</th><th>Renovação</th><th>Estado</th><th class="actions">Ações</th></tr></thead><tbody>
+    @foreach (var item in Model.Policies)
+    {
+        var typeLabel = item.Type switch { InsurancePolicyType.Home => "Habitação", InsurancePolicyType.Motor => "Automóvel", InsurancePolicyType.Health => "Saúde", InsurancePolicyType.Life => "Vida", InsurancePolicyType.PersonalAccident => "Acidentes pessoais", _ => "Outro" };
+        var statusLabel = item.Status switch { InsurancePolicyStatus.Active => "Ativa", InsurancePolicyStatus.Archived => "Arquivada", _ => "Cancelada" };
+        <tr><td><strong>@item.Name</strong><small>@item.PolicyNumber</small></td><td>@item.Insurer</td><td>@typeLabel</td><td class="nowrap">@(item.RenewalDate?.ToString("dd/MM/yyyy") ?? "—")</td><td><span class="status @(item.Status == InsurancePolicyStatus.Active ? "active" : "inactive")">@statusLabel</span></td><td class="actions"><a class="text-link" asp-action="Details" asp-route-id="@item.Id">Consultar</a><a class="text-link" asp-action="Edit" asp-route-id="@item.Id">Editar</a></td></tr>
+    }
+    @if (Model.Policies.Count == 0) { <tr><td colspan="6" class="empty-row"><strong>Ainda não existem apólices.</strong><small>Registe a primeira apólice para começar a acompanhar coberturas e prémios.</small></td></tr> }
+    </tbody></table></div>
+</section>
