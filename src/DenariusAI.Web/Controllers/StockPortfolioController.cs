@@ -15,9 +15,8 @@ namespace DenariusAI.Web.Controllers;
 public sealed class StockPortfolioController(DenariusDbContext dbContext, IStockForecastService forecastService, IStockMarketDataService marketDataService, ILogger<StockPortfolioController> logger) : Controller
 {
     /// <summary>Displays the current stock portfolio with filters and independent portfolio/watchlist pagination.</summary><param name="search">Optional ticker or instrument-name filter.</param><param name="currency">Optional trading-currency filter.</param><param name="exchange">Optional exchange filter.</param><param name="portfolioPage">Portfolio page number.</param><param name="watchlistPage">Watchlist page number.</param><param name="pageSize">Number of items per section page.</param><param name="cancellationToken">Cancellation token.</param><returns>The portfolio view.</returns>
-    public async Task<IActionResult> Index(string? search, string? currency, string? exchange, int portfolioPage = 1, int watchlistPage = 1, int pageSize = PaginationViewModel.DefaultPageSize, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> Index(string? search, string? currency, string? exchange, int portfolioPage = 1, int watchlistPage = 1, int pageSize = 10, CancellationToken cancellationToken = default)
     {
-        pageSize = PaginationViewModel.NormalizePageSize(pageSize);
         var positions = await dbContext.StockPositions.AsNoTracking().OrderBy(x => x.Ticker).ToListAsync(cancellationToken);
         var positionIds = positions.Select(x => x.Id).ToArray();
         var history = await dbContext.StockPrices.AsNoTracking().Where(x => positionIds.Contains(x.StockPositionId)).OrderBy(x => x.Date).ToListAsync(cancellationToken);
@@ -41,8 +40,8 @@ public sealed class StockPortfolioController(DenariusDbContext dbContext, IStock
         var watchlistRows = filtered;
         var portfolioPagination = PaginationViewModel.Create(portfolioRows.Count, portfolioPage, pageSize);
         var watchlistPagination = PaginationViewModel.Create(watchlistRows.Count, watchlistPage, pageSize);
-        var portfolioItems = portfolioRows.Skip((portfolioPagination.Page - 1) * pageSize).Take(pageSize).ToList();
-        var watchlistItems = watchlistRows.Skip((watchlistPagination.Page - 1) * pageSize).Take(pageSize).ToList();
+        var portfolioItems = portfolioRows.Skip((portfolioPagination.Page - 1) * portfolioPagination.PageSize).Take(portfolioPagination.PageSize).ToList();
+        var watchlistItems = watchlistRows.Skip((watchlistPagination.Page - 1) * watchlistPagination.PageSize).Take(watchlistPagination.PageSize).ToList();
 
         return View(new StockPortfolioIndexViewModel(portfolioItems, watchlistItems, completePortfolio.Sum(x => x.CostValue), completePortfolio.Sum(x => x.MarketValue), completePortfolio.Sum(x => x.Gain), search, currency, exchange, currencies, exchanges, portfolioPagination, watchlistPagination));
     }
