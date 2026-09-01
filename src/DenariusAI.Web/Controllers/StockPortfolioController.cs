@@ -80,7 +80,7 @@ public sealed class StockPortfolioController(DenariusDbContext dbContext, IStock
         var ticker=model.Ticker.Trim().ToUpperInvariant(); var exchange=string.IsNullOrWhiteSpace(model.Exchange)?null:model.Exchange.Trim().ToUpperInvariant();
         if(await dbContext.StockPositions.AnyAsync(candidate=>candidate.Id!=id&&candidate.Ticker==ticker&&candidate.Exchange==exchange,cancellationToken)){ModelState.AddModelError(nameof(model.Ticker),"Esta ação já existe no portfólio para o mercado indicado.");return View("Form",model);}
         var priceChanged=position.CurrentPrice!=model.CurrentPrice||position.PriceDate!=model.PriceDate; position.Update(ticker,model.Name,exchange,model.Currency,model.Quantity,model.AverageCost,model.CurrentPrice,model.PriceDate); position.ConfigureMarketAnalysis(model.HistoryStartDate,model.ForecastEnabled); position.SetWatchlistOnly(model.WatchlistOnly); position.UpdatedBy=UserId();
-        if(priceChanged&&!await dbContext.StockPrices.AnyAsync(price=>price.StockPositionId==id&&price.Date==model.PriceDate,cancellationToken))dbContext.StockPrices.Add(new StockPrice(id,model.Date,model.CurrentPrice));
+        if(priceChanged&&!await dbContext.StockPrices.AnyAsync(price=>price.StockPositionId==id&&price.Date==model.PriceDate,cancellationToken))dbContext.StockPrices.Add(new StockPrice(id,model.PriceDate,model.CurrentPrice));
         await dbContext.SaveChangesAsync(cancellationToken); TempData["SuccessMessage"]="Posição atualizada."; return RedirectToAction(nameof(Index));
     }
 
@@ -91,7 +91,7 @@ public sealed class StockPortfolioController(DenariusDbContext dbContext, IStock
         if(!ModelState.IsValid){TempData["ErrorMessage"]="Indique um preço válido.";return RedirectToAction(nameof(Index));} var position=await dbContext.StockPositions.FindAsync([model.Id],cancellationToken);if(position is null)return NotFound();position.UpdatePrice(model.Price,model.Date);position.UpdatedBy=UserId();var history=await dbContext.StockPrices.SingleOrDefaultAsync(price=>price.StockPositionId==model.Id&&price.Date==model.Date,cancellationToken);if(history is not null)dbContext.StockPrices.Remove(history);dbContext.StockPrices.Add(new StockPrice(model.Id,model.Date,model.Price));await dbContext.SaveChangesAsync(cancellationToken);TempData["SuccessMessage"]=$"Cotação de {position.Ticker} atualizada.";return RedirectToAction(nameof(Index));
     }
 
-    /// <summary>Imports the configured daily market history for a tracked instrument.</summary><param name="id">The stock position identifier.</param><param name="cancellationToken">Token used to cancel the provider request.</param><returns>The refreshed portfolio view.</returns>
+    /// <summary>Imports the configured daily market history for a tracked instrument.</summary><param name="id">The stock position identifier.</param><param name="cancellationToken">Token used to cancel database access.</param><returns>The refreshed portfolio view.</returns>
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> ImportHistory(Guid id,CancellationToken cancellationToken)
     {
