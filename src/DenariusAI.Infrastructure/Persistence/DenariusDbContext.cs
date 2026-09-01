@@ -50,6 +50,8 @@ public sealed class DenariusDbContext(DbContextOptions<DenariusDbContext> option
     public DbSet<CorrespondenceMetadata> CorrespondenceMetadata => Set<CorrespondenceMetadata>();
     /// <summary>Gets insurance policies.</summary>
     public DbSet<InsurancePolicy> InsurancePolicies => Set<InsurancePolicy>();
+    /// <summary>Gets general insurance policy attachments.</summary>
+    public DbSet<InsurancePolicyAttachment> InsurancePolicyAttachments => Set<InsurancePolicyAttachment>();
     /// <summary>Gets insurance premiums.</summary>
     public DbSet<InsurancePremium> InsurancePremiums => Set<InsurancePremium>();
     /// <summary>Gets insurance premium attachments.</summary>

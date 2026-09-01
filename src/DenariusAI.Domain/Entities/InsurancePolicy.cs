@@ -9,6 +9,7 @@ namespace DenariusAI.Domain.Entities;
 public sealed class InsurancePolicy : AuditableEntity
 {
     private readonly List<InsurancePremium> _premiums = [];
+    private readonly List<InsurancePolicyAttachment> _attachments = [];
 
     /// <summary>Initializes an empty policy for Entity Framework Core.</summary>
     private InsurancePolicy() { }
@@ -55,6 +56,8 @@ public sealed class InsurancePolicy : AuditableEntity
     public InsurancePolicyStatus Status { get; private set; } = InsurancePolicyStatus.Active;
     /// <summary>Gets the premium history.</summary>
     public IReadOnlyCollection<InsurancePremium> Premiums => _premiums.AsReadOnly();
+    /// <summary>Gets the general policy documents.</summary>
+    public IReadOnlyCollection<InsurancePolicyAttachment> Attachments => _attachments.AsReadOnly();
 
     /// <summary>Updates the editable policy details.</summary>
     /// <param name="name">Policy display name.</param>

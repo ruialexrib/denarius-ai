@@ -4,6 +4,7 @@ using DenariusAI.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DenariusAI.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(DenariusDbContext))]
-    partial class DenariusDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260901170151_AddInsurancePolicyAttachments")]
+    partial class AddInsurancePolicyAttachments
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

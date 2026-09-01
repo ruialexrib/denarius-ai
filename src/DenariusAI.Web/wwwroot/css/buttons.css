@@ -10,7 +10,9 @@
 .button:focus-visible,.text-link:focus-visible,.pager-link:focus-visible,.settings-operation-button:focus-visible,.support-button:focus-visible{outline:3px solid rgba(52,211,153,.3);outline-offset:2px}
 .button:disabled,.button[aria-disabled=true]{box-shadow:none;cursor:not-allowed;opacity:.5;transform:none}
 .filterbar>.button{width:auto;justify-self:start}
-.form-actions,.header-actions{align-items:center}
+.form-actions,.header-actions{display:flex;align-items:center;gap:10px}
+.header-actions{justify-content:flex-end;flex-wrap:nowrap}
+.header-actions form{display:flex;margin:0}
 .text-link{display:inline-flex;min-height:28px;align-items:center;padding:4px 2px;border-radius:5px;font:inherit;font-size:.75rem;font-weight:750;line-height:1.2;white-space:nowrap;transition:background-color .15s ease,color .15s ease}
 .text-link:hover{background:#eaf7f2;color:#066b4e}
 .text-link.danger-link,.danger-link{color:#b42318}
@@ -21,4 +23,5 @@
 .export-pdf-button{border-color:#c9d8d5!important;background:linear-gradient(135deg,#fff,#f2f8f6)!important;color:#126c57!important;box-shadow:0 3px 10px rgba(18,108,87,.10)}
 .export-pdf-button:hover{border-color:#9fcbbf!important;background:#eaf6f2!important;box-shadow:0 6px 16px rgba(18,108,87,.18)}
 .auth-divider{display:flex;align-items:center;gap:12px;margin:22px 0 12px;color:var(--muted);font-size:.72rem;text-transform:uppercase}.auth-divider:before,.auth-divider:after{height:1px;flex:1;background:var(--line);content:""}.google-button{width:100%;border-color:#d8dee8;background:#fff;color:#273246;box-shadow:0 4px 12px rgba(24,34,55,.07)}.google-button:hover{border-color:#c5ceda;background:#f8fafc;color:#172033;box-shadow:0 7px 17px rgba(24,34,55,.11)}.google-button svg{width:19px;height:19px;flex:0 0 auto}.external-login-help{margin:10px 0 0;color:var(--muted);font-size:.72rem;line-height:1.5;text-align:center}
-@media(max-width:800px){.filterbar>.button{width:100%;justify-self:stretch}.page-header .button,.header-actions .button{min-height:40px}}
+@media(max-width:800px){.filterbar>.button{width:100%;justify-self:stretch}.page-header .button,.header-actions .button{min-height:40px}.page-header{align-items:flex-start;gap:16px}.header-actions{flex-wrap:wrap}}
+@media(max-width:560px){.page-header{flex-direction:column}.header-actions{width:100%;justify-content:flex-start}.header-actions>a,.header-actions>form{flex:1}.header-actions form .button{width:100%}}

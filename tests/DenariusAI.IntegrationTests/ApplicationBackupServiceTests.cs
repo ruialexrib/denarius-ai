@@ -9,8 +9,10 @@ using System.Text.Json.Nodes;
 
 namespace DenariusAI.IntegrationTests;
 
+/// <summary>Verifies full application backup export, compatibility, and restore behavior.</summary>
 public sealed class ApplicationBackupServiceTests
 {
+    /// <summary>Verifies a current backup restores all mapped data and safely upgrades an older schema.</summary>
     [Fact]
     public async Task ExportAndRestoreReplaceAllMappedRecords()
     {
@@ -39,6 +41,7 @@ public sealed class ApplicationBackupServiceTests
             row!.AsObject().Remove(nameof(ApplicationUser.ShowAssetBalancesWidget));
         var tables = legacyBackup["tables"]!.AsObject();
         tables.Remove(typeof(Correspondence).FullName!); tables.Remove(typeof(Warranty).FullName!); tables.Remove(typeof(CorrespondenceMetadata).FullName!);
+        tables.Remove(typeof(InsurancePolicy).FullName!); tables.Remove(typeof(InsurancePolicyAttachment).FullName!); tables.Remove(typeof(InsurancePremium).FullName!); tables.Remove(typeof(InsurancePremiumAttachment).FullName!);
         foreach (var row in tables[typeof(Reminder).FullName!]!.AsArray())
         {
             row!.AsObject().Remove(nameof(Reminder.SavingsCertificateId));
@@ -64,8 +67,13 @@ public sealed class ApplicationBackupServiceTests
         Assert.Equal("original", setting.Value);
         Assert.Equal(2, await context.JournalEntryLines.CountAsync());
         Assert.Single(await context.Reminders.Where(item => item.SavingsCertificateId == certificate.Id).ToListAsync());
+        Assert.Empty(context.InsurancePolicies);
+        Assert.Empty(context.InsurancePolicyAttachments);
+        Assert.Empty(context.InsurancePremiums);
+        Assert.Empty(context.InsurancePremiumAttachments);
     }
 
+    /// <summary>Verifies an invalid backup is rejected before existing data is changed.</summary>
     [Fact]
     public async Task RestoreRejectsUnknownFormatWithoutChangingData()
     {

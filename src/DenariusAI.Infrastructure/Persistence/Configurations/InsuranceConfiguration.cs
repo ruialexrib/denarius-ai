@@ -24,6 +24,22 @@ internal sealed class InsurancePolicyConfiguration : IEntityTypeConfiguration<In
         builder.HasIndex(x => x.PolicyNumber);
         builder.HasIndex(x => x.RenewalDate);
         builder.HasMany(x => x.Premiums).WithOne(x => x.Policy).HasForeignKey(x => x.PolicyId).OnDelete(DeleteBehavior.Cascade);
+        builder.HasMany(x => x.Attachments).WithOne(x => x.Policy).HasForeignKey(x => x.PolicyId).OnDelete(DeleteBehavior.Cascade);
+    }
+}
+
+/// <summary>Configures persistence for general insurance policy attachments.</summary>
+internal sealed class InsurancePolicyAttachmentConfiguration : IEntityTypeConfiguration<InsurancePolicyAttachment>
+{
+    /// <summary>Configures the insurance policy attachment table.</summary>
+    /// <param name="builder">Entity type builder.</param>
+    public void Configure(EntityTypeBuilder<InsurancePolicyAttachment> builder)
+    {
+        builder.ToTable("InsurancePolicyAttachments");
+        builder.ConfigureAuditing();
+        builder.Property(x => x.FileName).HasMaxLength(255).IsRequired();
+        builder.Property(x => x.ContentType).HasMaxLength(100).IsRequired();
+        builder.Property(x => x.DocumentBase64).IsRequired();
     }
 }
 

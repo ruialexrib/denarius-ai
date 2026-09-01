@@ -96,4 +96,19 @@ public sealed record JournalEntryIndexViewModel(
     IReadOnlyList<SelectListItem> SortOptions,
     PaginationViewModel Pagination);
 
-public sealed record JournalEntryDetailsViewModel(JournalEntryDetailsDto Entry);
+/// <summary>Displays a journal entry and insurance premiums supported by it.</summary>
+/// <param name="Entry">Accounting movement details.</param>
+/// <param name="InsurancePremiums">Insurance premiums associated with the movement.</param>
+public sealed record JournalEntryDetailsViewModel(JournalEntryDetailsDto Entry, IReadOnlyList<JournalEntryInsurancePremiumViewModel> InsurancePremiums);
+
+/// <summary>Identifies an insurance premium and its supporting documents from a financial movement.</summary>
+/// <param name="PolicyId">Insurance policy identifier.</param>
+/// <param name="PolicyName">Insurance policy display name.</param>
+/// <param name="PremiumReference">Optional premium reference.</param>
+/// <param name="Attachments">Supporting documents attached to the premium.</param>
+public sealed record JournalEntryInsurancePremiumViewModel(Guid PolicyId, string PolicyName, string? PremiumReference, IReadOnlyList<InsuranceAttachmentLinkViewModel> Attachments);
+
+/// <summary>Provides a link to an insurance premium supporting document.</summary>
+/// <param name="Id">Attachment identifier.</param>
+/// <param name="FileName">Original attachment file name.</param>
+public sealed record InsuranceAttachmentLinkViewModel(Guid Id, string FileName);

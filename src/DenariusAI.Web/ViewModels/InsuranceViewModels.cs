@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using DenariusAI.Domain.Entities;
 using DenariusAI.Domain.Enums;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace DenariusAI.Web.ViewModels;
 
@@ -89,4 +90,14 @@ public sealed class InsurancePortfolioViewModel
 
     /// <summary>Gets or sets renewals occurring in the next 30 days.</summary>
     public int UpcomingRenewals { get; set; }
+}
+
+/// <summary>Insurance policy details together with eligible accounting movements.</summary>
+public sealed class InsurancePolicyDetailsViewModel
+{
+    /// <summary>Gets or sets the policy being displayed.</summary>
+    public InsurancePolicy Policy { get; set; } = null!;
+
+    /// <summary>Gets or sets active accounting movements available for premium association.</summary>
+    public IReadOnlyList<SelectListItem> AvailableMovements { get; set; } = [];
 }
