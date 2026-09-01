@@ -14,16 +14,37 @@ namespace DenariusAI.Web.Controllers;
 [Authorize]
 public sealed class StockPortfolioController(DenariusDbContext dbContext, IStockForecastService forecastService, IStockMarketDataService marketDataService, ILogger<StockPortfolioController> logger) : Controller
 {
-    /// <summary>Displays the current stock portfolio.</summary><param name="cancellationToken">Cancellation token.</param><returns>The portfolio view.</returns>
-    public async Task<IActionResult> Index(CancellationToken cancellationToken = default)
+    /// <summary>Displays the current stock portfolio with filters and independent portfolio/watchlist pagination.</summary><param name="search">Optional ticker or instrument-name filter.</param><param name="currency">Optional trading-currency filter.</param><param name="exchange">Optional exchange filter.</param><param name="portfolioPage">Portfolio page number.</param><param name="watchlistPage">Watchlist page number.</param><param name="pageSize">Number of items per section page.</param><param name="cancellationToken">Cancellation token.</param><returns>The portfolio view.</returns>
+    public async Task<IActionResult> Index(string? search, string? currency, string? exchange, int portfolioPage = 1, int watchlistPage = 1, int pageSize = PaginationViewModel.DefaultPageSize, CancellationToken cancellationToken = default)
     {
+        pageSize = PaginationViewModel.NormalizePageSize(pageSize);
         var positions = await dbContext.StockPositions.AsNoTracking().OrderBy(x => x.Ticker).ToListAsync(cancellationToken);
         var positionIds = positions.Select(x => x.Id).ToArray();
         var history = await dbContext.StockPrices.AsNoTracking().Where(x => positionIds.Contains(x.StockPositionId)).OrderBy(x => x.Date).ToListAsync(cancellationToken);
         var historyByPosition = history.ToLookup(x => x.StockPositionId);
         var rows = positions.Select(position => ToRow(position, historyByPosition[position.Id])).ToList();
-        var portfolioRows = rows.Where(x => !x.WatchlistOnly).ToList();
-        return View(new StockPortfolioIndexViewModel(portfolioRows, rows, portfolioRows.Sum(x => x.CostValue), portfolioRows.Sum(x => x.MarketValue), portfolioRows.Sum(x => x.Gain)));
+        var completePortfolio = rows.Where(x => !x.WatchlistOnly).ToList();
+        var currencies = rows.Select(x => x.Currency).Where(x => !string.IsNullOrWhiteSpace(x)).Distinct(StringComparer.OrdinalIgnoreCase).OrderBy(x => x).ToArray();
+        var exchanges = rows.Select(x => x.Exchange).Where(x => !string.IsNullOrWhiteSpace(x)).Select(x => x!).Distinct(StringComparer.OrdinalIgnoreCase).OrderBy(x => x).ToArray();
+
+        IEnumerable<StockPositionRowViewModel> filteredRows = rows;
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var term = search.Trim();
+            filteredRows = filteredRows.Where(x => x.Ticker.Contains(term, StringComparison.OrdinalIgnoreCase) || x.Name.Contains(term, StringComparison.OrdinalIgnoreCase));
+        }
+        if (!string.IsNullOrWhiteSpace(currency)) filteredRows = filteredRows.Where(x => string.Equals(x.Currency, currency, StringComparison.OrdinalIgnoreCase));
+        if (!string.IsNullOrWhiteSpace(exchange)) filteredRows = filteredRows.Where(x => string.Equals(x.Exchange, exchange, StringComparison.OrdinalIgnoreCase));
+
+        var filtered = filteredRows.ToList();
+        var portfolioRows = filtered.Where(x => !x.WatchlistOnly).ToList();
+        var watchlistRows = filtered;
+        var portfolioPagination = PaginationViewModel.Create(portfolioRows.Count, portfolioPage, pageSize);
+        var watchlistPagination = PaginationViewModel.Create(watchlistRows.Count, watchlistPage, pageSize);
+        var portfolioItems = portfolioRows.Skip((portfolioPagination.Page - 1) * pageSize).Take(pageSize).ToList();
+        var watchlistItems = watchlistRows.Skip((watchlistPagination.Page - 1) * pageSize).Take(pageSize).ToList();
+
+        return View(new StockPortfolioIndexViewModel(portfolioItems, watchlistItems, completePortfolio.Sum(x => x.CostValue), completePortfolio.Sum(x => x.MarketValue), completePortfolio.Sum(x => x.Gain), search, currency, exchange, currencies, exchanges, portfolioPagination, watchlistPagination));
     }
 
     /// <summary>Displays the imported price evolution and configured forecasts for one instrument.</summary><param name="id">The stock position identifier.</param><param name="cancellationToken">Token used to cancel database access.</param><returns>The history page or not found.</returns>
