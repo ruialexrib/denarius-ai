@@ -775,6 +775,174 @@ namespace DenariusAI.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("DenariusAI.Domain.Entities.InsurancePolicy", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateOnly?>("EndDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("InsuredSubject")
+                        .HasMaxLength(240)
+                        .HasColumnType("nvarchar(240)");
+
+                    b.Property<string>("Insurer")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("nvarchar(160)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("nvarchar(160)");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<int>("PaymentFrequency")
+                        .HasColumnType("int");
+
+                    b.Property<string>("PolicyNumber")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateOnly?>("RenewalDate")
+                        .HasColumnType("date");
+
+                    b.Property<DateOnly>("StartDate")
+                        .HasColumnType("date");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("int");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PolicyNumber");
+
+                    b.HasIndex("RenewalDate");
+
+                    b.ToTable("InsurancePolicies", "denarius");
+                });
+
+            modelBuilder.Entity("DenariusAI.Domain.Entities.InsurancePremium", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(19, 4)
+                        .HasColumnType("decimal(19,4)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateOnly>("DueDate")
+                        .HasColumnType("date");
+
+                    b.Property<Guid?>("JournalEntryId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateOnly>("PeriodEnd")
+                        .HasColumnType("date");
+
+                    b.Property<DateOnly>("PeriodStart")
+                        .HasColumnType("date");
+
+                    b.Property<Guid>("PolicyId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Reference")
+                        .HasMaxLength(160)
+                        .HasColumnType("nvarchar(160)");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DueDate");
+
+                    b.HasIndex("JournalEntryId");
+
+                    b.HasIndex("PolicyId");
+
+                    b.ToTable("InsurancePremiums", "denarius");
+                });
+
+            modelBuilder.Entity("DenariusAI.Domain.Entities.InsurancePremiumAttachment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ContentType")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("DocumentBase64")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<Guid>("PremiumId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PremiumId");
+
+                    b.ToTable("InsurancePremiumAttachments", "denarius");
+                });
+
             modelBuilder.Entity("DenariusAI.Domain.Entities.JournalEntry", b =>
                 {
                     b.Property<Guid>("Id")
@@ -4436,6 +4604,35 @@ namespace DenariusAI.Infrastructure.Persistence.Migrations
                     b.Navigation("Correspondence");
                 });
 
+            modelBuilder.Entity("DenariusAI.Domain.Entities.InsurancePremium", b =>
+                {
+                    b.HasOne("DenariusAI.Domain.Entities.JournalEntry", "JournalEntry")
+                        .WithMany()
+                        .HasForeignKey("JournalEntryId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("DenariusAI.Domain.Entities.InsurancePolicy", "Policy")
+                        .WithMany("Premiums")
+                        .HasForeignKey("PolicyId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("JournalEntry");
+
+                    b.Navigation("Policy");
+                });
+
+            modelBuilder.Entity("DenariusAI.Domain.Entities.InsurancePremiumAttachment", b =>
+                {
+                    b.HasOne("DenariusAI.Domain.Entities.InsurancePremium", "Premium")
+                        .WithMany("Attachments")
+                        .HasForeignKey("PremiumId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Premium");
+                });
+
             modelBuilder.Entity("DenariusAI.Domain.Entities.JournalEntry", b =>
                 {
                     b.HasOne("DenariusAI.Domain.Entities.Budget", "Budget")
@@ -4613,6 +4810,16 @@ namespace DenariusAI.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("DenariusAI.Domain.Entities.FinancialGroup", b =>
                 {
                     b.Navigation("Categories");
+                });
+
+            modelBuilder.Entity("DenariusAI.Domain.Entities.InsurancePolicy", b =>
+                {
+                    b.Navigation("Premiums");
+                });
+
+            modelBuilder.Entity("DenariusAI.Domain.Entities.InsurancePremium", b =>
+                {
+                    b.Navigation("Attachments");
                 });
 
             modelBuilder.Entity("DenariusAI.Domain.Entities.JournalEntry", b =>
