@@ -43,8 +43,7 @@ AI features assist with transaction entry, classification, financial questions, 
 - Portuguese Savings Certificates portfolio and projections
 - Stock portfolio and watchlist with market price history, performance tracking and optional ARIMA forecasts
 - Automatic stock market history collection through a configurable market-data provider
-- Insurance portfolio with policy, insurer, premium, coverage, renewal and expiry tracking
-- Insurance renewal and expiry alerts integrated with application reminders
+- Insurance portfolio with policy details, premium records, renewal dates and status tracking
 - Document, correspondence and warranty management
 - Reminders and alerts for relevant dates and expirations
 - AI-assisted correspondence analysis and metadata extraction
@@ -60,9 +59,9 @@ Historical market prices can be collected from the configured provider and are u
 
 ### Insurance portfolio
 
-The insurance portfolio centralises personal and family policies in DenariusAI. Policies can be registered by type, insurer, policy number and insured object, together with start, renewal and expiry dates, premium amount and payment frequency, coverage amount, deductible, status and notes.
+The insurance portfolio centralises personal and family policies in DenariusAI. Policies can be registered by type, insurer, policy number and insured object, together with start and renewal dates, payment frequency, status and notes. Premium amounts are maintained as separate records associated with each policy.
 
-The portfolio dashboard summarises active policies, annualised premium commitments, upcoming renewals and expiring policies. Renewal and expiry dates are also surfaced through DenariusAI reminders, helping users keep recurring insurance commitments and relevant deadlines visible alongside the rest of their financial information.
+The portfolio dashboard provides an overview of active policies and registered insurance costs for the current year, together with outstanding premium information and upcoming renewal dates. This keeps recurring insurance commitments visible alongside the rest of the user's financial information.
 
 ## Technology
 
