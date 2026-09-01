@@ -93,6 +93,16 @@ docker compose down
 
 Never commit `.env`, credentials or real financial data.
 
+### Stock market data
+
+Stock price history, portfolio updates and watchlist market data use the Alpha Vantage service. Create a free API key at [Alpha Vantage](https://www.alphavantage.co/support/#api-key) and add it to your `.env` file:
+
+```text
+MARKET_DATA_API_KEY=your_api_key
+```
+
+The API key is required only for stock market data features. Keep it private and never commit it to the repository.
+
 ### Optional Google authentication
 
 User provisioning remains exclusive to DenariusAI administrators. Google authentication never creates a local account: access is granted only when the Google email exactly matches an existing application user. The same user can continue to sign in with the local email and password.
