@@ -14,16 +14,27 @@ namespace DenariusAI.Web.Controllers;
 [Authorize]
 public sealed class StockPortfolioController(DenariusDbContext dbContext, IStockForecastService forecastService, IStockMarketDataService marketDataService, ILogger<StockPortfolioController> logger) : Controller
 {
-    /// <summary>Displays the current stock portfolio.</summary><param name="cancellationToken">Cancellation token.</param><returns>The portfolio view.</returns>
-    public async Task<IActionResult> Index(CancellationToken cancellationToken = default)
+    /// <summary>Displays the current stock portfolio with independent portfolio and watchlist filters and pagination.</summary>
+    /// <param name="portfolioSearch">Optional portfolio ticker or instrument-name filter.</param><param name="portfolioCurrency">Optional portfolio trading-currency filter.</param><param name="portfolioExchange">Optional portfolio exchange filter.</param><param name="portfolioPage">Portfolio page number.</param><param name="portfolioPageSize">Number of portfolio items per page.</param><param name="watchlistSearch">Optional watchlist ticker or instrument-name filter.</param><param name="watchlistCurrency">Optional watchlist trading-currency filter.</param><param name="watchlistExchange">Optional watchlist exchange filter.</param><param name="watchlistPage">Watchlist page number.</param><param name="watchlistPageSize">Number of watchlist items per page.</param><param name="cancellationToken">Cancellation token.</param><returns>The portfolio view.</returns>
+    public async Task<IActionResult> Index(string? portfolioSearch, string? portfolioCurrency, string? portfolioExchange, int portfolioPage = 1, int portfolioPageSize = 10, string? watchlistSearch = null, string? watchlistCurrency = null, string? watchlistExchange = null, int watchlistPage = 1, int watchlistPageSize = 10, CancellationToken cancellationToken = default)
     {
         var positions = await dbContext.StockPositions.AsNoTracking().OrderBy(x => x.Ticker).ToListAsync(cancellationToken);
         var positionIds = positions.Select(x => x.Id).ToArray();
         var history = await dbContext.StockPrices.AsNoTracking().Where(x => positionIds.Contains(x.StockPositionId)).OrderBy(x => x.Date).ToListAsync(cancellationToken);
         var historyByPosition = history.ToLookup(x => x.StockPositionId);
         var rows = positions.Select(position => ToRow(position, historyByPosition[position.Id])).ToList();
-        var portfolioRows = rows.Where(x => !x.WatchlistOnly).ToList();
-        return View(new StockPortfolioIndexViewModel(portfolioRows, rows, portfolioRows.Sum(x => x.CostValue), portfolioRows.Sum(x => x.MarketValue), portfolioRows.Sum(x => x.Gain)));
+        var completePortfolio = rows.Where(x => !x.WatchlistOnly).ToList();
+        var currencies = rows.Select(x => x.Currency).Where(x => !string.IsNullOrWhiteSpace(x)).Distinct(StringComparer.OrdinalIgnoreCase).OrderBy(x => x).ToArray();
+        var exchanges = rows.Select(x => x.Exchange).Where(x => !string.IsNullOrWhiteSpace(x)).Select(x => x!).Distinct(StringComparer.OrdinalIgnoreCase).OrderBy(x => x).ToArray();
+
+        var portfolioRows = ApplyFilters(rows.Where(x => !x.WatchlistOnly), portfolioSearch, portfolioCurrency, portfolioExchange).ToList();
+        var watchlistRows = ApplyFilters(rows, watchlistSearch, watchlistCurrency, watchlistExchange).ToList();
+        var portfolioPagination = PaginationViewModel.Create(portfolioRows.Count, portfolioPage, portfolioPageSize);
+        var watchlistPagination = PaginationViewModel.Create(watchlistRows.Count, watchlistPage, watchlistPageSize);
+        var portfolioItems = portfolioRows.Skip((portfolioPagination.Page - 1) * portfolioPagination.PageSize).Take(portfolioPagination.PageSize).ToList();
+        var watchlistItems = watchlistRows.Skip((watchlistPagination.Page - 1) * watchlistPagination.PageSize).Take(watchlistPagination.PageSize).ToList();
+
+        return View(new StockPortfolioIndexViewModel(portfolioItems, watchlistItems, completePortfolio.Sum(x => x.CostValue), completePortfolio.Sum(x => x.MarketValue), completePortfolio.Sum(x => x.Gain), currencies, exchanges, new StockListFilterViewModel(portfolioSearch, portfolioCurrency, portfolioExchange, portfolioPagination), new StockListFilterViewModel(watchlistSearch, watchlistCurrency, watchlistExchange, watchlistPagination)));
     }
 
     /// <summary>Displays the imported price evolution and configured forecasts for one instrument.</summary><param name="id">The stock position identifier.</param><param name="cancellationToken">Token used to cancel database access.</param><returns>The history page or not found.</returns>
@@ -80,7 +91,7 @@ public sealed class StockPortfolioController(DenariusDbContext dbContext, IStock
         if(!ModelState.IsValid){TempData["ErrorMessage"]="Indique um preço válido.";return RedirectToAction(nameof(Index));} var position=await dbContext.StockPositions.FindAsync([model.Id],cancellationToken);if(position is null)return NotFound();position.UpdatePrice(model.Price,model.Date);position.UpdatedBy=UserId();var history=await dbContext.StockPrices.SingleOrDefaultAsync(price=>price.StockPositionId==model.Id&&price.Date==model.Date,cancellationToken);if(history is not null)dbContext.StockPrices.Remove(history);dbContext.StockPrices.Add(new StockPrice(model.Id,model.Date,model.Price));await dbContext.SaveChangesAsync(cancellationToken);TempData["SuccessMessage"]=$"Cotação de {position.Ticker} atualizada.";return RedirectToAction(nameof(Index));
     }
 
-    /// <summary>Imports the configured daily market history for a tracked instrument.</summary><param name="id">The stock position identifier.</param><param name="cancellationToken">Token used to cancel the provider request.</param><returns>The refreshed portfolio view.</returns>
+    /// <summary>Imports the configured daily market history for a tracked instrument.</summary><param name="id">The stock position identifier.</param><param name="cancellationToken">Token used to cancel database access.</param><returns>The refreshed portfolio view.</returns>
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> ImportHistory(Guid id,CancellationToken cancellationToken)
     {
@@ -90,6 +101,15 @@ public sealed class StockPortfolioController(DenariusDbContext dbContext, IStock
     /// <summary>Removes a stock holding and its price history.</summary><param name="id">Position identifier.</param><param name="cancellationToken">Cancellation token.</param><returns>The portfolio view.</returns>
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> Delete(Guid id,CancellationToken cancellationToken){var position=await dbContext.StockPositions.FindAsync([id],cancellationToken);if(position is null)return NotFound();dbContext.StockPositions.Remove(position);await dbContext.SaveChangesAsync(cancellationToken);TempData["SuccessMessage"]="Ação removida do portfólio.";return RedirectToAction(nameof(Index));}
+
+    /// <summary>Applies stock-list filters without changing the source collection.</summary><param name="source">The source rows.</param><param name="search">Optional ticker or instrument-name filter.</param><param name="currency">Optional trading-currency filter.</param><param name="exchange">Optional exchange filter.</param><returns>The filtered rows.</returns>
+    private static IEnumerable<StockPositionRowViewModel> ApplyFilters(IEnumerable<StockPositionRowViewModel> source, string? search, string? currency, string? exchange)
+    {
+        if (!string.IsNullOrWhiteSpace(search)) { var term = search.Trim(); source = source.Where(x => x.Ticker.Contains(term, StringComparison.OrdinalIgnoreCase) || x.Name.Contains(term, StringComparison.OrdinalIgnoreCase)); }
+        if (!string.IsNullOrWhiteSpace(currency)) source = source.Where(x => string.Equals(x.Currency, currency, StringComparison.OrdinalIgnoreCase));
+        if (!string.IsNullOrWhiteSpace(exchange)) source = source.Where(x => string.Equals(x.Exchange, exchange, StringComparison.OrdinalIgnoreCase));
+        return source;
+    }
 
     /// <summary>Gets the authenticated user identifier.</summary><returns>The user identifier.</returns>
     private string UserId()=>User.FindFirstValue(ClaimTypes.NameIdentifier)??throw new InvalidOperationException("Utilizador não identificado.");
