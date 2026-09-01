@@ -35,10 +35,21 @@
 .modern-toggle-copy { display:flex; flex-direction:column; gap:2px; }
 .modern-toggle-copy strong { color:#253247; font-size:.82rem; }
 .modern-toggle-copy small { color:#667386; font-size:.72rem; font-weight:500; line-height:1.45; }
+.file-picker { display:flex!important; align-items:center; gap:15px; min-height:76px; margin:20px 0 0!important; padding:15px 17px; border:1px dashed #b9c8d2; border-radius:13px; background:linear-gradient(180deg,#fbfdfc,#f5faf8); cursor:pointer; text-transform:none!important; letter-spacing:normal!important; transition:border-color .16s,box-shadow .16s,background .16s; }
+.file-picker:hover { border-color:#159a70; background:#f3faf7; }
+.file-picker:focus-within { border-color:#159a70; box-shadow:0 0 0 4px rgba(21,154,112,.11); }
+.file-picker.has-file { border-style:solid; border-color:#8bcdb7; background:#f1faf6; }
+.file-picker-icon { display:grid; width:44px; height:44px; flex:0 0 44px; place-items:center; border-radius:12px; background:#e4f5ef; color:#087a58; font-size:1.45rem; font-weight:500; line-height:1; }
+.file-picker.has-file .file-picker-icon { background:#159a70; color:#fff; }
+.file-picker-copy { display:flex; min-width:0; flex:1; flex-direction:column; gap:4px; }
+.file-picker-copy strong { overflow:hidden; color:#253247; font-size:.88rem; font-weight:750; text-overflow:ellipsis; white-space:nowrap; }
+.file-picker-copy span { color:#718094; font-size:.76rem; font-weight:500; line-height:1.4; }
+.file-picker-change { flex:0 0 auto; color:#087a58; font-size:.75rem; font-weight:750; }
+.file-picker input[type=file] { position:absolute!important; width:1px!important; height:1px!important; min-height:0!important; padding:0!important; overflow:hidden!important; clip:rect(0,0,0,0)!important; white-space:nowrap!important; border:0!important; }
 .page-header + .panel .form-actions,.data-editor .form-actions { justify-content:flex-end; gap:10px; margin:30px -38px 0; padding:19px 38px; border-top:1px solid #e8edf1; background:linear-gradient(180deg,#fafcfd,#f6f9fa); }
 .page-header + .panel .form-actions .button,.data-editor .form-actions .button { min-width:132px; }
 #journal-entry-form > .panel { border:1px solid #dfe6ec; border-radius:18px; box-shadow:0 18px 55px rgba(24,34,55,.075); }
 #journal-entry-form > .panel .panel-header { border-bottom-color:#e8edf1; background:linear-gradient(180deg,#fff,#fbfdfc); }
 @media(max-width:900px){.data-editor-grid{grid-template-columns:1fr}.data-editor-context{border-top:1px solid #e8edf1;border-left:0}}
-@media(max-width:700px){.page-header + .panel,.data-editor{border-radius:14px}.page-header + .panel > .form-stack,.data-editor .form-stack{padding:24px 20px 0}.data-editor-context{padding:26px 20px}.page-header + .panel .form-actions,.data-editor .form-actions{margin:24px -20px 0;padding:16px 20px;flex-direction:column-reverse}.page-header + .panel .form-actions .button,.data-editor .form-actions .button{width:100%}}
+@media(max-width:700px){.page-header + .panel,.data-editor{border-radius:14px}.page-header + .panel > .form-stack,.data-editor .form-stack{padding:24px 20px 0}.data-editor-context{padding:26px 20px}.page-header + .panel .form-actions,.data-editor .form-actions{margin:24px -20px 0;padding:16px 20px;flex-direction:column-reverse}.page-header + .panel .form-actions .button,.data-editor .form-actions .button{width:100%}.file-picker{align-items:flex-start}.file-picker-change{align-self:center}}
 .searchable-select{position:relative;min-width:11rem}.searchable-select-native{position:absolute!important;width:1px!important;height:1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important}.searchable-select-input{width:100%;padding-right:2.25rem;background-image:linear-gradient(45deg,transparent 50%,#64748b 50%),linear-gradient(135deg,#64748b 50%,transparent 50%);background-position:calc(100% - 16px) 50%,calc(100% - 11px) 50%;background-size:5px 5px,5px 5px;background-repeat:no-repeat}.searchable-select-list{position:fixed;z-index:1200;max-height:18rem;overflow:auto;padding:.35rem;background:#fff;border:1px solid #dbe3ed;border-radius:.75rem;box-shadow:0 18px 40px rgba(15,23,42,.16)}.searchable-select-list button{display:block;width:100%;padding:.65rem .75rem;border:0;border-radius:.5rem;background:transparent;color:#0f172a;text-align:left;font:inherit;cursor:pointer}.searchable-select-list button:hover,.searchable-select-list button.active{background:#e9f8f3;color:#047857}.searchable-select-empty{display:block;padding:.75rem;color:#64748b;font-size:.875rem}
