@@ -2,18 +2,28 @@ using System.Security.Claims;
 using DenariusAI.Application.Abstractions.Services;
 using DenariusAI.Application.DTOs;
 using DenariusAI.Domain.Enums;
+using DenariusAI.Infrastructure.Persistence;
 using DenariusAI.Web.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
 
 namespace DenariusAI.Web.Controllers;
 
 /// <summary>
 /// Manages journal entry creation, editing, posting, and list operations.
 /// </summary>
+/// <param name="service">Journal entry application service.</param>
+/// <param name="accountService">Account application service.</param>
+/// <param name="categoryService">Category application service.</param>
+/// <param name="groupService">Financial group application service.</param>
+/// <param name="budgetService">Budget application service.</param>
+/// <param name="suggestionService">AI-assisted journal entry suggestion service.</param>
+/// <param name="dbContext">Application database context used to resolve insurance associations.</param>
+/// <param name="logger">Controller logger.</param>
 [Authorize]
-public sealed class JournalEntriesController(IJournalEntryService service, IAccountService accountService, ICategoryService categoryService, IFinancialGroupService groupService, IBudgetService budgetService, IJournalEntrySuggestionService suggestionService, ILogger<JournalEntriesController> logger) : Controller
+public sealed class JournalEntriesController(IJournalEntryService service, IAccountService accountService, ICategoryService categoryService, IFinancialGroupService groupService, IBudgetService budgetService, IJournalEntrySuggestionService suggestionService, DenariusDbContext dbContext, ILogger<JournalEntriesController> logger) : Controller
 {
     /// <summary>
     /// Displays a paginated list of journal entries with optional filtering and sorting.
@@ -63,7 +73,13 @@ public sealed class JournalEntriesController(IJournalEntryService service, IAcco
     public async Task<IActionResult> Details(Guid id, CancellationToken cancellationToken)
     {
         var entry = await service.GetAsync(id, cancellationToken);
-        return entry is null ? NotFound() : View(new JournalEntryDetailsViewModel(entry));
+        if (entry is null) return NotFound();
+        var premiums = await dbContext.InsurancePremiums.AsNoTracking().Where(item => item.JournalEntryId == id)
+            .Include(item => item.Policy).Include(item => item.Attachments).OrderBy(item => item.Policy.Name).ThenBy(item => item.DueDate)
+            .Select(item => new JournalEntryInsurancePremiumViewModel(item.PolicyId, item.Policy.Name, item.Reference,
+                item.Attachments.OrderBy(attachment => attachment.FileName).Select(attachment => new InsuranceAttachmentLinkViewModel(attachment.Id, attachment.FileName)).ToList()))
+            .ToListAsync(cancellationToken);
+        return View(new JournalEntryDetailsViewModel(entry, premiums));
     }
 
     /// <summary>

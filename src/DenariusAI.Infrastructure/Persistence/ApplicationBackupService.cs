@@ -10,6 +10,8 @@ using Microsoft.EntityFrameworkCore.Metadata;
 
 namespace DenariusAI.Infrastructure.Persistence;
 
+/// <summary>Exports and restores complete, versioned application data backups.</summary>
+/// <param name="dbContext">Application database context.</param>
 public sealed class ApplicationBackupService(DenariusDbContext dbContext) : IApplicationBackupService
 {
     private const string Format = "DenariusAI.ApplicationBackup";
@@ -156,9 +158,21 @@ public sealed class ApplicationBackupService(DenariusDbContext dbContext) : IApp
         }
     }
 
+    /// <summary>Adds safe defaults required to restore backups created by earlier application schemas.</summary>
+    /// <param name="document">Backup document to normalize.</param>
+    /// <param name="entityTypes">Entity types required by the current schema.</param>
     private static void NormalizeForCurrentSchema(ApplicationBackupDto document, IReadOnlyDictionary<string, IEntityType> entityTypes)
     {
-        foreach (var type in new[] { typeof(Correspondence), typeof(Warranty), typeof(CorrespondenceMetadata) })
+        foreach (var type in new[]
+        {
+            typeof(Correspondence),
+            typeof(Warranty),
+            typeof(CorrespondenceMetadata),
+            typeof(InsurancePolicy),
+            typeof(InsurancePolicyAttachment),
+            typeof(InsurancePremium),
+            typeof(InsurancePremiumAttachment)
+        })
         {
             var key = type.FullName!;
             if (entityTypes.ContainsKey(key) && !document.Tables.ContainsKey(key)) document.Tables[key] = [];

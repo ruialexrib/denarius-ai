@@ -1,0 +1,23 @@
+@model DenariusAI.Web.ViewModels.InsurancePortfolioViewModel
+@using DenariusAI.Domain.Enums
+@{ ViewData["Title"] = "Seguros"; }
+<link rel="stylesheet" href="~/css/insurance.css" asp-append-version="true" />
+<div class="page-header"><div><p class="eyebrow">Proteção</p><h1>Carteira de seguros</h1><p class="page-subtitle">Acompanhe apólices, encargos, pagamentos e renovações num único lugar.</p></div><a class="button" asp-action="Create">Nova apólice</a></div>
+<section class="insurance-totals" aria-label="Resumo da carteira de seguros">
+    <article class="insurance-primary"><span>Custo no ano</span><strong>@Model.AnnualCost.ToString("N2") €</strong><small>Prémios registados no ano atual</small></article>
+    <article class="insurance-active"><span>Apólices ativas</span><strong>@Model.ActivePolicies</strong><small>Coberturas atualmente em vigor</small></article>
+    <article class="insurance-overdue"><span>Prémios vencidos</span><strong>@Model.OutstandingPremiums</strong><small>Pagamentos por regularizar</small></article>
+    <article class="insurance-renewals"><span>Próximas renovações</span><strong>@Model.UpcomingRenewals</strong><small>Nos próximos 30 dias</small></article>
+</section>
+<section class="panel insurance-panel">
+    <header class="insurance-panel-header"><div><p class="eyebrow">Apólices</p><h2>Proteções registadas</h2></div><span>@Model.Policies.Count registo@(Model.Policies.Count == 1 ? "" : "s")</span></header>
+    <div class="table-wrap"><table class="entity-table insurance-table"><thead><tr><th>Apólice</th><th>Seguradora</th><th>Tipo</th><th>Renovação</th><th>Estado</th><th class="actions">Ações</th></tr></thead><tbody>
+    @foreach (var item in Model.Policies)
+    {
+        var typeLabel = item.Type switch { InsurancePolicyType.Home => "Habitação", InsurancePolicyType.Motor => "Automóvel", InsurancePolicyType.Health => "Saúde", InsurancePolicyType.Life => "Vida", InsurancePolicyType.PersonalAccident => "Acidentes pessoais", _ => "Outro" };
+        var statusLabel = item.Status switch { InsurancePolicyStatus.Active => "Ativa", InsurancePolicyStatus.Archived => "Arquivada", _ => "Cancelada" };
+        <tr><td><strong>@item.Name</strong><small>@item.PolicyNumber</small></td><td>@item.Insurer</td><td>@typeLabel</td><td class="nowrap">@(item.RenewalDate?.ToString("dd/MM/yyyy") ?? "—")</td><td><span class="status @(item.Status == InsurancePolicyStatus.Active ? "active" : "inactive")">@statusLabel</span></td><td class="actions"><a class="text-link" asp-action="Details" asp-route-id="@item.Id">Consultar</a><a class="text-link" asp-action="Edit" asp-route-id="@item.Id">Editar</a></td></tr>
+    }
+    @if (Model.Policies.Count == 0) { <tr><td colspan="6" class="empty-row"><strong>Ainda não existem apólices.</strong><small>Registe a primeira apólice para começar a acompanhar coberturas e prémios.</small></td></tr> }
+    </tbody></table></div>
+</section>
