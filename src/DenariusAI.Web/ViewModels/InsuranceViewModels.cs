@@ -76,8 +76,20 @@ public sealed class InsurancePremiumFormViewModel
 /// <summary>Insurance portfolio overview model.</summary>
 public sealed class InsurancePortfolioViewModel
 {
-    /// <summary>Gets or sets policies.</summary>
+    /// <summary>Gets or sets the filtered policies displayed on the current page.</summary>
     public IReadOnlyList<InsurancePolicy> Policies { get; set; } = [];
+
+    /// <summary>Gets or sets the free-text search applied to the portfolio.</summary>
+    public string? Search { get; set; }
+
+    /// <summary>Gets or sets the selected policy type filter.</summary>
+    public InsurancePolicyType? Type { get; set; }
+
+    /// <summary>Gets or sets the selected policy status filter.</summary>
+    public InsurancePolicyStatus? Status { get; set; }
+
+    /// <summary>Gets or sets pagination metadata for the filtered policy list.</summary>
+    public PaginationViewModel Pagination { get; set; } = PaginationViewModel.Create(0, 1, 10);
 
     /// <summary>Gets or sets active policy count.</summary>
     public int ActivePolicies { get; set; }

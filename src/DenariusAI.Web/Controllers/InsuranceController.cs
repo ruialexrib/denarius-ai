@@ -15,18 +15,43 @@ namespace DenariusAI.Web.Controllers;
 [Authorize]
 public sealed class InsuranceController(DenariusDbContext dbContext) : Controller
 {
-    /// <summary>Displays the insurance portfolio.</summary>
+    /// <summary>Displays the insurance portfolio with optional filters and pagination.</summary>
+    /// <param name="search">Free-text search across policy name, insurer, policy number, and insured subject.</param>
+    /// <param name="type">Optional insurance type filter.</param>
+    /// <param name="status">Optional policy status filter.</param>
+    /// <param name="page">Requested page number.</param>
+    /// <param name="pageSize">Requested number of policies per page.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The insurance portfolio view.</returns>
-    public async Task<IActionResult> Index(CancellationToken cancellationToken)
+    public async Task<IActionResult> Index(string? search, InsurancePolicyType? type, InsurancePolicyStatus? status, int page = 1, int pageSize = 10, CancellationToken cancellationToken = default)
     {
         var today = DateOnly.FromDateTime(DateTime.Today);
         var policies = await dbContext.InsurancePolicies.AsNoTracking().Include(x => x.Premiums).ThenInclude(x => x.JournalEntry).OrderBy(x => x.RenewalDate).ThenBy(x => x.Name).ToListAsync(cancellationToken);
         var active = policies.Where(x => x.Status == InsurancePolicyStatus.Active).ToList();
         var premiums = active.SelectMany(x => x.Premiums).ToList();
+
+        IEnumerable<InsurancePolicy> filtered = policies;
+        var normalizedSearch = search?.Trim();
+        if (!string.IsNullOrWhiteSpace(normalizedSearch))
+        {
+            filtered = filtered.Where(x => x.Name.Contains(normalizedSearch, StringComparison.CurrentCultureIgnoreCase)
+                || x.Insurer.Contains(normalizedSearch, StringComparison.CurrentCultureIgnoreCase)
+                || x.PolicyNumber.Contains(normalizedSearch, StringComparison.CurrentCultureIgnoreCase)
+                || (x.InsuredSubject?.Contains(normalizedSearch, StringComparison.CurrentCultureIgnoreCase) ?? false));
+        }
+        if (type.HasValue) filtered = filtered.Where(x => x.Type == type.Value);
+        if (status.HasValue) filtered = filtered.Where(x => x.Status == status.Value);
+
+        var filteredPolicies = filtered.ToList();
+        var pagination = PaginationViewModel.Create(filteredPolicies.Count, page, pageSize);
+        var pagePolicies = filteredPolicies.Skip((pagination.Page - 1) * pagination.PageSize).Take(pagination.PageSize).ToList();
         var model = new InsurancePortfolioViewModel
         {
-            Policies = policies,
+            Policies = pagePolicies,
+            Search = normalizedSearch,
+            Type = type,
+            Status = status,
+            Pagination = pagination,
             ActivePolicies = active.Count,
             AnnualCost = premiums.Where(x => x.PeriodStart.Year == today.Year).Sum(x => x.Amount),
             OutstandingPremiums = premiums.Count(x => x.DueDate <= today && !x.IsPaid),
