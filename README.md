@@ -30,7 +30,7 @@ _The demo runs on an Azure virtual machine and may be temporarily unavailable wh
 
 ## About
 
-DenariusAI is a personal and family finance management platform built around double-entry accounting. It combines daily financial management with budgeting, bank reconciliation, savings, investments, analytics and administrative organisation in one secure and consistent workspace.
+DenariusAI is a personal and family finance management platform built around double-entry accounting. It combines daily financial management with budgeting, bank reconciliation, savings, investments, insurance, analytics and administrative organisation in one secure and consistent workspace.
 
 AI features assist with transaction entry, classification, financial questions, correspondence analysis and Markdown report generation. Suggestions are always reviewed by the user before relevant data is saved.
 
@@ -43,6 +43,8 @@ AI features assist with transaction entry, classification, financial questions, 
 - Portuguese Savings Certificates portfolio and projections
 - Stock portfolio and watchlist with market price history, performance tracking and optional ARIMA forecasts
 - Automatic stock market history collection through a configurable market-data provider
+- Insurance portfolio with policy, insurer, premium, coverage, renewal and expiry tracking
+- Insurance renewal and expiry alerts integrated with application reminders
 - Document, correspondence and warranty management
 - Reminders and alerts for relevant dates and expirations
 - AI-assisted correspondence analysis and metadata extraction
@@ -55,6 +57,12 @@ AI features assist with transaction entry, classification, financial questions, 
 The stock portfolio brings listed investments into the same personal-finance workspace. Positions can be registered with ticker, exchange, trading currency, quantity and average purchase price, while the watchlist can also track instruments that are not currently held.
 
 Historical market prices can be collected from the configured provider and are used to show price evolution, period change, minimum and maximum prices, and current unrealised gain or loss. When enabled and enough observations are available, DenariusAI can also calculate deterministic ARIMA-based 30, 60 and 90-day price forecasts with 95% confidence intervals. Forecasts are indicative only and never change financial records automatically.
+
+### Insurance portfolio
+
+The insurance portfolio centralises personal and family policies in DenariusAI. Policies can be registered by type, insurer, policy number and insured object, together with start, renewal and expiry dates, premium amount and payment frequency, coverage amount, deductible, status and notes.
+
+The portfolio dashboard summarises active policies, annualised premium commitments, upcoming renewals and expiring policies. Renewal and expiry dates are also surfaced through DenariusAI reminders, helping users keep recurring insurance commitments and relevant deadlines visible alongside the rest of their financial information.
 
 ## Technology
 
