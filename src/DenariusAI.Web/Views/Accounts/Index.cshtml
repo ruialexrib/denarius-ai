@@ -1,8 +1,10 @@
 @model AccountIndexViewModel
 @using DenariusAI.Web.Controllers
-@{ ViewData["Title"] = "Contas"; }
+@{ ViewData["Title"] = "Contas"; var activeCount = Model.Items.Count(item => item.Account.IsActive); var positiveBalanceCount = Model.Items.Count(item => item.Account.Balance > 0); var currencies = Model.Items.Select(item => item.Account.Currency).Distinct(StringComparer.OrdinalIgnoreCase).Count(); }
 <link rel="stylesheet" href="~/css/searchable-select.css" asp-append-version="true" />
+<link rel="stylesheet" href="~/css/summary-cards.css" asp-append-version="true" />
 <div class="page-header"><div><p class="eyebrow">Configuração</p><h1>Contas financeiras</h1><p class="page-subtitle">Crie e organize as contas utilizadas para registar e acompanhar o património.</p></div><a class="button" asp-action="Create">Nova conta</a></div>
+<section class="area-summary" aria-label="Resumo das contas financeiras"><article class="summary-primary"><span>Contas</span><strong>@Model.Pagination.TotalItems</strong><small>Total correspondente aos filtros atuais</small></article><article class="summary-positive"><span>Ativas nesta página</span><strong>@activeCount</strong><small>Contas disponíveis para movimentos</small></article><article class="summary-info"><span>Saldo positivo</span><strong>@positiveBalanceCount</strong><small>Contas com saldo acima de zero nesta página</small></article><article><span>Moedas nesta página</span><strong>@currencies</strong><small>Moedas distintas nos resultados apresentados</small></article></section>
 <section class="panel entity-panel accounts-panel">
     <form id="account-filters" method="get" class="filterbar accounts">
         <select name="accountType" asp-items="Model.AccountTypes"></select>
