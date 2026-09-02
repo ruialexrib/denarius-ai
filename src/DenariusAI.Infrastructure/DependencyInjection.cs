@@ -94,6 +94,7 @@ public static class DependencyInjection
         services.Configure<MistralOptions>(configuration.GetSection(MistralOptions.SectionName));
         services.AddScoped<IApplicationSettingsService, ApplicationSettingsService>();
         services.AddScoped<ICorrespondenceMetadataSuggestionService, CorrespondenceMetadataSuggestionService>();
+        services.AddScoped<IInsuranceClipboardSuggestionService, InsuranceClipboardSuggestionService>();
         services.AddHttpClient<ILLMService, MistralLLMService>((serviceProvider, client) =>
         {
             var options = serviceProvider.GetRequiredService<Microsoft.Extensions.Options.IOptions<MistralOptions>>().Value;

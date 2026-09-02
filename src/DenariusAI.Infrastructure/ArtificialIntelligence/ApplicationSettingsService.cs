@@ -42,7 +42,8 @@ public sealed class ApplicationSettingsService(DenariusDbContext dbContext, IOpt
             Get(values, "Prompts.ConnectionTest", ApplicationSettingsDefaults.ConnectionTestPrompt),
             Get(values, "Prompts.CorrespondenceMetadata", ApplicationSettingsDefaults.CorrespondenceMetadataPrompt),
             Get(values, "MarketData.Provider", "AlphaVantage"),
-            Get(values, "MarketData.BaseUrl", "https://www.alphavantage.co/query"));
+            Get(values, "MarketData.BaseUrl", "https://www.alphavantage.co/query"),
+            Get(values, "Prompts.InsuranceClipboard", ApplicationSettingsDefaults.InsuranceClipboardPrompt));
     }
 
     /// <summary>
@@ -68,7 +69,8 @@ public sealed class ApplicationSettingsService(DenariusDbContext dbContext, IOpt
             ["Prompts.ConnectionTest"] = settings.ConnectionTestPrompt.Trim(),
             ["Prompts.CorrespondenceMetadata"] = settings.CorrespondenceMetadataPrompt.Trim(),
             ["MarketData.Provider"] = settings.MarketDataProvider.Trim(),
-            ["MarketData.BaseUrl"] = settings.MarketDataBaseUrl.Trim()
+            ["MarketData.BaseUrl"] = settings.MarketDataBaseUrl.Trim(),
+            ["Prompts.InsuranceClipboard"] = settings.InsuranceClipboardPrompt.Trim()
         };
         var existing = await dbContext.ApplicationSettings.ToDictionaryAsync(item => item.Key, cancellationToken);
         foreach (var pair in values)
@@ -86,7 +88,7 @@ public sealed class ApplicationSettingsService(DenariusDbContext dbContext, IOpt
     /// <exception cref="ArgumentException">Thrown when validation fails.</exception>
     private static void Validate(ApplicationSettingsDto value)
     {
-        if (string.IsNullOrWhiteSpace(value.MistralModel) || string.IsNullOrWhiteSpace(value.AssistantSystemPrompt) || string.IsNullOrWhiteSpace(value.JournalSuggestionSystemPrompt) || string.IsNullOrWhiteSpace(value.ReconciliationExtractionPrompt) || string.IsNullOrWhiteSpace(value.ReconciliationClassificationPrompt) || string.IsNullOrWhiteSpace(value.DashboardWelcomePrompt) || string.IsNullOrWhiteSpace(value.FinancialAnalysisPrompt) || string.IsNullOrWhiteSpace(value.ConnectionTestPrompt) || string.IsNullOrWhiteSpace(value.CorrespondenceMetadataPrompt)) throw new ArgumentException("Modelo e prompts são obrigatórios.");
+        if (string.IsNullOrWhiteSpace(value.MistralModel) || string.IsNullOrWhiteSpace(value.AssistantSystemPrompt) || string.IsNullOrWhiteSpace(value.JournalSuggestionSystemPrompt) || string.IsNullOrWhiteSpace(value.ReconciliationExtractionPrompt) || string.IsNullOrWhiteSpace(value.ReconciliationClassificationPrompt) || string.IsNullOrWhiteSpace(value.DashboardWelcomePrompt) || string.IsNullOrWhiteSpace(value.FinancialAnalysisPrompt) || string.IsNullOrWhiteSpace(value.ConnectionTestPrompt) || string.IsNullOrWhiteSpace(value.CorrespondenceMetadataPrompt) || string.IsNullOrWhiteSpace(value.InsuranceClipboardPrompt)) throw new ArgumentException("Modelo e prompts são obrigatórios.");
         if (!Uri.TryCreate(value.MistralBaseUrl, UriKind.Absolute, out var uri) || uri.Scheme != Uri.UriSchemeHttps) throw new ArgumentException("O endereço da Mistral deve ser um URL HTTPS válido.");
         if (!string.Equals(value.MarketDataProvider, "AlphaVantage", StringComparison.OrdinalIgnoreCase)) throw new ArgumentException("O fornecedor gratuito suportado é Alpha Vantage.");
         if (!Uri.TryCreate(value.MarketDataBaseUrl, UriKind.Absolute, out var marketUri) || marketUri.Scheme != Uri.UriSchemeHttps) throw new ArgumentException("O endereço do fornecedor de cotações deve ser um URL HTTPS válido.");
