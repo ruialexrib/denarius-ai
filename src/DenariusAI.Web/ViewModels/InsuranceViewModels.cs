@@ -8,6 +8,8 @@ namespace DenariusAI.Web.ViewModels;
 /// <summary>Form model for creating or editing an insurance policy.</summary>
 public sealed class InsurancePolicyFormViewModel
 {
+    /// <summary>Gets or sets whether clipboard-assisted completion is available.</summary>
+    public bool AiSuggestionAvailable { get; set; }
     /// <summary>Gets or sets the policy name.</summary>
     [Required, Display(Name = "Designação")]
     public string Name { get; set; } = string.Empty;
@@ -47,6 +49,14 @@ public sealed class InsurancePolicyFormViewModel
     /// <summary>Gets or sets notes.</summary>
     [Display(Name = "Notas")]
     public string? Notes { get; set; }
+}
+
+/// <summary>Represents clipboard text submitted for insurance policy extraction.</summary>
+public sealed class InsuranceClipboardRequestViewModel
+{
+    /// <summary>Gets or sets the clipboard text to analyze.</summary>
+    [Required, StringLength(20000, MinimumLength = 1)]
+    public string Text { get; set; } = string.Empty;
 }
 
 /// <summary>Form model for an insurance premium.</summary>

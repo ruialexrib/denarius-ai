@@ -18,6 +18,10 @@ namespace DenariusAI.Application.DTOs;
 /// <param name="DashboardWelcomePrompt">The welcome prompt displayed on the dashboard.</param>
 /// <param name="FinancialAnalysisPrompt">The prompt used to generate the consolidated financial analysis.</param>
 /// <param name="ConnectionTestPrompt">The prompt sent when testing the configured AI connection.</param>
+/// <param name="CorrespondenceMetadataPrompt">The prompt used to extract correspondence metadata.</param>
+/// <param name="MarketDataProvider">The configured stock market-data provider.</param>
+/// <param name="MarketDataBaseUrl">The stock market-data provider endpoint.</param>
+/// <param name="InsuranceClipboardPrompt">The prompt used to extract insurance fields from clipboard text.</param>
 public sealed record ApplicationSettingsDto(
     string MistralModel,
     string MistralBaseUrl,
@@ -36,4 +40,5 @@ public sealed record ApplicationSettingsDto(
     string ConnectionTestPrompt = Application.Configuration.ApplicationSettingsDefaults.ConnectionTestPrompt,
     string CorrespondenceMetadataPrompt = Application.Configuration.ApplicationSettingsDefaults.CorrespondenceMetadataPrompt,
     string MarketDataProvider = "AlphaVantage",
-    string MarketDataBaseUrl = "https://www.alphavantage.co/query");
+    string MarketDataBaseUrl = "https://www.alphavantage.co/query",
+    string InsuranceClipboardPrompt = Application.Configuration.ApplicationSettingsDefaults.InsuranceClipboardPrompt);

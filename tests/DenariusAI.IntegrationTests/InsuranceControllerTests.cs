@@ -1,4 +1,6 @@
 using System.Security.Claims;
+using DenariusAI.Application.Abstractions.Services;
+using DenariusAI.Application.DTOs;
 using DenariusAI.Domain.Entities;
 using DenariusAI.Domain.Enums;
 using DenariusAI.Infrastructure.Persistence;
@@ -8,6 +10,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace DenariusAI.IntegrationTests;
 
@@ -129,11 +132,21 @@ public sealed class InsuranceControllerTests
         {
             User = new ClaimsPrincipal(new ClaimsIdentity([new Claim(ClaimTypes.NameIdentifier, "test-user")], "Test"))
         };
-        return new InsuranceController(context)
+        return new InsuranceController(context, new StubClipboardSuggestionService(), NullLogger<InsuranceController>.Instance)
         {
             ControllerContext = new ControllerContext { HttpContext = httpContext },
             TempData = new TempDataDictionary(httpContext, new TestTempDataProvider())
         };
+    }
+
+    /// <summary>Provides an unavailable AI suggestion service for controller tests unrelated to extraction.</summary>
+    private sealed class StubClipboardSuggestionService : IInsuranceClipboardSuggestionService
+    {
+        /// <inheritdoc />
+        public bool IsAvailable => false;
+
+        /// <inheritdoc />
+        public Task<InsuranceClipboardSuggestionDto> SuggestAsync(string text, CancellationToken cancellationToken = default) => throw new NotSupportedException();
     }
 
     /// <summary>Creates a representative insurance policy.</summary>

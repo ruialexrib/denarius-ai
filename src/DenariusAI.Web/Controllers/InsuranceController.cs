@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using DenariusAI.Application.Abstractions.Services;
 using DenariusAI.Domain.Entities;
 using DenariusAI.Domain.Enums;
 using DenariusAI.Infrastructure.Persistence;
@@ -12,8 +13,10 @@ namespace DenariusAI.Web.Controllers;
 
 /// <summary>Manages insurance policies, premiums, movement associations, and premium documents.</summary>
 /// <param name="dbContext">Application database context.</param>
+/// <param name="clipboardSuggestionService">AI service used to interpret insurance clipboard text.</param>
+/// <param name="logger">Controller logger.</param>
 [Authorize]
-public sealed class InsuranceController(DenariusDbContext dbContext) : Controller
+public sealed class InsuranceController(DenariusDbContext dbContext, IInsuranceClipboardSuggestionService clipboardSuggestionService, ILogger<InsuranceController> logger) : Controller
 {
     /// <summary>Displays the insurance portfolio with optional filters and pagination.</summary>
     /// <param name="search">Free-text search across policy name, insurer, policy number, and insured subject.</param>
@@ -78,15 +81,42 @@ public sealed class InsuranceController(DenariusDbContext dbContext) : Controlle
     }
 
     /// <summary>Displays the create policy form.</summary><returns>The policy form.</returns>
-    [HttpGet] public IActionResult Create() => View("Form", new InsurancePolicyFormViewModel());
+    [HttpGet] public IActionResult Create() => View("Form", new InsurancePolicyFormViewModel { AiSuggestionAvailable = clipboardSuggestionService.IsAvailable });
 
     /// <summary>Creates a policy.</summary><param name="model">Policy form.</param><param name="cancellationToken">Cancellation token.</param><returns>Redirects to the portfolio when successful.</returns>
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(InsurancePolicyFormViewModel model, CancellationToken cancellationToken)
     {
-        if (!ModelState.IsValid) return View("Form", model);
+        if (!ModelState.IsValid) { model.AiSuggestionAvailable = clipboardSuggestionService.IsAvailable; return View("Form", model); }
         var policy = CreatePolicy(model); policy.CreatedBy = UserId(); dbContext.InsurancePolicies.Add(policy); await dbContext.SaveChangesAsync(cancellationToken);
         TempData["SuccessMessage"] = "Apólice adicionada."; return RedirectToAction(nameof(Details), new { id = policy.Id });
+    }
+
+    /// <summary>Analyzes clipboard text and returns an editable insurance policy suggestion.</summary>
+    /// <param name="model">Clipboard text request.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>JSON containing validated fields identified by the model.</returns>
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> SuggestFromClipboard([FromBody] InsuranceClipboardRequestViewModel model, CancellationToken cancellationToken)
+    {
+        if (!ModelState.IsValid) return BadRequest(new { error = "Copie texto com até 20 000 caracteres." });
+        try
+        {
+            var suggestion = await clipboardSuggestionService.SuggestAsync(model.Text, cancellationToken);
+            logger.LogInformation("Insurance clipboard suggestion processed. Confidence: {Confidence}.", suggestion.Confidence);
+            return Json(suggestion);
+        }
+        catch (ArgumentException exception) { return BadRequest(new { error = exception.Message }); }
+        catch (InvalidOperationException exception)
+        {
+            logger.LogWarning(exception, "Insurance clipboard suggestion could not be completed.");
+            return StatusCode(StatusCodes.Status503ServiceUnavailable, new { error = exception.Message });
+        }
+        catch (Exception exception) when (exception is HttpRequestException or TaskCanceledException)
+        {
+            logger.LogWarning(exception, "Insurance clipboard suggestion request failed.");
+            return StatusCode(StatusCodes.Status502BadGateway, new { error = "Não foi possível obter a sugestão. Tente novamente." });
+        }
     }
 
     /// <summary>Displays the edit policy form.</summary><param name="id">Policy identifier.</param><param name="cancellationToken">Cancellation token.</param><returns>The form or not found.</returns>
