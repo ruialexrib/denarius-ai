@@ -43,7 +43,7 @@ public sealed class ApplicationSettingsService(DenariusDbContext dbContext, IOpt
             Get(values, "Prompts.CorrespondenceMetadata", ApplicationSettingsDefaults.CorrespondenceMetadataPrompt),
             Get(values, "MarketData.Provider", "AlphaVantage"),
             Get(values, "MarketData.BaseUrl", "https://www.alphavantage.co/query"),
-            Get(values, "Prompts.InsuranceClipboard", ApplicationSettingsDefaults.InsuranceClipboardPrompt));
+            UpgradeDefault(Get(values, "Prompts.InsuranceClipboard", ApplicationSettingsDefaults.InsuranceClipboardPrompt), ApplicationSettingsDefaults.LegacyInsuranceClipboardPrompt, ApplicationSettingsDefaults.InsuranceClipboardPrompt));
     }
 
     /// <summary>

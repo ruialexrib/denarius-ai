@@ -17,7 +17,8 @@ public sealed class ApplicationSettingsServiceTests
             new() { Key = "Prompts.ReconciliationExtraction", Value = DenariusAI.Application.Configuration.ApplicationSettingsDefaults.LegacyReconciliationExtractionPrompt },
             new() { Key = "Prompts.ReconciliationClassification", Value = DenariusAI.Application.Configuration.ApplicationSettingsDefaults.LegacyReconciliationClassificationPrompt },
             new() { Key = "Prompts.DashboardWelcome", Value = DenariusAI.Application.Configuration.ApplicationSettingsDefaults.LegacyDashboardWelcomePrompt },
-            new() { Key = "Prompts.JournalSuggestion", Value = DenariusAI.Application.Configuration.ApplicationSettingsDefaults.LegacyJournalSuggestionPrompt });
+            new() { Key = "Prompts.JournalSuggestion", Value = DenariusAI.Application.Configuration.ApplicationSettingsDefaults.LegacyJournalSuggestionPrompt },
+            new() { Key = "Prompts.InsuranceClipboard", Value = DenariusAI.Application.Configuration.ApplicationSettingsDefaults.LegacyInsuranceClipboardPrompt });
         await context.SaveChangesAsync();
 
         var loaded = await new ApplicationSettingsService(context, Options.Create(new MistralOptions())).GetAsync();
@@ -26,6 +27,7 @@ public sealed class ApplicationSettingsServiceTests
         Assert.Equal(DenariusAI.Application.Configuration.ApplicationSettingsDefaults.ReconciliationClassificationPrompt, loaded.ReconciliationClassificationPrompt);
         Assert.Equal(DenariusAI.Application.Configuration.ApplicationSettingsDefaults.DashboardWelcomePrompt, loaded.DashboardWelcomePrompt);
         Assert.Equal(DenariusAI.Application.Configuration.ApplicationSettingsDefaults.JournalSuggestionPrompt, loaded.JournalSuggestionSystemPrompt);
+        Assert.Equal(DenariusAI.Application.Configuration.ApplicationSettingsDefaults.InsuranceClipboardPrompt, loaded.InsuranceClipboardPrompt);
     }
 
     [Fact]
