@@ -60,7 +60,7 @@ public sealed class SavingsCertificatesController(
     /// <param name="cancellationToken">Cancellation token for the language-model request.</param>
     /// <returns>A JSON suggestion for the editable certificate fields.</returns>
     [HttpPost, ValidateAntiForgeryToken]
-    public async Task<IActionResult> SuggestFromClipboard(SavingsCertificateClipboardRequestViewModel model, CancellationToken cancellationToken)
+    public async Task<IActionResult> SuggestFromClipboard([FromBody] SavingsCertificateClipboardRequestViewModel model, CancellationToken cancellationToken)
     {
         if (!ModelState.IsValid) return BadRequest(new { error = "Copie texto com até 20 000 caracteres." });
         try
