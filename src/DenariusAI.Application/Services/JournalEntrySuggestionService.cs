@@ -39,7 +39,7 @@ public sealed class JournalEntrySuggestionService(
     {
         var userMessage = request.Message?.Trim();
         if (string.IsNullOrWhiteSpace(userMessage) || userMessage.Length > 1000) throw new ArgumentException("A mensagem deve ter entre 1 e 1000 caracteres.", nameof(request));
-        if (!IsAvailable) throw new InvalidOperationException("A integração Mistral não está configurada.");
+        if (!IsAvailable) throw new InvalidOperationException("A integração de IA não está configurada.");
 
         var settings = await settingsService.GetAsync(cancellationToken);
         var accounts = await accountService.ListAsync(true, cancellationToken);

@@ -24,7 +24,8 @@ public sealed class ApplicationSettingsService(DenariusDbContext dbContext, IOpt
             Get(values, "Prompts.FinancialAnalysis", ApplicationSettingsDefaults.FinancialAnalysisPrompt), Get(values, "Prompts.ConnectionTest", ApplicationSettingsDefaults.ConnectionTestPrompt), Get(values, "Prompts.CorrespondenceMetadata", ApplicationSettingsDefaults.CorrespondenceMetadataPrompt),
             Get(values, "MarketData.Provider", "AlphaVantage"), Get(values, "MarketData.BaseUrl", "https://www.alphavantage.co/query"),
             UpgradeDefault(Get(values, "Prompts.InsuranceClipboard", ApplicationSettingsDefaults.InsuranceClipboardPrompt), ApplicationSettingsDefaults.LegacyInsuranceClipboardPrompt, ApplicationSettingsDefaults.InsuranceClipboardPrompt),
-            Get(values, "Prompts.SavingsCertificateClipboard", ApplicationSettingsDefaults.SavingsCertificateClipboardPrompt));
+            Get(values, "Prompts.SavingsCertificateClipboard", ApplicationSettingsDefaults.SavingsCertificateClipboardPrompt),
+            Get(values, "AI.Provider", "Mistral"), Get(values, "Ollama.Model", "llama3.2"), Get(values, "Ollama.BaseUrl", "http://localhost:11434"));
     }
 
     public async Task UpdateAsync(ApplicationSettingsDto settings, string userId, CancellationToken cancellationToken = default)
@@ -32,6 +33,7 @@ public sealed class ApplicationSettingsService(DenariusDbContext dbContext, IOpt
         Validate(settings);
         var values = new Dictionary<string, string>
         {
+            ["AI.Provider"] = settings.AiProvider.Trim(), ["Ollama.Model"] = settings.OllamaModel.Trim(), ["Ollama.BaseUrl"] = settings.OllamaBaseUrl.Trim(),
             ["Mistral.Model"] = settings.MistralModel.Trim(), ["Mistral.BaseUrl"] = settings.MistralBaseUrl.Trim(), ["Mistral.MaxTokens"] = settings.MistralMaxTokens.ToString(CultureInfo.InvariantCulture), ["Mistral.Temperature"] = settings.MistralTemperature.ToString(CultureInfo.InvariantCulture),
             ["Prompts.Assistant"] = settings.AssistantSystemPrompt.Trim(), ["Assistant.ContextMonths"] = settings.AssistantContextMonths.ToString(CultureInfo.InvariantCulture), ["Assistant.MaxTransactions"] = settings.AssistantMaxTransactions.ToString(CultureInfo.InvariantCulture), ["Assistant.HistoryMessages"] = settings.AssistantHistoryMessages.ToString(CultureInfo.InvariantCulture),
             ["Prompts.JournalSuggestion"] = settings.JournalSuggestionSystemPrompt.Trim(), ["JournalSuggestion.HistoryMessages"] = settings.JournalSuggestionHistoryMessages.ToString(CultureInfo.InvariantCulture), ["Prompts.ReconciliationExtraction"] = settings.ReconciliationExtractionPrompt.Trim(), ["Prompts.ReconciliationClassification"] = settings.ReconciliationClassificationPrompt.Trim(),
@@ -39,18 +41,17 @@ public sealed class ApplicationSettingsService(DenariusDbContext dbContext, IOpt
             ["MarketData.Provider"] = settings.MarketDataProvider.Trim(), ["MarketData.BaseUrl"] = settings.MarketDataBaseUrl.Trim(), ["Prompts.InsuranceClipboard"] = settings.InsuranceClipboardPrompt.Trim(), ["Prompts.SavingsCertificateClipboard"] = settings.SavingsCertificateClipboardPrompt.Trim()
         };
         var existing = await dbContext.ApplicationSettings.ToDictionaryAsync(item => item.Key, cancellationToken);
-        foreach (var pair in values)
-        {
-            if (existing.TryGetValue(pair.Key, out var setting)) { setting.Value = pair.Value; setting.UpdatedBy = userId; }
-            else dbContext.ApplicationSettings.Add(new ApplicationSetting { Key = pair.Key, Value = pair.Value, CreatedBy = userId });
-        }
+        foreach (var pair in values) { if (existing.TryGetValue(pair.Key, out var setting)) { setting.Value = pair.Value; setting.UpdatedBy = userId; } else dbContext.ApplicationSettings.Add(new ApplicationSetting { Key = pair.Key, Value = pair.Value, CreatedBy = userId }); }
         await dbContext.SaveChangesAsync(cancellationToken);
     }
 
     private static void Validate(ApplicationSettingsDto value)
     {
-        if (string.IsNullOrWhiteSpace(value.MistralModel) || string.IsNullOrWhiteSpace(value.AssistantSystemPrompt) || string.IsNullOrWhiteSpace(value.JournalSuggestionSystemPrompt) || string.IsNullOrWhiteSpace(value.ReconciliationExtractionPrompt) || string.IsNullOrWhiteSpace(value.ReconciliationClassificationPrompt) || string.IsNullOrWhiteSpace(value.DashboardWelcomePrompt) || string.IsNullOrWhiteSpace(value.FinancialAnalysisPrompt) || string.IsNullOrWhiteSpace(value.ConnectionTestPrompt) || string.IsNullOrWhiteSpace(value.CorrespondenceMetadataPrompt) || string.IsNullOrWhiteSpace(value.InsuranceClipboardPrompt) || string.IsNullOrWhiteSpace(value.SavingsCertificateClipboardPrompt)) throw new ArgumentException("Modelo e prompts são obrigatórios.");
-        if (!Uri.TryCreate(value.MistralBaseUrl, UriKind.Absolute, out var uri) || uri.Scheme != Uri.UriSchemeHttps) throw new ArgumentException("O endereço da Mistral deve ser um URL HTTPS válido.");
+        if (!string.Equals(value.AiProvider, "Mistral", StringComparison.OrdinalIgnoreCase) && !string.Equals(value.AiProvider, "Ollama", StringComparison.OrdinalIgnoreCase)) throw new ArgumentException("O fornecedor de IA deve ser Mistral ou Ollama.");
+        if (string.IsNullOrWhiteSpace(value.MistralModel) || string.IsNullOrWhiteSpace(value.OllamaModel)) throw new ArgumentException("Os modelos de IA são obrigatórios.");
+        if (!Uri.TryCreate(value.MistralBaseUrl, UriKind.Absolute, out var mistralUri) || mistralUri.Scheme != Uri.UriSchemeHttps) throw new ArgumentException("O endereço da Mistral deve ser um URL HTTPS válido.");
+        if (!Uri.TryCreate(value.OllamaBaseUrl, UriKind.Absolute, out var ollamaUri) || (ollamaUri.Scheme != Uri.UriSchemeHttp && ollamaUri.Scheme != Uri.UriSchemeHttps)) throw new ArgumentException("O endereço do Ollama deve ser um URL HTTP ou HTTPS válido.");
+        if (string.IsNullOrWhiteSpace(value.AssistantSystemPrompt) || string.IsNullOrWhiteSpace(value.JournalSuggestionSystemPrompt) || string.IsNullOrWhiteSpace(value.ReconciliationExtractionPrompt) || string.IsNullOrWhiteSpace(value.ReconciliationClassificationPrompt) || string.IsNullOrWhiteSpace(value.DashboardWelcomePrompt) || string.IsNullOrWhiteSpace(value.FinancialAnalysisPrompt) || string.IsNullOrWhiteSpace(value.ConnectionTestPrompt) || string.IsNullOrWhiteSpace(value.CorrespondenceMetadataPrompt) || string.IsNullOrWhiteSpace(value.InsuranceClipboardPrompt) || string.IsNullOrWhiteSpace(value.SavingsCertificateClipboardPrompt)) throw new ArgumentException("Os prompts são obrigatórios.");
         if (!string.Equals(value.MarketDataProvider, "AlphaVantage", StringComparison.OrdinalIgnoreCase)) throw new ArgumentException("O fornecedor gratuito suportado é Alpha Vantage.");
         if (!Uri.TryCreate(value.MarketDataBaseUrl, UriKind.Absolute, out var marketUri) || marketUri.Scheme != Uri.UriSchemeHttps) throw new ArgumentException("O endereço do fornecedor de cotações deve ser um URL HTTPS válido.");
         if (value.MistralMaxTokens is < 64 or > 8192 || value.MistralTemperature is < 0 or > 1) throw new ArgumentException("Os parâmetros do modelo estão fora dos limites permitidos.");
