@@ -8,6 +8,8 @@
   const show = (message, state) => { status.textContent = message; status.dataset.state = state; };
   const apply = suggestion => { let count = 0; Object.entries(fields).forEach(([key, selector]) => { if (suggestion[key] === null || suggestion[key] === undefined || suggestion[key] === '') return; const field = form.querySelector(selector); if (!field) return; field.value = suggestion[key]; field.dispatchEvent(new Event('input', { bubbles: true })); field.dispatchEvent(new Event('change', { bubbles: true })); count++; }); return count; };
   button.addEventListener('click', async () => {
+    const accepted = window.confirm('Partilhar conteúdo com a IA?\n\nO conteúdo atual da área de transferência será enviado ao fornecedor de IA configurado e pode incluir dados pessoais, confidenciais ou financeiros. Aceita continuar?');
+    if (!accepted) { show('Partilha com a IA cancelada. O conteúdo da área de transferência não foi lido.', 'neutral'); return; }
     button.disabled = true; show('A ler e analisar a área de transferência…', 'loading');
     try {
       if (!navigator.clipboard?.readText) throw new Error('O browser não permite ler a área de transferência neste contexto.');
