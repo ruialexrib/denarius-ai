@@ -42,13 +42,14 @@ public sealed class ApplicationSettingsServiceTests
         var loaded = await service.GetAsync();
 
         Assert.Equal(updated, loaded);
-        Assert.Equal(19, await context.ApplicationSettings.CountAsync());
+        Assert.Equal(20, await context.ApplicationSettings.CountAsync());
         Assert.Equal(updated.ReconciliationExtractionPrompt, loaded.ReconciliationExtractionPrompt);
         Assert.Equal(updated.ReconciliationClassificationPrompt, loaded.ReconciliationClassificationPrompt);
         Assert.Equal(updated.FinancialAnalysisPrompt, loaded.FinancialAnalysisPrompt);
         Assert.Equal(updated.ConnectionTestPrompt, loaded.ConnectionTestPrompt);
         Assert.Equal(updated.CorrespondenceMetadataPrompt, loaded.CorrespondenceMetadataPrompt);
         Assert.Equal(updated.InsuranceClipboardPrompt, loaded.InsuranceClipboardPrompt);
+        Assert.Equal(updated.SavingsCertificateClipboardPrompt, loaded.SavingsCertificateClipboardPrompt);
         Assert.Equal("AlphaVantage", loaded.MarketDataProvider);
         Assert.Equal("https://www.alphavantage.co/query", loaded.MarketDataBaseUrl);
     }
