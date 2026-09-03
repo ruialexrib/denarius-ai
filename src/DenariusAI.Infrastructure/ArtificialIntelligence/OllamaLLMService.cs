@@ -1,6 +1,5 @@
 using System.Net.Http.Json;
 using System.Text.Json.Serialization;
-using DenariusAI.Application.Abstractions.Services;
 using DenariusAI.Application.DTOs;
 using Microsoft.Extensions.Logging;
 
@@ -9,8 +8,16 @@ namespace DenariusAI.Infrastructure.ArtificialIntelligence;
 /// <summary>Calls a local or remote Ollama server using its chat API.</summary>
 public sealed class OllamaLLMService(HttpClient httpClient, IApplicationSettingsService settingsService, ILogger<OllamaLLMService> logger)
 {
+    /// <summary>Gets whether Ollama can be configured without an API credential.</summary>
+    public bool IsConfigured => true;
+
     public async Task<LlmCompletionDto> CompleteAsync(IReadOnlyCollection<LlmMessageDto> messages, int maxTokens, CancellationToken cancellationToken = default)
     {
+        if (messages.Count == 0 || messages.Any(message => string.IsNullOrWhiteSpace(message.Content)))
+            throw new ArgumentException("É necessária pelo menos uma mensagem com conteúdo.", nameof(messages));
+        if (maxTokens is < 64 or > 8192)
+            throw new ArgumentOutOfRangeException(nameof(maxTokens), "O limite deve estar entre 64 e 8192 tokens.");
+
         var settings = await settingsService.GetAsync(cancellationToken);
         if (string.IsNullOrWhiteSpace(settings.OllamaModel) || string.IsNullOrWhiteSpace(settings.OllamaBaseUrl))
             throw new InvalidOperationException("O Ollama não está configurado.");
