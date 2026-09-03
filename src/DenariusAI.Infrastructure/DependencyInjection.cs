@@ -33,12 +33,10 @@ public static class DependencyInjection
     {
         services.AddHttpContextAccessor();
         var connectionString = configuration.GetConnectionString("DenariusAIDatabase")
-            ?? throw new InvalidOperationException(
-                "Connection string 'DenariusAIDatabase' is not configured.");
+            ?? throw new InvalidOperationException("Connection string 'DenariusAIDatabase' is not configured.");
 
         services.AddDbContext<DenariusDbContext>(options =>
-            options.UseSqlServer(connectionString, sqlOptions =>
-                sqlOptions.EnableRetryOnFailure()));
+            options.UseSqlServer(connectionString, sqlOptions => sqlOptions.EnableRetryOnFailure()));
 
         services.AddIdentity<ApplicationUser, IdentityRole>(options =>
             {
@@ -59,14 +57,13 @@ public static class DependencyInjection
         var googleClientSecret = configuration["Authentication:Google:ClientSecret"];
         if (!string.IsNullOrWhiteSpace(googleClientId) && !string.IsNullOrWhiteSpace(googleClientSecret))
         {
-            services.AddAuthentication()
-                .AddGoogle(options =>
-                {
-                    options.ClientId = googleClientId;
-                    options.ClientSecret = googleClientSecret;
-                    options.SaveTokens = false;
-                    options.ClaimActions.MapJsonKey("urn:google:picture", "picture", "url");
-                });
+            services.AddAuthentication().AddGoogle(options =>
+            {
+                options.ClientId = googleClientId;
+                options.ClientSecret = googleClientSecret;
+                options.SaveTokens = false;
+                options.ClaimActions.MapJsonKey("urn:google:picture", "picture", "url");
+            });
         }
 
         services.ConfigureApplicationCookie(options =>
@@ -96,12 +93,9 @@ public static class DependencyInjection
         services.AddScoped<ICorrespondenceMetadataSuggestionService, CorrespondenceMetadataSuggestionService>();
         services.AddScoped<IInsuranceClipboardSuggestionService, InsuranceClipboardSuggestionService>();
         services.AddScoped<ISavingsCertificateClipboardSuggestionService, SavingsCertificateClipboardSuggestionService>();
-        services.AddHttpClient<ILLMService, MistralLLMService>((serviceProvider, client) =>
-        {
-            var options = serviceProvider.GetRequiredService<Microsoft.Extensions.Options.IOptions<MistralOptions>>().Value;
-            client.BaseAddress = new Uri(options.BaseUrl);
-            client.Timeout = TimeSpan.FromSeconds(60);
-        });
+        services.AddHttpClient<MistralLLMService>(client => client.Timeout = TimeSpan.FromSeconds(60));
+        services.AddHttpClient<OllamaLLMService>(client => client.Timeout = TimeSpan.FromSeconds(120));
+        services.AddScoped<ILLMService, ConfigurableLLMService>();
         services.AddHttpClient<IStockMarketDataService, AlphaVantageStockMarketDataService>(client => client.Timeout = TimeSpan.FromSeconds(60))
             .RemoveAllLoggers();
 
