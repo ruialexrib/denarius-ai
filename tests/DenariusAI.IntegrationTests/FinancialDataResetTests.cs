@@ -4,8 +4,14 @@ using Microsoft.EntityFrameworkCore;
 
 namespace DenariusAI.IntegrationTests;
 
+/// <summary>
+/// Verifies the lifecycle of resettable financial data and the complete demonstration scenario.
+/// </summary>
 public sealed class FinancialDataResetTests
 {
+    /// <summary>
+    /// Verifies that a financial reset removes transactional data while retaining shared configuration.
+    /// </summary>
     [Fact]
     public async Task ResetRemovesFinancialDataAndKeepsConfiguration()
     {
@@ -34,6 +40,9 @@ public sealed class FinancialDataResetTests
         Assert.Equal(categoryCount, await context.Categories.CountAsync());
     }
 
+    /// <summary>
+    /// Verifies that demonstration data covers every user-facing area and cannot be loaded twice.
+    /// </summary>
     [Fact]
     public async Task DemonstrationDataCanBeLoadedAfterResetButIsNotDuplicated()
     {
@@ -57,5 +66,17 @@ public sealed class FinancialDataResetTests
         Assert.Equal(8, await context.Budgets.CountAsync());
         Assert.Equal(72, await context.BudgetLines.CountAsync());
         Assert.Equal(3, await context.SavingsCertificates.CountAsync());
+        Assert.Equal(3, await context.StockPositions.CountAsync());
+        Assert.Equal(24, await context.StockPrices.CountAsync());
+        Assert.Equal(2, await context.Warranties.CountAsync());
+        Assert.Equal(2, await context.Reminders.CountAsync(reminder => reminder.WarrantyId != null));
+        Assert.Equal(2, await context.Correspondence.CountAsync());
+        Assert.Equal(4, await context.CorrespondenceMetadata.CountAsync());
+        Assert.Equal(3, await context.InsurancePolicies.CountAsync());
+        Assert.Equal(5, await context.InsurancePremiums.CountAsync());
+        Assert.Single(context.InsurancePolicyAttachments);
+        Assert.Single(context.InsurancePremiumAttachments);
+        Assert.All(context.Warranties, warranty => Assert.False(string.IsNullOrWhiteSpace(warranty.DocumentBase64)));
+        Assert.All(context.Correspondence, item => Assert.False(string.IsNullOrWhiteSpace(item.DocumentBase64)));
     }
 }
