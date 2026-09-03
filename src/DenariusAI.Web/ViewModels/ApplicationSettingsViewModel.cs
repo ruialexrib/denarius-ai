@@ -5,11 +5,11 @@ namespace DenariusAI.Web.ViewModels;
 
 public sealed class ApplicationSettingsViewModel
 {
-    [Required] public string AiProvider { get; set; } = "Mistral";
+    [Required, Display(Name = "Fornecedor de IA")] public string AiProvider { get; set; } = "Mistral";
     [Required, StringLength(100)] public string MistralModel { get; set; } = string.Empty;
     [Required, Url, StringLength(300)] public string MistralBaseUrl { get; set; } = string.Empty;
-    [Required, StringLength(100)] public string OllamaModel { get; set; } = "llama3.2";
-    [Required, Url, StringLength(300)] public string OllamaBaseUrl { get; set; } = "http://localhost:11434";
+    [Required, StringLength(100), Display(Name = "Modelo Ollama")] public string OllamaModel { get; set; } = "llama3.2";
+    [Required, Url, StringLength(300), Display(Name = "Servidor Ollama")] public string OllamaBaseUrl { get; set; } = "http://localhost:11434";
     [Range(64, 8192)] public int MistralMaxTokens { get; set; }
     [Range(0, 1)] public double MistralTemperature { get; set; }
     [Required, StringLength(10000)] public string AssistantSystemPrompt { get; set; } = string.Empty;
@@ -20,12 +20,12 @@ public sealed class ApplicationSettingsViewModel
     [Range(0, 50)] public int JournalSuggestionHistoryMessages { get; set; }
     [Required, StringLength(10000)] public string ReconciliationExtractionPrompt { get; set; } = string.Empty;
     [Required, StringLength(10000)] public string ReconciliationClassificationPrompt { get; set; } = string.Empty;
-    [Required, StringLength(10000)] public string DashboardWelcomePrompt { get; set; } = string.Empty;
-    [Required, StringLength(10000)] public string FinancialAnalysisPrompt { get; set; } = string.Empty;
-    [Required, StringLength(1000)] public string ConnectionTestPrompt { get; set; } = string.Empty;
-    [Required, StringLength(10000)] public string CorrespondenceMetadataPrompt { get; set; } = string.Empty;
-    [Required, StringLength(10000)] public string InsuranceClipboardPrompt { get; set; } = string.Empty;
-    [Required, StringLength(10000)] public string SavingsCertificateClipboardPrompt { get; set; } = string.Empty;
+    [Required, StringLength(10000), Display(Name = "Prompt da mensagem de boas-vindas")] public string DashboardWelcomePrompt { get; set; } = string.Empty;
+    [Required, StringLength(10000), Display(Name = "Prompt da análise financeira")] public string FinancialAnalysisPrompt { get; set; } = string.Empty;
+    [Required, StringLength(1000), Display(Name = "Prompt do teste de ligação")] public string ConnectionTestPrompt { get; set; } = string.Empty;
+    [Required, StringLength(10000), Display(Name = "Prompt dos metadados da correspondência")] public string CorrespondenceMetadataPrompt { get; set; } = string.Empty;
+    [Required, StringLength(10000), Display(Name = "Prompt do preenchimento de seguros")] public string InsuranceClipboardPrompt { get; set; } = string.Empty;
+    [Required, StringLength(10000), Display(Name = "Prompt do preenchimento de Certificados de Aforro")] public string SavingsCertificateClipboardPrompt { get; set; } = string.Empty;
     public bool AiIsConfigured { get; set; }
     [Required, StringLength(40)] public string MarketDataProvider { get; set; } = "AlphaVantage";
     [Required, Url, StringLength(300)] public string MarketDataBaseUrl { get; set; } = "https://www.alphavantage.co/query";
