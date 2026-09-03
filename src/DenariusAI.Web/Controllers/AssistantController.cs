@@ -16,7 +16,12 @@ public sealed class AssistantController(IAssistantService assistantService, IApp
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>The assistant view.</returns>
     [HttpGet]
-    public async Task<IActionResult> Index(CancellationToken cancellationToken) => View(new AssistantPageViewModel { IsAvailable = assistantService.IsAvailable, Model = (await settingsService.GetAsync(cancellationToken)).MistralModel });
+    public async Task<IActionResult> Index(CancellationToken cancellationToken)
+    {
+        var settings = await settingsService.GetAsync(cancellationToken);
+        var model = string.Equals(settings.AiProvider, "Ollama", StringComparison.OrdinalIgnoreCase) ? settings.OllamaModel : settings.MistralModel;
+        return View(new AssistantPageViewModel { IsAvailable = assistantService.IsAvailable, Model = model });
+    }
 
     /// <summary>
     /// Processes a question submitted to the AI assistant and returns the response.
@@ -37,12 +42,12 @@ public sealed class AssistantController(IAssistantService assistantService, IApp
         }
         catch (InvalidOperationException)
         {
-            return StatusCode(StatusCodes.Status503ServiceUnavailable, new { error = "O assistente ainda não está configurado. Adicione a chave Mistral nas Definições." });
+            return StatusCode(StatusCodes.Status503ServiceUnavailable, new { error = "O fornecedor de IA selecionado ainda não está configurado. Verifique as Definições da aplicação." });
         }
         catch (Exception exception) when (exception is HttpRequestException or TaskCanceledException)
         {
             logger.LogWarning(exception, "Financial assistant request failed.");
-            return StatusCode(StatusCodes.Status502BadGateway, new { error = "Não foi possível obter uma resposta da Mistral. Tente novamente." });
+            return StatusCode(StatusCodes.Status502BadGateway, new { error = "Não foi possível obter uma resposta do fornecedor de IA selecionado. Tente novamente." });
         }
     }
 }
