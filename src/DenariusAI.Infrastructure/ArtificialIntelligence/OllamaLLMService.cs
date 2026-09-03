@@ -6,12 +6,21 @@ using Microsoft.Extensions.Logging;
 
 namespace DenariusAI.Infrastructure.ArtificialIntelligence;
 
-/// <summary>Calls a local or remote Ollama server using its chat API.</summary>
+/// <summary>Calls a local or remote Ollama server using its non-streaming chat API.</summary>
 public sealed class OllamaLLMService(HttpClient httpClient, IApplicationSettingsService settingsService, ILogger<OllamaLLMService> logger)
 {
     /// <summary>Gets whether Ollama can be used without an API credential.</summary>
     public bool IsConfigured => true;
 
+    /// <summary>Sends chat messages to the configured Ollama <c>/api/chat</c> endpoint.</summary>
+    /// <param name="messages">Messages forming the chat conversation.</param>
+    /// <param name="maxTokens">Maximum number of tokens Ollama may generate.</param>
+    /// <param name="cancellationToken">Token used to cancel the HTTP request.</param>
+    /// <returns>The textual completion and token usage returned by Ollama.</returns>
+    /// <exception cref="ArgumentException">Thrown when no usable messages are supplied.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when the token limit is outside the supported range.</exception>
+    /// <exception cref="InvalidOperationException">Thrown when Ollama is not configured or returns no textual completion.</exception>
+    /// <exception cref="HttpRequestException">Thrown when Ollama returns a non-success HTTP status.</exception>
     public async Task<LlmCompletionDto> CompleteAsync(IReadOnlyCollection<LlmMessageDto> messages, int maxTokens, CancellationToken cancellationToken = default)
     {
         if (messages.Count == 0 || messages.Any(message => string.IsNullOrWhiteSpace(message.Content)))
@@ -39,9 +48,16 @@ public sealed class OllamaLLMService(HttpClient httpClient, IApplicationSettings
         return new(result.Message.Content, result.Model ?? settings.OllamaModel, result.PromptEvalCount, result.EvalCount, result.DoneReason);
     }
 
+    /// <summary>Represents the request body sent to Ollama.</summary>
     private sealed record OllamaRequest(string Model, IReadOnlyCollection<OllamaMessage> Messages, bool Stream, OllamaOptions Options);
+
+    /// <summary>Represents one Ollama chat message.</summary>
     private sealed record OllamaMessage(string Role, string Content);
+
+    /// <summary>Represents Ollama generation options used by Denarius AI.</summary>
     private sealed record OllamaOptions(double Temperature, [property: JsonPropertyName("num_predict")] int NumPredict);
+
+    /// <summary>Represents the subset of an Ollama chat response consumed by Denarius AI.</summary>
     private sealed record OllamaResponse(string? Model, OllamaMessage? Message,
         [property: JsonPropertyName("prompt_eval_count")] int? PromptEvalCount,
         [property: JsonPropertyName("eval_count")] int? EvalCount,
