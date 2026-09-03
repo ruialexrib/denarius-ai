@@ -1,5 +1,6 @@
 using System.Net.Http.Json;
 using System.Text.Json.Serialization;
+using DenariusAI.Application.Abstractions.Services;
 using DenariusAI.Application.DTOs;
 using Microsoft.Extensions.Logging;
 
@@ -8,7 +9,7 @@ namespace DenariusAI.Infrastructure.ArtificialIntelligence;
 /// <summary>Calls a local or remote Ollama server using its chat API.</summary>
 public sealed class OllamaLLMService(HttpClient httpClient, IApplicationSettingsService settingsService, ILogger<OllamaLLMService> logger)
 {
-    /// <summary>Gets whether Ollama can be configured without an API credential.</summary>
+    /// <summary>Gets whether Ollama can be used without an API credential.</summary>
     public bool IsConfigured => true;
 
     public async Task<LlmCompletionDto> CompleteAsync(IReadOnlyCollection<LlmMessageDto> messages, int maxTokens, CancellationToken cancellationToken = default)
