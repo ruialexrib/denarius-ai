@@ -59,7 +59,8 @@ public sealed class MistralLLMService(HttpClient httpClient, IOptions<MistralOpt
         var effectiveMaxTokens = maxTokens ?? settings.MistralMaxTokens;
         if (effectiveMaxTokens is < 64 or > 8192) throw new ArgumentOutOfRangeException(nameof(maxTokens), "O limite deve estar entre 64 e 8192 tokens.");
 
-        var request = new HttpRequestMessage(HttpMethod.Post, new Uri(new Uri(settings.MistralBaseUrl), "chat/completions"))
+        var baseUri = new Uri(settings.MistralBaseUrl.TrimEnd('/') + "/");
+        var request = new HttpRequestMessage(HttpMethod.Post, new Uri(baseUri, "chat/completions"))
         {
             Content = JsonContent.Create(new MistralRequest(settings.MistralModel, messages.Select(message => new MistralMessage(message.Role, message.Content)).ToArray(), settings.MistralTemperature, effectiveMaxTokens))
         };
