@@ -63,7 +63,7 @@ public sealed class AnalyticsController(IAnalyticsService analyticsService, IFin
     public async Task<IActionResult> GenerateIntelligentReport(DateOnly from, DateOnly to, CancellationToken cancellationToken)
     {
         if (from == default || to == default || from > to) return BadRequest();
-        if (!llmService.IsConfigured) { TempData["ErrorMessage"] = "Configure a integração Mistral antes de gerar o relatório inteligente."; return RedirectToAction(nameof(Index), new { from, to }); }
+        if (!llmService.IsConfigured) { TempData["ErrorMessage"] = "Configure a integração de IA antes de gerar o relatório inteligente."; return RedirectToAction(nameof(Index), new { from, to }); }
         var data = await reportDataService.GetAsync(from, to, cancellationToken);
         var prompt = (await settingsService.GetAsync(cancellationToken)).FinancialAnalysisPrompt;
         var accuracyRules = """
