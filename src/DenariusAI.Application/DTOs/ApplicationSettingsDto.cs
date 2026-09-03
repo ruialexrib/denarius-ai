@@ -21,4 +21,7 @@ public sealed record ApplicationSettingsDto(
     string MarketDataProvider = "AlphaVantage",
     string MarketDataBaseUrl = "https://www.alphavantage.co/query",
     string InsuranceClipboardPrompt = Application.Configuration.ApplicationSettingsDefaults.InsuranceClipboardPrompt,
-    string SavingsCertificateClipboardPrompt = Application.Configuration.ApplicationSettingsDefaults.SavingsCertificateClipboardPrompt);
+    string SavingsCertificateClipboardPrompt = Application.Configuration.ApplicationSettingsDefaults.SavingsCertificateClipboardPrompt,
+    string AiProvider = "Mistral",
+    string OllamaModel = "llama3.2",
+    string OllamaBaseUrl = "http://localhost:11434");
