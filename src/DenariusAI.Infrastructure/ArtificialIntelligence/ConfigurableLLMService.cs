@@ -9,21 +9,30 @@ public sealed class ConfigurableLLMService(
     OllamaLLMService ollamaService,
     IApplicationSettingsService settingsService) : ILLMService
 {
-    /// <summary>Gets the configured provider. Runtime calls resolve the persisted setting before dispatch.</summary>
+    /// <summary>Gets the providers supported by this router.</summary>
     public string Provider => "Mistral / Ollama";
 
-    /// <summary>Gets a provider-neutral model description because the selected model is stored in the database.</summary>
+    /// <summary>Gets a provider-neutral model description because the selected model is stored in application settings.</summary>
     public string Model => "Configured in application settings";
 
-    /// <summary>
-    /// Gets whether at least one provider can be used. Ollama requires no credential; Mistral requires its API key.
-    /// Endpoint and model validation is performed when settings are saved.
-    /// </summary>
+    /// <summary>Gets whether an LLM provider is potentially available. Provider-specific readiness is checked before each call.</summary>
     public bool IsConfigured => ollamaService.IsConfigured || mistralService.IsConfigured;
 
-    public Task<LlmCompletionDto> CompleteAsync(IReadOnlyCollection<LlmMessageDto> messages, CancellationToken cancellationToken = default)
-        => CompleteAsync(messages, 1024, cancellationToken);
+    /// <summary>Completes a chat using the token limit configured in application settings.</summary>
+    /// <param name="messages">Messages to send to the selected provider.</param>
+    /// <param name="cancellationToken">Token used to cancel the operation.</param>
+    /// <returns>The generated completion.</returns>
+    public async Task<LlmCompletionDto> CompleteAsync(IReadOnlyCollection<LlmMessageDto> messages, CancellationToken cancellationToken = default)
+    {
+        var settings = await settingsService.GetAsync(cancellationToken);
+        return await CompleteAsync(messages, settings.MistralMaxTokens, cancellationToken);
+    }
 
+    /// <summary>Completes a chat using the provider selected in application settings.</summary>
+    /// <param name="messages">Messages to send to the selected provider.</param>
+    /// <param name="maxTokens">Maximum number of tokens to generate.</param>
+    /// <param name="cancellationToken">Token used to cancel the operation.</param>
+    /// <returns>The generated completion.</returns>
     public async Task<LlmCompletionDto> CompleteAsync(IReadOnlyCollection<LlmMessageDto> messages, int maxTokens, CancellationToken cancellationToken = default)
     {
         var settings = await settingsService.GetAsync(cancellationToken);
