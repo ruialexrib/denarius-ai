@@ -1,5 +1,6 @@
 using DenariusAI.Infrastructure.Identity;
 using DenariusAI.Infrastructure.Persistence;
+using DenariusAI.Web.Models;
 using DenariusAI.Web.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authentication;
@@ -98,6 +99,10 @@ public sealed class AccountController(
         return View(nameof(Login), LoginModel(returnUrl));
     }
 
+    /// <summary>Completes login tracking and starts the per-session cloud AI privacy acknowledgement.</summary>
+    /// <param name="user">The successfully authenticated user.</param>
+    /// <param name="returnUrl">The local URL requested before authentication.</param>
+    /// <returns>A redirect to the requested local URL or the home page.</returns>
     private async Task<IActionResult> CompleteLoginAsync(ApplicationUser user, string? returnUrl)
     {
         var previousLogin = await dbContext.LoginHistory.AsNoTracking().Where(item => item.UserId == user.Id).OrderByDescending(item => item.LoggedInAt).FirstOrDefaultAsync();
@@ -106,6 +111,7 @@ public sealed class AccountController(
         TempData["SuccessMessage"] = previousLogin is null
             ? "Bem-vindo. Este é o seu primeiro acesso registado."
             : $"Bem-vindo. O seu acesso anterior foi em {FormatLogin(previousLogin.LoggedInAt)}, a partir do IP {previousLogin.IpAddress}.";
+        HttpContext.Session.SetString(CloudAiPrivacyNoticePolicy.SessionKey, bool.TrueString);
         return Url.IsLocalUrl(returnUrl) ? LocalRedirect(returnUrl) : RedirectToAction("Index", "Home");
     }
 
@@ -191,6 +197,18 @@ public sealed class AccountController(
         user.CookieConsentAcceptedAt = DateTimeOffset.UtcNow;
         var result = await userManager.UpdateAsync(user);
         if (!result.Succeeded) TempData["ErrorMessage"] = "Não foi possível guardar o consentimento de cookies.";
+        return Url.IsLocalUrl(returnUrl) ? LocalRedirect(returnUrl) : RedirectToAction("Index", "Home");
+    }
+
+    /// <summary>
+    /// Records that the authenticated user acknowledged the cloud AI privacy notice for the current login session.
+    /// </summary>
+    /// <param name="returnUrl">The local URL to return to after acknowledgement.</param>
+    /// <returns>A redirect to the requested local URL or the home page.</returns>
+    [HttpPost, ValidateAntiForgeryToken]
+    public IActionResult AcknowledgeCloudAiPrivacyNotice(string? returnUrl = null)
+    {
+        HttpContext.Session.Remove(CloudAiPrivacyNoticePolicy.SessionKey);
         return Url.IsLocalUrl(returnUrl) ? LocalRedirect(returnUrl) : RedirectToAction("Index", "Home");
     }
 

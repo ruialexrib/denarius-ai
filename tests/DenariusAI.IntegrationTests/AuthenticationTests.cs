@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using DenariusAI.Web.Controllers;
 using DenariusAI.Web.ViewModels;
+using DenariusAI.Web.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using DenariusAI.Infrastructure.Identity;
@@ -9,6 +10,17 @@ namespace DenariusAI.IntegrationTests;
 
 public sealed class AuthenticationTests
 {
+    [Theory]
+    [InlineData("Mistral", "True", true)]
+    [InlineData("mistral", "True", true)]
+    [InlineData("Ollama", "True", false)]
+    [InlineData("OLLAMA", "True", false)]
+    [InlineData("Mistral", null, false)]
+    public void CloudAiPrivacyNoticeFollowsProviderAndSessionState(string provider, string? sessionValue, bool expected)
+    {
+        Assert.Equal(expected, CloudAiPrivacyNoticePolicy.ShouldShow(provider, sessionValue));
+    }
+
     [Fact]
     public void DashboardRequiresAuthentication()
     {
@@ -119,6 +131,7 @@ public sealed class AuthenticationTests
     [Theory]
     [InlineData(typeof(HomeController), nameof(HomeController.AcknowledgeDemonstrationData))]
     [InlineData(typeof(AccountController), nameof(AccountController.AcceptCookieConsent))]
+    [InlineData(typeof(AccountController), nameof(AccountController.AcknowledgeCloudAiPrivacyNotice))]
     public void UserNoticeConfirmationsRequirePostAndAntiforgery(Type controllerType, string actionName)
     {
         var method = controllerType.GetMethods().Single(item => item.Name == actionName);
