@@ -22,6 +22,13 @@ public sealed class SavingsCertificateFormViewModel
     public DateOnly NextCapitalization { get; set; } = DateOnly.FromDateTime(DateTime.Today);
     [Range(0, 3650), Display(Name = "Avisar com quantos dias de antecedência")]
     public int NoticeDays { get; set; } = 7;
+    public bool AiSuggestionAvailable { get; set; }
+}
+
+public sealed class SavingsCertificateClipboardRequestViewModel
+{
+    [Required, StringLength(20000, MinimumLength = 1)]
+    public string Text { get; set; } = string.Empty;
 }
 
 public sealed record SavingsCertificateRowViewModel(Guid Id, DateOnly InvestmentDate, int AgeDays,
