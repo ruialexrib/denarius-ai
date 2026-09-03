@@ -9,9 +9,17 @@ public sealed class ConfigurableLLMService(
     OllamaLLMService ollamaService,
     IApplicationSettingsService settingsService) : ILLMService
 {
-    public string Provider => "Configured";
-    public string Model => "Configured";
-    public bool IsConfigured => true;
+    /// <summary>Gets the configured provider. Runtime calls resolve the persisted setting before dispatch.</summary>
+    public string Provider => "Mistral / Ollama";
+
+    /// <summary>Gets a provider-neutral model description because the selected model is stored in the database.</summary>
+    public string Model => "Configured in application settings";
+
+    /// <summary>
+    /// Gets whether at least one provider can be used. Ollama requires no credential; Mistral requires its API key.
+    /// Endpoint and model validation is performed when settings are saved.
+    /// </summary>
+    public bool IsConfigured => ollamaService.IsConfigured || mistralService.IsConfigured;
 
     public Task<LlmCompletionDto> CompleteAsync(IReadOnlyCollection<LlmMessageDto> messages, CancellationToken cancellationToken = default)
         => CompleteAsync(messages, 1024, cancellationToken);
@@ -19,8 +27,13 @@ public sealed class ConfigurableLLMService(
     public async Task<LlmCompletionDto> CompleteAsync(IReadOnlyCollection<LlmMessageDto> messages, int maxTokens, CancellationToken cancellationToken = default)
     {
         var settings = await settingsService.GetAsync(cancellationToken);
-        return string.Equals(settings.AiProvider, "Ollama", StringComparison.OrdinalIgnoreCase)
-            ? await ollamaService.CompleteAsync(messages, maxTokens, cancellationToken)
-            : await mistralService.CompleteAsync(messages, maxTokens, cancellationToken);
+        if (string.Equals(settings.AiProvider, "Ollama", StringComparison.OrdinalIgnoreCase))
+        {
+            if (!ollamaService.IsConfigured) throw new InvalidOperationException("O Ollama não está configurado.");
+            return await ollamaService.CompleteAsync(messages, maxTokens, cancellationToken);
+        }
+
+        if (!mistralService.IsConfigured) throw new InvalidOperationException("A API key da Mistral não está configurada.");
+        return await mistralService.CompleteAsync(messages, maxTokens, cancellationToken);
     }
 }
