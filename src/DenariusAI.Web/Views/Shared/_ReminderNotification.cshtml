@@ -6,3 +6,7 @@
 {
 <a class="alert-button has-alerts top-with-tooltip" asp-controller="Reminders" asp-action="Index" aria-label="Lembretes: @reminderCount alertas ativos"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 2.8 20h18.4L12 3Z" /><path d="M12 8v6M12 17.2v.1" /></svg><span class="alert-count">@(reminderCount > 99 ? "99+" : reminderCount)</span><span class="top-tooltip" role="tooltip"><strong>Lembretes</strong><small>@reminderCount @(reminderCount == 1 ? "aviso ativo" : "avisos ativos") para consultar</small></span></a>
 }
+
+<link rel="stylesheet" href="~/css/cookie-consent.css" asp-append-version="true" />
+<partial name="_CookieConsent" />
+<script src="~/js/cookie-consent.js" asp-append-version="true" defer></script>
