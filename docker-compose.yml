@@ -32,6 +32,9 @@ services:
       InitialAdmin__Email: ${DENARIUS_AI_ADMIN_EMAIL:?Define DENARIUS_AI_ADMIN_EMAIL in .env}
       InitialAdmin__Password: ${DENARIUS_AI_ADMIN_PASSWORD:?Define DENARIUS_AI_ADMIN_PASSWORD in .env}
       InitialAdmin__DisplayName: ${DENARIUS_AI_ADMIN_DISPLAY_NAME:-Administrador}
+      DemoMode__Enabled: ${DENARIUS_AI_DEMO_MODE:-false}
+      DemoMode__Email: ${DENARIUS_AI_DEMO_EMAIL:-}
+      DemoMode__Password: ${DENARIUS_AI_DEMO_PASSWORD:-}
       DataProtection__KeyPath: /app/keys
       Mistral__ApiKey: ${MISTRAL_API_KEY:-}
       Mistral__Model: mistral-small-2603
