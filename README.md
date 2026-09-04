@@ -8,15 +8,13 @@
 [![ASP.NET Core](https://img.shields.io/badge/ASP.NET_Core-MVC-512BD4?logo=dotnet&logoColor=white)](https://learn.microsoft.com/aspnet/core/)
 [![SQL Server 2022](https://img.shields.io/badge/SQL_Server-2022-CC2927?logo=microsoftsqlserver&logoColor=white)](https://www.microsoft.com/sql-server/)
 [![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)](https://www.docker.com/)
-[![AI](https://img.shields.io/badge/AI-Local_%2F_Cloud-6C63FF)](https://ollama.com/)
+[![AI](https://img.shields.io/badge/AI-Local_%2F_Cloud-6C63FF)](#ai-providers)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Live Demo](https://img.shields.io/badge/Live_Demo-Open-159A70?logo=azure&logoColor=white)](https://denarius-ai.westeurope.cloudapp.azure.com)
 
 Developed by [Rui Ribeiro](https://github.com/ruialexrib)
 
 <h3><a href="https://denarius-ai.westeurope.cloudapp.azure.com/" target="_blank" rel="noopener noreferrer">Open the live demonstration</a></h3>
-
-Demo access: `guest@denarius-ai.local` / `Denarius2026!`
 
 _The demo runs on an Azure virtual machine and may be temporarily unavailable when the VM is switched off._
 
@@ -168,15 +166,14 @@ Never commit `.env`, credentials or real financial data.
 
 DenariusAI supports two AI providers. **Mistral AI** is the installation default and requires a `MISTRAL_API_KEY` for remote inference. **Ollama** can instead be selected in the application's administrative settings and does not require a Mistral API key.
 
-For local AI, install [Ollama](https://ollama.com/), download a suitable model and make the Ollama server reachable from the DenariusAI web application. The built-in defaults are:
+For local AI, install [Ollama](https://ollama.com/), download a suitable model and make the Ollama server reachable from the DenariusAI web application. Select Ollama as the provider and configure its model and endpoint. The built-in Ollama defaults are:
 
 ```text
-AI.Provider = Ollama
 Ollama.Model = llama3.2
 Ollama.BaseUrl = http://localhost:11434
 ```
 
-These are application settings rather than required `.env` variables and can be changed by an administrator. `Ollama.BaseUrl` may point to a local or remote HTTP/HTTPS Ollama endpoint. When DenariusAI itself runs in Docker, remember that `localhost` inside the web container refers to that container; configure an address that the container can use to reach the Ollama service.
+Set `AI.Provider` to `Ollama` in the administrative settings to use these Ollama settings. Mistral remains the application's default provider until that selection is changed. These are application settings rather than required `.env` variables and can be changed by an administrator. `Ollama.BaseUrl` may point to a local or remote HTTP/HTTPS Ollama endpoint. When DenariusAI itself runs in Docker, remember that `localhost` inside the web container refers to that container; configure an address that the container can use to reach the Ollama service.
 
 The selected provider is used by the configurable AI service for the application's assisted workflows. Regardless of provider, AI output remains advisory: DenariusAI performs deterministic financial calculations itself and the user confirms changes to financial records.
 
