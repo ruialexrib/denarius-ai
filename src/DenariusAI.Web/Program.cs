@@ -45,6 +45,7 @@ var app = builder.Build();
 
 await ApplyDatabaseMigrationsAsync(app);
 await SeedAdministratorAsync(app);
+await ProvisionDemoGuestAsync(app);
 await SeedDemonstrationUsersAsync(app);
 
 if (!app.Environment.IsDevelopment())
@@ -125,6 +126,62 @@ static async Task SeedAdministratorAsync(WebApplication application)
     await userManager.AddToRoleAsync(user, ApplicationRoles.Administrator);
 
     logger.LogInformation("Initial administrator created for {Email}.", email);
+}
+
+/// <summary>
+/// Creates or synchronizes the configured public demonstration guest when demo mode is enabled.
+/// </summary>
+/// <param name="application">The running web application whose services and configuration are used.</param>
+static async Task ProvisionDemoGuestAsync(WebApplication application)
+{
+    await using var scope = application.Services.CreateAsyncScope();
+    var configuration = scope.ServiceProvider.GetRequiredService<IConfiguration>();
+    if (!configuration.GetValue("DemoMode:Enabled", false)) return;
+
+    var email = configuration["DemoMode:Email"];
+    var password = configuration["DemoMode:Password"];
+    if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
+        throw new InvalidOperationException("Demo mode requires DemoMode:Email and DemoMode:Password to be configured.");
+
+    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+    var user = await userManager.FindByEmailAsync(email);
+    if (user is null)
+    {
+        user = new ApplicationUser
+        {
+            UserName = email,
+            Email = email,
+            EmailConfirmed = true,
+            DisplayName = "Convidado — Demo"
+        };
+        var createResult = await userManager.CreateAsync(user, password);
+        if (!createResult.Succeeded)
+            throw new InvalidOperationException($"Demo guest could not be created: {string.Join("; ", createResult.Errors.Select(error => error.Code))}");
+    }
+    else if (!await userManager.CheckPasswordAsync(user, password))
+    {
+        var resetToken = await userManager.GeneratePasswordResetTokenAsync(user);
+        var resetResult = await userManager.ResetPasswordAsync(user, resetToken, password);
+        if (!resetResult.Succeeded)
+            throw new InvalidOperationException($"Demo guest password could not be synchronized: {string.Join("; ", resetResult.Errors.Select(error => error.Code))}");
+    }
+
+    if (!await userManager.IsInRoleAsync(user, ApplicationRoles.User))
+    {
+        var roleResult = await userManager.AddToRoleAsync(user, ApplicationRoles.User);
+        if (!roleResult.Succeeded)
+            throw new InvalidOperationException($"Demo guest role could not be assigned: {string.Join("; ", roleResult.Errors.Select(error => error.Code))}");
+    }
+
+    if (await userManager.IsInRoleAsync(user, ApplicationRoles.Administrator))
+    {
+        var removeResult = await userManager.RemoveFromRoleAsync(user, ApplicationRoles.Administrator);
+        if (!removeResult.Succeeded)
+            throw new InvalidOperationException($"Demo guest administrator role could not be removed: {string.Join("; ", removeResult.Errors.Select(error => error.Code))}");
+    }
+
+    var logger = scope.ServiceProvider.GetRequiredService<ILoggerFactory>().CreateLogger("IdentitySeed");
+    logger.LogInformation("Demo guest account synchronized for {Email}.", email);
 }
 
 static async Task SeedDemonstrationUsersAsync(WebApplication application)
