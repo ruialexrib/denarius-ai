@@ -16,6 +16,8 @@ Developed by [Rui Ribeiro](https://github.com/ruialexrib)
 
 <h3><a href="https://denarius-ai.westeurope.cloudapp.azure.com/" target="_blank" rel="noopener noreferrer">Open the live demonstration</a></h3>
 
+Demo access: `guest@denarius-ai.local` / `Denarius2026!`
+
 _The demo runs on an Azure virtual machine and may be temporarily unavailable when the VM is switched off._
 
 ### Application tour
