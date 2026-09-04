@@ -171,7 +171,9 @@ public sealed class ApplicationBackupService(DenariusDbContext dbContext) : IApp
             typeof(InsurancePolicy),
             typeof(InsurancePolicyAttachment),
             typeof(InsurancePremium),
-            typeof(InsurancePremiumAttachment)
+            typeof(InsurancePremiumAttachment),
+            typeof(StockPosition),
+            typeof(StockPrice)
         })
         {
             var key = type.FullName!;
