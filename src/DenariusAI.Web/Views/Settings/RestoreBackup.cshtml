@@ -6,7 +6,7 @@
 <div class="alert error"><strong>O ficheiro de backup é sensível.</strong> Pode conter emails e hashes de palavras-passe. Utilize apenas ficheiros de origem confiável.</div>
 <form asp-action="RestoreBackup" method="post" enctype="multipart/form-data" class="form-stack" data-no-progress="true" data-restore-form data-settings-url="@Url.Action("Index", "Settings")">
 <div asp-validation-summary="ModelOnly" class="validation-summary"></div>
-<label asp-for="BackupFile"></label><input asp-for="BackupFile" type="file" accept="application/json,.json" /><span asp-validation-for="BackupFile" class="field-error"></span>
+<div><label asp-for="BackupFile"></label><label class="file-picker" for="BackupFile" data-file-picker data-file-selected-label="Backup JSON selecionado"><span class="file-picker-icon" aria-hidden="true">＋</span><span class="file-picker-copy"><strong data-file-name>Selecionar backup JSON</strong><span data-file-meta aria-live="polite">Ficheiro JSON até 50 MB</span></span><span class="file-picker-change" data-file-action>Escolher</span><input asp-for="BackupFile" type="file" accept="application/json,.json" /></label><span asp-validation-for="BackupFile" class="field-error"></span></div>
 <label asp-for="Password"></label><input asp-for="Password" autocomplete="current-password" /><span asp-validation-for="Password" class="field-error"></span>
 <label asp-for="Confirmation"></label><input asp-for="Confirmation" autocomplete="off" placeholder="RESTAURAR TUDO" /><span asp-validation-for="Confirmation" class="field-error"></span>
 <p class="form-help">Escreva exatamente <strong>RESTAURAR TUDO</strong>. Após o restauro será descarregado automaticamente um backup da informação anterior.</p>
@@ -14,6 +14,7 @@
 <div class="form-actions"><button class="button danger" type="submit" data-restore-submit>Validar e restaurar dados</button><a class="button secondary" asp-action="Index">Cancelar</a></div>
 </form></section>
 @section Scripts {
+<script src="~/js/insurance-file-picker.js" asp-append-version="true"></script>
 <script>
 (() => {
     const form = document.querySelector('[data-restore-form]');

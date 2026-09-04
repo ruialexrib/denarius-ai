@@ -16,9 +16,13 @@
 
 .cookie-consent strong { display: block; color: var(--ink); }
 .cookie-consent p { margin: 5px 0 0; color: var(--muted); font-size: .8rem; line-height: 1.5; }
-.cookie-consent form { flex: 0 0 auto; margin: 0; }
+.cookie-consent-actions { display: flex; flex: 0 0 auto; align-items: center; gap: 14px; }
+.cookie-consent-actions > a { color: #087a58; font-size: .78rem; font-weight: 750; text-decoration: none; }
+.cookie-consent-actions > a:hover { text-decoration: underline; }
+.cookie-consent form { margin: 0; }
 
 @media (max-width: 650px) {
     .cookie-consent { right: 16px; bottom: 58px; width: calc(100% - 32px); align-items: stretch; flex-direction: column; gap: 14px; }
+    .cookie-consent-actions { align-items: stretch; flex-direction: column-reverse; gap: 10px; text-align: center; }
     .cookie-consent .button { width: 100%; }
 }

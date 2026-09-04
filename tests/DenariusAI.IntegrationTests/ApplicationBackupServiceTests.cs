@@ -42,6 +42,7 @@ public sealed class ApplicationBackupServiceTests
         var tables = legacyBackup["tables"]!.AsObject();
         tables.Remove(typeof(Correspondence).FullName!); tables.Remove(typeof(Warranty).FullName!); tables.Remove(typeof(CorrespondenceMetadata).FullName!);
         tables.Remove(typeof(InsurancePolicy).FullName!); tables.Remove(typeof(InsurancePolicyAttachment).FullName!); tables.Remove(typeof(InsurancePremium).FullName!); tables.Remove(typeof(InsurancePremiumAttachment).FullName!);
+        tables.Remove(typeof(StockPosition).FullName!); tables.Remove(typeof(StockPrice).FullName!);
         foreach (var row in tables[typeof(Reminder).FullName!]!.AsArray())
         {
             row!.AsObject().Remove(nameof(Reminder.SavingsCertificateId));
@@ -71,6 +72,8 @@ public sealed class ApplicationBackupServiceTests
         Assert.Empty(context.InsurancePolicyAttachments);
         Assert.Empty(context.InsurancePremiums);
         Assert.Empty(context.InsurancePremiumAttachments);
+        Assert.Empty(context.StockPositions);
+        Assert.Empty(context.StockPrices);
     }
 
     /// <summary>Verifies an invalid backup is rejected before existing data is changed.</summary>

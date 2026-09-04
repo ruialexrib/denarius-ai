@@ -14,12 +14,13 @@
         const action = picker.querySelector("[data-file-action]");
         const defaultName = name?.textContent ?? "";
         const defaultMeta = meta?.textContent ?? "";
+        const selectedLabel = picker.dataset.fileSelectedLabel ?? "PDF selecionado";
 
         input?.addEventListener("change", () => {
             const file = input.files?.[0];
             picker.classList.toggle("has-file", Boolean(file));
             if (name) name.textContent = file?.name ?? defaultName;
-            if (meta) meta.textContent = file ? `${formatFileSize(file.size)} · PDF selecionado` : defaultMeta;
+            if (meta) meta.textContent = file ? `${formatFileSize(file.size)} · ${selectedLabel}` : defaultMeta;
             if (action) action.textContent = file ? "Alterar" : "Escolher";
         });
     });
