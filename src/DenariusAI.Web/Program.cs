@@ -2,6 +2,7 @@ using DenariusAI.Application;
 using DenariusAI.Infrastructure;
 using DenariusAI.Infrastructure.Identity;
 using DenariusAI.Infrastructure.Persistence;
+using DenariusAI.Web.Models;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.DataProtection;
@@ -16,6 +17,7 @@ builder.Services.AddHttpClient("GoogleProfileImages")
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddMemoryCache();
 builder.Services.AddSession(options => { options.IdleTimeout = TimeSpan.FromMinutes(30); options.Cookie.HttpOnly = true; options.Cookie.IsEssential = true; });
+builder.Services.Configure<DemoModeOptions>(builder.Configuration.GetSection("DemoMode"));
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 var dataProtectionKeyPath = builder.Configuration["DataProtection:KeyPath"];
@@ -36,7 +38,7 @@ var applicationVersion = applicationAssembly
     .SingleOrDefault()?.InformationalVersion.Split('+')[0]
     ?? applicationAssembly.GetName().Version?.ToString(3)
     ?? "0.21.1";
-builder.Services.AddSingleton(new DenariusAI.Web.Models.ApplicationInfo(
+builder.Services.AddSingleton(new ApplicationInfo(
     Version: applicationVersion,
     Description: "O controlo do seu futuro financeiro começa aqui."));
 builder.Services.AddHealthChecks().AddDbContextCheck<DenariusDbContext>("sqlserver");
@@ -66,6 +68,8 @@ app.MapHealthChecks("/health", new HealthCheckOptions()).AllowAnonymous();
 app.MapControllerRoute(name: "default", pattern: "{controller=Home}/{action=Index}/{id?}");
 app.Run();
 
+/// <summary>Applies pending Entity Framework Core migrations during application startup.</summary>
+/// <param name="application">The running web application.</param>
 static async Task ApplyDatabaseMigrationsAsync(WebApplication application)
 {
     await using var scope = application.Services.CreateAsyncScope();
@@ -85,6 +89,8 @@ static async Task ApplyDatabaseMigrationsAsync(WebApplication application)
     }
 }
 
+/// <summary>Creates or promotes the configured initial administrator account.</summary>
+/// <param name="application">The running web application.</param>
 static async Task SeedAdministratorAsync(WebApplication application)
 {
     await using var scope = application.Services.CreateAsyncScope();
@@ -127,6 +133,8 @@ static async Task SeedAdministratorAsync(WebApplication application)
     logger.LogInformation("Initial administrator created for {Email}.", email);
 }
 
+/// <summary>Ensures demonstration users exist when demonstration financial data is present.</summary>
+/// <param name="application">The running web application.</param>
 static async Task SeedDemonstrationUsersAsync(WebApplication application)
 {
     await using var scope = application.Services.CreateAsyncScope();
@@ -137,4 +145,5 @@ static async Task SeedDemonstrationUsersAsync(WebApplication application)
     await service.EnsureUsersAsync();
 }
 
+/// <summary>Provides a public entry point for integration tests.</summary>
 public partial class Program;
