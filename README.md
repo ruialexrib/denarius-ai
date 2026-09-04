@@ -8,15 +8,13 @@
 [![ASP.NET Core](https://img.shields.io/badge/ASP.NET_Core-MVC-512BD4?logo=dotnet&logoColor=white)](https://learn.microsoft.com/aspnet/core/)
 [![SQL Server 2022](https://img.shields.io/badge/SQL_Server-2022-CC2927?logo=microsoftsqlserver&logoColor=white)](https://www.microsoft.com/sql-server/)
 [![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)](https://www.docker.com/)
-[![Mistral AI](https://img.shields.io/badge/AI-Mistral-FF7000)](https://mistral.ai/)
+[![AI](https://img.shields.io/badge/AI-Local_%2F_Cloud-6C63FF)](https://ollama.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Live Demo](https://img.shields.io/badge/Live_Demo-Open-159A70?logo=azure&logoColor=white)](https://denarius-ai.westeurope.cloudapp.azure.com)
 
 Developed by [Rui Ribeiro](https://github.com/ruialexrib)
 
 <h3><a href="https://denarius-ai.westeurope.cloudapp.azure.com/" target="_blank" rel="noopener noreferrer">Open the live demonstration</a></h3>
-
-Demo access: `guest@denarius-ai.local` / `Denarius2026!`
 
 _The demo runs on an Azure virtual machine and may be temporarily unavailable when the VM is switched off._
 
@@ -32,13 +30,14 @@ _The demo runs on an Azure virtual machine and may be temporarily unavailable wh
 
 DenariusAI is a personal and family finance management platform built around double-entry accounting. It combines daily financial management with budgeting, bank reconciliation, savings, investments, insurance, analytics and administrative organisation in one secure and consistent workspace.
 
-AI features assist with transaction entry, classification, financial questions, correspondence analysis and Markdown report generation. Suggestions are always reviewed by the user before relevant data is saved.
+AI features assist with transaction entry, classification, financial questions, correspondence analysis and Markdown report generation. The AI layer can use Mistral AI as a cloud provider or Ollama for local inference. Suggestions are always reviewed by the user before relevant data is saved.
 
 ## Highlights
 
 - Double-entry financial management with accounts, groups, categories and transactions
 - Monthly budgeting and transaction allocation
 - AI-assisted bank reconciliation and transaction classification
+- Configurable AI provider with cloud inference through Mistral AI or local inference through Ollama
 - Dashboards, period comparisons and financial analytics
 - Portuguese Savings Certificates portfolio and projections
 - Stock portfolio and watchlist with market price history, performance tracking and optional ARIMA forecasts
@@ -109,6 +108,8 @@ The reminder layer complements areas such as documents and warranties by drawing
 
 The optional financial assistant provides a natural-language interface for questions about the user's DenariusAI data. AI is also used in selected workflows for interpretation, classification assistance and Markdown report generation.
 
+The AI provider is configurable in the application settings. Mistral AI remains the default provider and uses its remote API, while Ollama can be selected to run a compatible model through a local or privately hosted Ollama server. With Ollama running inside the installation's trusted infrastructure, prompts and financial context sent to the model do not need to be processed by a third-party cloud AI provider.
+
 The AI layer is deliberately advisory: deterministic financial calculations remain application responsibilities, and suggestions that would affect financial records remain subject to user review.
 
 ### Administration and security
@@ -130,7 +131,8 @@ The read-only design preserves the application's principle that financial change
 | **.NET 9 / ASP.NET Core MVC** | Web application and business workflows |
 | **Entity Framework Core** | Persistence and database migrations |
 | **SQL Server 2022** | Financial and identity data |
-| **Mistral AI** | Natural-language assistance and reports |
+| **Mistral AI** | Optional cloud AI provider for natural-language assistance and reports |
+| **Ollama** | Optional local or privately hosted AI inference |
 | **Docker Compose** | Reproducible local deployment |
 | **xUnit** | Unit, integration and MCP tests |
 
@@ -144,7 +146,7 @@ cd denarius-ai
 Copy-Item .env.example .env
 ```
 
-Set secure local passwords in `.env` and optionally add `MISTRAL_API_KEY`. Then start the application:
+Set secure local passwords in `.env`. If you intend to use the default Mistral AI provider, also add `MISTRAL_API_KEY`. Ollama does not require a Mistral API key. Then start the application:
 
 ```powershell
 docker compose up --build -d
@@ -159,6 +161,22 @@ docker compose down
 ```
 
 Never commit `.env`, credentials or real financial data.
+
+### AI providers
+
+DenariusAI supports two AI providers. **Mistral AI** is the installation default and requires a `MISTRAL_API_KEY` for remote inference. **Ollama** can instead be selected in the application's administrative settings and does not require a Mistral API key.
+
+For local AI, install [Ollama](https://ollama.com/), download a suitable model and make the Ollama server reachable from the DenariusAI web application. The built-in defaults are:
+
+```text
+AI.Provider = Ollama
+Ollama.Model = llama3.2
+Ollama.BaseUrl = http://localhost:11434
+```
+
+These are application settings rather than required `.env` variables and can be changed by an administrator. `Ollama.BaseUrl` may point to a local or remote HTTP/HTTPS Ollama endpoint. When DenariusAI itself runs in Docker, remember that `localhost` inside the web container refers to that container; configure an address that the container can use to reach the Ollama service.
+
+The selected provider is used by the configurable AI service for the application's assisted workflows. Regardless of provider, AI output remains advisory: DenariusAI performs deterministic financial calculations itself and the user confirms changes to financial records.
 
 ### Stock market data
 
