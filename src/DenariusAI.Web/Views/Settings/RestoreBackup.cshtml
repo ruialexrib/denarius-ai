@@ -2,9 +2,7 @@
 @{ ViewData["Title"] = "Restaurar backup"; }
 <link rel="stylesheet" href="~/css/data-forms.css" asp-append-version="true" />
 <div class="page-header"><div><p class="eyebrow">Definições · Backup</p><h1>Restaurar todos os dados</h1><p class="page-subtitle">Substitua integralmente a informação da aplicação por um backup DenariusAI.</p></div></div>
-<section class="panel narrow danger-zone"><div class="panel-heading"><h2>Confirmação obrigatória</h2><p>O conteúdo atual será substituído, incluindo utilizadores, definições, movimentos e auditoria. A operação é transacional: um erro mantém a base de dados atual.</p></div>
-<div class="alert error"><strong>O ficheiro de backup é sensível.</strong> Pode conter emails e hashes de palavras-passe. Utilize apenas ficheiros de origem confiável.</div>
-<form asp-action="RestoreBackup" method="post" enctype="multipart/form-data" class="form-stack" data-no-progress="true" data-restore-form data-settings-url="@Url.Action("Index", "Settings")">
+<section class="data-editor"><div class="data-editor-grid"><div class="data-editor-main"><form asp-action="RestoreBackup" method="post" enctype="multipart/form-data" class="form-stack" data-no-progress="true" data-restore-form data-settings-url="@Url.Action("Index", "Settings")">
 <div asp-validation-summary="ModelOnly" class="validation-summary"></div>
 <div><label asp-for="BackupFile"></label><label class="file-picker" for="BackupFile" data-file-picker data-file-selected-label="Backup JSON selecionado"><span class="file-picker-icon" aria-hidden="true">＋</span><span class="file-picker-copy"><strong data-file-name>Selecionar backup JSON</strong><span data-file-meta aria-live="polite">Ficheiro JSON até 50 MB</span></span><span class="file-picker-change" data-file-action>Escolher</span><input asp-for="BackupFile" type="file" accept="application/json,.json" /></label><span asp-validation-for="BackupFile" class="field-error"></span></div>
 <label asp-for="Password"></label><input asp-for="Password" autocomplete="current-password" /><span asp-validation-for="Password" class="field-error"></span>
@@ -12,7 +10,8 @@
 <p class="form-help">Escreva exatamente <strong>RESTAURAR TUDO</strong>. Após o restauro será descarregado automaticamente um backup da informação anterior.</p>
 <div class="alert info" data-restore-status hidden role="status" aria-live="polite"><strong>Restauro em curso.</strong> A validar e substituir os dados. Não feche esta página.</div>
 <div class="form-actions"><button class="button danger" type="submit" data-restore-submit>Validar e restaurar dados</button><a class="button secondary" asp-action="Index">Cancelar</a></div>
-</form></section>
+</form></div>
+<aside class="data-editor-context"><p class="eyebrow">Contexto</p><h2>Antes de restaurar</h2><p>O restauro substitui integralmente a informação atual da aplicação. Utilize apenas backups DenariusAI de origem confiável.</p><ul class="data-editor-context-list"><li><strong>Substituição total</strong>Utilizadores, definições, movimentos, auditoria e restante informação incluída no backup passam a substituir os dados atuais.</li><li><strong>Operação transacional</strong>O backup é validado antes da substituição e uma falha mantém a base de dados atual sem alterações.</li><li><strong>Dados sensíveis</strong>O ficheiro pode conter emails, hashes de palavras-passe e outros dados da aplicação. Trate-o como informação sensível.</li><li><strong>Backup de segurança</strong>Após um restauro concluído com sucesso, é descarregado automaticamente um backup da informação anterior.</li></ul></aside></div></section>
 @section Scripts {
 <script src="~/js/insurance-file-picker.js" asp-append-version="true"></script>
 <script>
