@@ -5,15 +5,101 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+  workflow_call:
 
 permissions:
   contents: read
+  pull-requests: read
 
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
+  classify:
+    name: Classify change impact
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      dotnet: ${{ steps.result.outputs.dotnet }}
+      database: ${{ steps.result.outputs.database }}
+      docker: ${{ steps.result.outputs.docker }}
+      mcp: ${{ steps.result.outputs.mcp }}
+      ai: ${{ steps.result.outputs.ai }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Detect affected areas
+        if: github.event_name != 'workflow_call'
+        id: changes
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            dotnet:
+              - '.github/workflows/ci.yml'
+              - '**/*.cs'
+              - '**/*.csproj'
+              - '**/*.props'
+              - '**/*.targets'
+              - 'DenariusAI.slnx'
+              - 'Directory.Build.props'
+              - 'global.json'
+              - '.config/dotnet-tools.json'
+              - 'tests/**'
+            database:
+              - '.github/workflows/ci.yml'
+              - 'src/DenariusAI.Domain/**'
+              - 'src/DenariusAI.Infrastructure/Persistence/**'
+              - 'src/DenariusAI.Web/Program.cs'
+              - '.config/dotnet-tools.json'
+            docker:
+              - '.github/workflows/ci.yml'
+              - 'Dockerfile'
+              - 'docker-compose*.yml'
+              - '.dockerignore'
+              - 'Directory.Build.props'
+              - 'global.json'
+              - 'src/**'
+            mcp:
+              - '.github/workflows/ci.yml'
+              - 'src/DenariusAI.Mcp/**'
+              - 'tests/DenariusAI.McpTests/**'
+              - 'src/DenariusAI.Application/**'
+              - 'src/DenariusAI.Domain/**'
+              - 'src/DenariusAI.Infrastructure/**'
+            ai:
+              - '.github/workflows/ci.yml'
+              - 'src/DenariusAI.Infrastructure/ArtificialIntelligence/**'
+              - 'src/DenariusAI.Application/Abstractions/Services/ILLMService.cs'
+              - 'src/DenariusAI.Application/Services/*Assistant*'
+              - 'src/DenariusAI.Application/Services/*Suggestion*'
+              - 'tests/DenariusAI.IntegrationTests/*LLM*'
+              - 'tests/DenariusAI.IntegrationTests/*Suggestion*'
+              - 'tests/DenariusAI.IntegrationTests/*Assistant*'
+
+      - name: Publish impact classification
+        id: result
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ "${{ github.event_name }}" == "workflow_call" ]]; then
+            echo 'dotnet=true' >> "$GITHUB_OUTPUT"
+            echo 'database=true' >> "$GITHUB_OUTPUT"
+            echo 'docker=true' >> "$GITHUB_OUTPUT"
+            echo 'mcp=true' >> "$GITHUB_OUTPUT"
+            echo 'ai=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'dotnet=${{ steps.changes.outputs.dotnet }}' >> "$GITHUB_OUTPUT"
+            echo 'database=${{ steps.changes.outputs.database }}' >> "$GITHUB_OUTPUT"
+            echo 'docker=${{ steps.changes.outputs.docker }}' >> "$GITHUB_OUTPUT"
+            echo 'mcp=${{ steps.changes.outputs.mcp }}' >> "$GITHUB_OUTPUT"
+            echo 'ai=${{ steps.changes.outputs.ai }}' >> "$GITHUB_OUTPUT"
+          fi
+
   hygiene:
     name: Repository hygiene
     runs-on: ubuntu-latest
@@ -38,79 +124,59 @@ jobs:
           PUSH_BASE_SHA: ${{ github.event.before }}
         run: |
           set -euo pipefail
-
-          if [[ "$EVENT_NAME" == "pull_request" ]]; then
-            base_sha="$PR_BASE_SHA"
+          if [[ "$EVENT_NAME" == "workflow_call" ]]; then
+            mapfile -t changed_cs < <(git ls-files '*.cs')
           else
-            base_sha="$PUSH_BASE_SHA"
+            if [[ "$EVENT_NAME" == "pull_request" ]]; then
+              base_sha="$PR_BASE_SHA"
+            else
+              base_sha="$PUSH_BASE_SHA"
+            fi
+            if [[ -z "$base_sha" || "$base_sha" =~ ^0+$ ]]; then
+              base_sha="$(git rev-parse HEAD^)"
+            fi
+            mapfile -t changed_cs < <(git diff --diff-filter=ACMRT --name-only "$base_sha"...HEAD -- '*.cs')
           fi
-
-          if [[ -z "$base_sha" || "$base_sha" =~ ^0+$ ]]; then
-            base_sha="$(git rev-parse HEAD^)"
-          fi
-
-          mapfile -t changed_cs < <(git diff --diff-filter=ACMRT --name-only "$base_sha"...HEAD -- '*.cs')
-
           if (( ${#changed_cs[@]} == 0 )); then
             echo 'No changed C# files require formatting validation.'
             exit 0
           fi
-
-          echo 'Checking formatting for changed C# files:'
-          printf ' - %s\n' "${changed_cs[@]}"
+          printf 'Checking formatting for %d C# file(s).\n' "${#changed_cs[@]}"
           dotnet format DenariusAI.slnx whitespace --verify-no-changes --include "${changed_cs[@]}"
 
       - name: Check for unresolved merge-conflict markers
         shell: bash
         run: |
           set -euo pipefail
-
-          if git grep -n -E '^(<<<<<<< |>>>>>>> )' -- \
-            '*.cs' '*.csproj' '*.props' '*.targets' '*.json' '*.yml' '*.yaml' \
-            '*.xml' '*.cshtml' '*.js' '*.css' '*.sh' '*.bat' '*.ps1'; then
+          if git grep -n -E '^(<<<<<<< |>>>>>>> )' -- '*.cs' '*.csproj' '*.props' '*.targets' '*.json' '*.yml' '*.yaml' '*.xml' '*.cshtml' '*.js' '*.css' '*.sh' '*.bat' '*.ps1' '*.py'; then
             echo 'Unresolved merge-conflict markers were found in tracked source or configuration files.' >&2
             exit 1
           fi
-
           echo 'No unresolved merge-conflict markers found.'
 
       - name: Check for prohibited tracked files
         shell: bash
         run: |
           set -euo pipefail
-
           prohibited=()
           while IFS= read -r path; do
             normalized_path="${path,,}"
-
-            if [[ "$normalized_path" =~ (^|/)\.env($|\.) ]] && [[ ! "$normalized_path" =~ (^|/)\.env\.example$ ]]; then
-              prohibited+=("$path")
-              continue
-            fi
-
-            if [[ "$normalized_path" =~ (^|/)(secrets\.json|appsettings\.local\.json)$ ]]; then
-              prohibited+=("$path")
-              continue
-            fi
-
-            if [[ "$normalized_path" =~ \.(bak|bacpac|mdf|ldf|db|db3|sqlite|sqlite3)$ ]]; then
-              prohibited+=("$path")
-            fi
+            if [[ "$normalized_path" =~ (^|/)\.env($|\.) ]] && [[ ! "$normalized_path" =~ (^|/)\.env\.example$ ]]; then prohibited+=("$path"); continue; fi
+            if [[ "$normalized_path" =~ (^|/)(secrets\.json|appsettings\.local\.json)$ ]]; then prohibited+=("$path"); continue; fi
+            if [[ "$normalized_path" =~ \.(bak|bacpac|mdf|ldf|db|db3|sqlite|sqlite3)$ ]]; then prohibited+=("$path"); fi
           done < <(git ls-files)
-
           if (( ${#prohibited[@]} > 0 )); then
-            echo 'Prohibited tracked files were found:' >&2
-            printf ' - %s\n' "${prohibited[@]}" >&2
+            printf 'Prohibited tracked file: %s\n' "${prohibited[@]}" >&2
             exit 1
           fi
-
           echo 'No prohibited tracked files found.'
 
   dotnet:
     name: Build and test .NET
-    needs: hygiene
+    needs: [classify, hygiene]
+    if: needs.classify.outputs.dotnet == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
 
     steps:
       - name: Check out repository
@@ -121,8 +187,10 @@ jobs:
         with:
           global-json-file: global.json
 
-      - name: Restore dependencies
-        run: dotnet restore DenariusAI.slnx
+      - name: Restore dependencies and tools
+        run: |
+          dotnet restore DenariusAI.slnx
+          dotnet tool restore
 
       - name: Build
         run: dotnet build DenariusAI.slnx --configuration Release --no-restore
@@ -136,6 +204,25 @@ jobs:
           --results-directory TestResults
           --logger "trx;LogFilePrefix=test-results"
 
+      - name: Merge coverage reports
+        run: |
+          dotnet tool install --global dotnet-reportgenerator-globaltool --version 5.4.1
+          reportgenerator "-reports:TestResults/**/coverage.cobertura.xml" "-targetdir:TestResults/CoverageReport" "-reporttypes:Cobertura;TextSummary"
+
+      - name: Enforce coverage thresholds
+        run: python3 eng/ci/check_coverage.py TestResults/CoverageReport/Cobertura.xml eng/ci/coverage-thresholds.json
+
+      - name: Detect pending EF Core model changes
+        if: needs.classify.outputs.database == 'true'
+        env:
+          ConnectionStrings__DenariusAIDatabase: Server=localhost;Database=DenariusAIModelCheck;User Id=sa;Password=NotUsedForModelCheck;TrustServerCertificate=True;Encrypt=False
+        run: >-
+          dotnet ef migrations has-pending-model-changes
+          --project src/DenariusAI.Infrastructure/DenariusAI.Infrastructure.csproj
+          --startup-project src/DenariusAI.Web/DenariusAI.Web.csproj
+          --configuration Release
+          --no-build
+
       - name: Upload test results and coverage
         if: always()
         uses: actions/upload-artifact@v7
@@ -145,19 +232,108 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
+  database:
+    name: Validate SQL Server migrations
+    needs: [classify, hygiene]
+    if: needs.classify.outputs.database == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      CI_DB_PASSWORD: DenariusCI!${{ github.run_id }}aA
+      CI_ADMIN_PASSWORD: DenariusAdmin!${{ github.run_id }}aA
+      ConnectionStrings__DenariusAIDatabase: Server=localhost,1433;Database=DenariusAI;User Id=sa;Password=DenariusCI!${{ github.run_id }}aA;TrustServerCertificate=True;Encrypt=True
+      InitialAdmin__Email: ci-admin@example.invalid
+      InitialAdmin__Password: DenariusAdmin!${{ github.run_id }}aA
+      InitialAdmin__DisplayName: CI Administrator
+      HttpsRedirection__Enabled: 'false'
+      ASPNETCORE_ENVIRONMENT: Production
+
+    services:
+      sqlserver:
+        image: mcr.microsoft.com/mssql/server:2022-latest
+        env:
+          ACCEPT_EULA: Y
+          MSSQL_PID: Express
+          MSSQL_SA_PASSWORD: DenariusCI!${{ github.run_id }}aA
+        ports:
+          - 1433:1433
+        options: >-
+          --health-cmd "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P 'DenariusCI!${{ github.run_id }}aA' -C -Q 'SELECT 1' -b -o /dev/null"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 12
+          --health-start-period 30s
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+
+      - name: Restore, build, and restore tools
+        run: |
+          dotnet restore DenariusAI.slnx
+          dotnet tool restore
+          dotnet build DenariusAI.slnx --configuration Release --no-restore
+
+      - name: Apply complete migration chain to empty SQL Server database
+        run: >-
+          dotnet ef database update
+          --project src/DenariusAI.Infrastructure/DenariusAI.Infrastructure.csproj
+          --startup-project src/DenariusAI.Web/DenariusAI.Web.csproj
+          --configuration Release
+          --no-build
+
+      - name: Start application and verify health
+        shell: bash
+        run: |
+          set -euo pipefail
+          dotnet run --project src/DenariusAI.Web/DenariusAI.Web.csproj --configuration Release --no-build --urls http://127.0.0.1:5080 > web-startup.log 2>&1 &
+          echo $! > web-startup.pid
+          for attempt in {1..60}; do
+            if curl --fail --silent http://127.0.0.1:5080/health >/dev/null; then
+              echo 'Application is healthy against the fully migrated database.'
+              exit 0
+            fi
+            sleep 2
+          done
+          cat web-startup.log
+          exit 1
+
+      - name: Upload startup diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: sqlserver-startup-diagnostics
+          path: web-startup.log
+          if-no-files-found: ignore
+          retention-days: 14
+
+      - name: Stop application process
+        if: always()
+        shell: bash
+        run: |
+          if [[ -f web-startup.pid ]]; then kill "$(cat web-startup.pid)" 2>/dev/null || true; fi
+
   docker:
     name: Build Docker (${{ matrix.component }})
-    needs: hygiene
+    needs: [classify, hygiene]
+    if: needs.classify.outputs.docker == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
         include:
           - component: web
             target: final
+            tag: denarius-ai-ci:web
           - component: mcp
             target: mcp-final
+            tag: denarius-ai-ci:mcp
 
     steps:
       - name: Check out repository
@@ -166,12 +342,75 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
 
-      - name: Build image
+      - name: Build image for local validation
         uses: docker/build-push-action@v7
         with:
           context: .
           file: Dockerfile
           target: ${{ matrix.target }}
           push: false
+          load: true
+          tags: ${{ matrix.tag }}
           cache-from: type=gha,scope=${{ matrix.component }}
           cache-to: type=gha,mode=max,scope=${{ matrix.component }}
+
+      - name: Scan image for blocking vulnerabilities
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: ${{ matrix.tag }}
+          format: table
+          vuln-type: os,library
+          severity: CRITICAL
+          ignore-unfixed: true
+          exit-code: '1'
+
+  compose-smoke:
+    name: Docker Compose smoke test
+    needs: [classify, hygiene]
+    if: needs.classify.outputs.docker == 'true' || needs.classify.outputs.database == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      DENARIUS_AI_DB_PASSWORD: DenariusCompose!${{ github.run_id }}aA
+      DENARIUS_AI_ADMIN_EMAIL: ci-admin@example.invalid
+      DENARIUS_AI_ADMIN_PASSWORD: DenariusAdmin!${{ github.run_id }}aA
+      DENARIUS_AI_ADMIN_DISPLAY_NAME: CI Administrator
+      DENARIUS_AI_HTTP_PORT: '8080'
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Start Compose web/database stack
+        run: docker compose up --detach --build denarius-ai-web
+
+      - name: Wait for database and web health
+        shell: bash
+        run: |
+          set -euo pipefail
+          for attempt in {1..60}; do
+            db_id="$(docker compose ps -q denarius-ai-db)"
+            web_id="$(docker compose ps -q denarius-ai-web)"
+            if [[ -n "$db_id" && -n "$web_id" ]]; then
+              db_status="$(docker inspect --format='{{.State.Health.Status}}' "$db_id" 2>/dev/null || true)"
+              web_status="$(docker inspect --format='{{.State.Health.Status}}' "$web_id" 2>/dev/null || true)"
+              if [[ "$db_status" == 'healthy' && "$web_status" == 'healthy' ]] && curl --fail --silent http://127.0.0.1:8080/health >/dev/null; then
+                echo 'Compose database and web services are healthy.'
+                exit 0
+              fi
+            fi
+            sleep 5
+          done
+          docker compose ps
+          docker compose logs --no-color --tail=200
+          exit 1
+
+      - name: Show Compose diagnostics on failure
+        if: failure()
+        run: |
+          docker compose ps || true
+          docker compose logs --no-color --tail=300 || true
+
+      - name: Tear down ephemeral Compose stack
+        if: always()
+        run: docker compose down --volumes --remove-orphans
