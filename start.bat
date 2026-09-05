@@ -9,6 +9,7 @@ if not defined CHECK_INTERVAL set "CHECK_INTERVAL=30"
 set "WEB_SERVICE=denarius-ai-web"
 set "MCP_SERVICE=denarius-ai-mcp"
 set "DEPLOYED_SHA="
+set "SYNCED_SHA="
 set "PENDING_SHA="
 set "REBUILD_WEB=0"
 set "REBUILD_MCP=0"
@@ -51,6 +52,7 @@ if errorlevel 1 goto startup_error
 call :wait_for_web
 if errorlevel 1 goto startup_error
 for /f %%i in ('git rev-parse HEAD') do set "DEPLOYED_SHA=%%i"
+set "SYNCED_SHA=!DEPLOYED_SHA!"
 call :show_deployment_summary
 
 :watch
@@ -69,7 +71,7 @@ echo ============================================================
 echo Repository update detected. Analysing changed files...
 echo ============================================================
 
-set "OLD_SHA=!DEPLOYED_SHA!"
+set "OLD_SHA=!SYNCED_SHA!"
 set "NEW_SHA=!REMOTE_SHA!"
 set "PENDING_SHA=!NEW_SHA!"
 set "REBUILD_WEB=0"
@@ -86,7 +88,7 @@ if /i not "!LOCAL_SHA!"=="!NEW_SHA!" (
 
 if "!REBUILD_WEB!"=="0" if "!REBUILD_MCP!"=="0" (
     echo No container-impacting changes detected. No rebuild required.
-    set "DEPLOYED_SHA=!PENDING_SHA!"
+    set "SYNCED_SHA=!PENDING_SHA!"
     set "PENDING_SHA="
     timeout /t %CHECK_INTERVAL% /nobreak >nul
     goto watch
@@ -116,7 +118,8 @@ if "!REBUILD_MCP!"=="1" (
     )
 )
 
-set "DEPLOYED_SHA=!PENDING_SHA!"
+if "!REBUILD_WEB!"=="1" set "DEPLOYED_SHA=!PENDING_SHA!"
+set "SYNCED_SHA=!PENDING_SHA!"
 set "PENDING_SHA="
 if "!REBUILD_WEB!"=="1" call :show_deployment_summary
 echo Update complete. Monitoring for new commits...
@@ -172,8 +175,8 @@ exit /b 0
 git fetch --quiet origin %BRANCH%
 if errorlevel 1 exit /b 2
 for /f %%i in ('git rev-parse origin/%BRANCH%') do set "REMOTE_SHA=%%i"
-if not defined DEPLOYED_SHA for /f %%i in ('git rev-parse HEAD') do set "DEPLOYED_SHA=%%i"
-if /i not "!DEPLOYED_SHA!"=="!REMOTE_SHA!" exit /b 1
+if not defined SYNCED_SHA for /f %%i in ('git rev-parse HEAD') do set "SYNCED_SHA=%%i"
+if /i not "!SYNCED_SHA!"=="!REMOTE_SHA!" exit /b 1
 exit /b 0
 
 :ensure_running
