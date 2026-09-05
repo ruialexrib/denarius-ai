@@ -81,17 +81,19 @@ jobs:
 
           prohibited=()
           while IFS= read -r path; do
-            if [[ "$path" =~ (^|/)\.env($|\.) ]] && [[ ! "$path" =~ (^|/)\.env\.example$ ]]; then
+            normalized_path="${path,,}"
+
+            if [[ "$normalized_path" =~ (^|/)\.env($|\.) ]] && [[ ! "$normalized_path" =~ (^|/)\.env\.example$ ]]; then
               prohibited+=("$path")
               continue
             fi
 
-            if [[ "$path" =~ (^|/)(secrets\.json|appsettings\.Local\.json)$ ]]; then
+            if [[ "$normalized_path" =~ (^|/)(secrets\.json|appsettings\.local\.json)$ ]]; then
               prohibited+=("$path")
               continue
             fi
 
-            if [[ "$path" =~ \.(bak|bacpac|mdf|ldf|db|db3|sqlite|sqlite3)$ ]]; then
+            if [[ "$normalized_path" =~ \.(bak|bacpac|mdf|ldf|db|db3|sqlite|sqlite3)$ ]]; then
               prohibited+=("$path")
             fi
           done < <(git ls-files)
