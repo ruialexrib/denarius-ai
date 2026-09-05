@@ -1,10 +1,54 @@
 @model HelpDetailViewModel
 @{ ViewData["Title"] = $"Ajuda · {Model.Title}"; }
 <link rel="stylesheet" href="~/css/help-details.css" asp-append-version="true" />
-<div class="page-header"><div><p class="eyebrow">Centro de ajuda</p><h1>@Model.Title</h1><p class="page-subtitle">@Model.Subtitle</p></div><div class="form-actions"><a class="button secondary" asp-action="Help">Voltar à ajuda</a><a class="button" asp-controller="@Model.Controller" asp-action="@Model.Action">@Model.ActionLabel</a></div></div>
-<section class="help-detail-grid">
-@foreach (var topic in Model.Sections) {
-<article class="panel help-detail-card"><div class="help-detail-heading"><span>?</span><h2>@topic.Title</h2></div><p class="help-section-description">@topic.Description</p><ol>@foreach (var item in topic.Items) { <li><span>@item</span></li> }</ol></article>
-}
-</section>
-<section class="panel help-tip"><span aria-hidden="true">✓</span><div><strong>Boa prática</strong><p>Confirme os dados apresentados antes de gravar ou alterar registos. Os resultados financeiros e as sugestões da IA dependem da informação introduzida.</p></div></section>
+<div class="page-header help-detail-header">
+    <div>
+        <p class="eyebrow">Centro de ajuda · @Model.Category</p>
+        <h1>@Model.Title</h1>
+        <p class="page-subtitle">@Model.Subtitle</p>
+    </div>
+    <div class="form-actions">
+        <a class="button secondary" asp-action="Help">Voltar à ajuda</a>
+        <a class="button" asp-controller="@Model.Controller" asp-action="@Model.Action">@Model.ActionLabel</a>
+    </div>
+</div>
+<div class="help-document-layout">
+    <aside class="panel help-toc" aria-label="Nesta página">
+        <p class="eyebrow">Nesta página</p>
+        <nav>
+        @foreach (var section in Model.Sections)
+        {
+            <a href="#@section.Id">@section.Title</a>
+        }
+        </nav>
+        <a class="help-toc-back" asp-action="Help">Ver todas as áreas</a>
+    </aside>
+    <main class="help-document">
+    @foreach (var topic in Model.Sections)
+    {
+        <article id="@topic.Id" class="panel help-detail-card">
+            <div class="help-detail-heading">
+                <span aria-hidden="true">@Model.Icon</span>
+                <div>
+                    <p>@Model.Category</p>
+                    <h2>@topic.Title</h2>
+                </div>
+            </div>
+            <p class="help-section-description">@topic.Description</p>
+            <ul class="help-document-list">
+            @foreach (var item in topic.Items)
+            {
+                <li><span>@item</span></li>
+            }
+            </ul>
+        </article>
+    }
+    <section class="panel help-tip">
+        <span aria-hidden="true">✓</span>
+        <div>
+            <strong>Boa prática</strong>
+            <p>Quando tiver dúvidas sobre um valor, confirme primeiro o período, o estado do registo e os dados de origem. Nas funcionalidades assistidas por IA, reveja sempre a proposta antes de confirmar.</p>
+        </div>
+    </section>
+    </main>
+</div>
