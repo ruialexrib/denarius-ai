@@ -46,7 +46,7 @@ public sealed class SavingsCertificateClipboardSuggestionServiceTests
     [Fact]
     public async Task SuggestAsyncParsesLocalizedAmountAndNormalizesConfidence()
     {
-        var llm = new StubLlm("""{"investmentDate":"2026-01-31","investmentValue":"1.234,56 €","series":"F","confidence":"medium"}""");
+        var llm = new StubLlm("""{"investmentDate":"2026-01-31","investmentValue":"1234,56 €","series":"F","confidence":"medium"}""");
         var service = new SavingsCertificateClipboardSuggestionService(llm, new StubSettings());
 
         var result = await service.SuggestAsync("certificado válido");
