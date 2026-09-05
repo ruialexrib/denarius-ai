@@ -61,6 +61,7 @@
                 .join(' '));
         });
 
+        axis.style.setProperty('--chart-points', definition.items.length);
         axis.replaceChildren(...definition.items.map(item => {
             const label = document.createElement('span');
             label.textContent = definition.axisLabel(item);
