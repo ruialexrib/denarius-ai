@@ -71,6 +71,8 @@ jobs:
               - 'Dockerfile'
               - 'docker-compose*.yml'
               - '.dockerignore'
+              - 'DenariusAI.slnx'
+              - 'tests/**/*.csproj'
               - 'Directory.Build.props'
               - 'Directory.Packages.props'
               - 'global.json'
