@@ -1,0 +1,27 @@
+name: Full Regression
+
+on:
+  schedule:
+    - cron: '17 3 * * 0'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  application-quality:
+    name: Application, database, containers, and tests
+    uses: ./.github/workflows/ci.yml
+
+  dependency-audit:
+    name: Dependency vulnerability audit
+    uses: ./.github/workflows/dependency-audit.yml
+
+  secret-scan:
+    name: Repository secret scan
+    uses: ./.github/workflows/secret-scan.yml
+
+# CodeQL remains in security.yml, which already runs weekly and on Pull Requests.
+# Keeping it there avoids paying for a duplicate scheduled analysis while this
+# workflow still exercises the remaining heavyweight security and runtime gates.
