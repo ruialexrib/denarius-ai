@@ -1,11 +1,13 @@
 @model LoadDemonstrationDataViewModel
 @{ ViewData["Title"] = "Carregar dados de demonstração"; }
+<link rel="stylesheet" href="~/css/data-forms.css" asp-append-version="true" />
 <div class="page-header"><div><p class="eyebrow">Definições · Operações globais</p><h1>Carregar demonstração</h1><p class="page-subtitle">Adicione o cenário de exemplo apenas a uma base financeira vazia.</p></div></div>
-<section class="panel narrow"><div class="panel-heading"><h2>Confirmar carregamento</h2><p>Esta operação cria contas, categorias, orçamentos, movimentos e Certificados de Aforro de demonstração.</p></div>
-<form asp-action="LoadDemonstrationData" method="post" class="form-stack" data-progress-message="A carregar os dados de demonstração…">
+<section class="data-editor"><div class="data-editor-grid"><div class="data-editor-main"><form asp-action="LoadDemonstrationData" method="post" class="form-stack" data-progress-message="A carregar os dados de demonstração…">
 <div asp-validation-summary="ModelOnly" class="validation-summary"></div>
 <label asp-for="Password"></label><input asp-for="Password" autocomplete="current-password" /><span asp-validation-for="Password" class="field-error"></span>
 <label asp-for="Confirmation"></label><input asp-for="Confirmation" autocomplete="off" placeholder="CARREGAR DEMONSTRAÇÃO" /><span asp-validation-for="Confirmation" class="field-error"></span>
 <p class="form-help">Escreva exatamente <strong>CARREGAR DEMONSTRAÇÃO</strong>.</p>
 <div class="form-actions"><button class="button" type="submit">Confirmar e carregar dados</button><a class="button secondary" asp-action="Index">Cancelar</a></div>
-</form></section>
+</form></div>
+<aside class="data-editor-context"><p class="eyebrow">Contexto</p><h2>Explorar com dados de exemplo</h2><p>O cenário de demonstração permite experimentar as principais áreas do Denarius AI sem ter de introduzir manualmente uma estrutura financeira inicial.</p><ul class="data-editor-context-list"><li><strong>Base financeira vazia</strong>Carregue a demonstração apenas quando ainda não existirem dados financeiros.</li><li><strong>Conteúdo incluído</strong>São criados dados de exemplo para contas, categorias, orçamentos, movimentos e Certificados de Aforro.</li><li><strong>Confirmação explícita</strong>É necessário indicar a palavra-passe atual e escrever exatamente CARREGAR DEMONSTRAÇÃO.</li><li><strong>Depois de explorar</strong>Os dados de demonstração podem ser removidos através da operação para reiniciar os dados financeiros.</li></ul></aside>
+</div></section>
