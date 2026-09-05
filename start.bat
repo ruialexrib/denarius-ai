@@ -9,6 +9,7 @@ if not defined CHECK_INTERVAL set "CHECK_INTERVAL=30"
 set "WEB_SERVICE=denarius-ai-web"
 set "MCP_SERVICE=denarius-ai-mcp"
 set "DEPLOYED_SHA="
+set "SYNCED_SHA="
 set "PENDING_SHA="
 set "REBUILD_WEB=0"
 set "REBUILD_MCP=0"
@@ -51,6 +52,8 @@ if errorlevel 1 goto startup_error
 call :wait_for_web
 if errorlevel 1 goto startup_error
 for /f %%i in ('git rev-parse HEAD') do set "DEPLOYED_SHA=%%i"
+set "SYNCED_SHA=!DEPLOYED_SHA!"
+call :show_deployment_summary
 
 :watch
 call :check_update
@@ -68,7 +71,7 @@ echo ============================================================
 echo Repository update detected. Analysing changed files...
 echo ============================================================
 
-set "OLD_SHA=!DEPLOYED_SHA!"
+set "OLD_SHA=!SYNCED_SHA!"
 set "NEW_SHA=!REMOTE_SHA!"
 set "PENDING_SHA=!NEW_SHA!"
 set "REBUILD_WEB=0"
@@ -85,7 +88,7 @@ if /i not "!LOCAL_SHA!"=="!NEW_SHA!" (
 
 if "!REBUILD_WEB!"=="0" if "!REBUILD_MCP!"=="0" (
     echo No container-impacting changes detected. No rebuild required.
-    set "DEPLOYED_SHA=!PENDING_SHA!"
+    set "SYNCED_SHA=!PENDING_SHA!"
     set "PENDING_SHA="
     timeout /t %CHECK_INTERVAL% /nobreak >nul
     goto watch
@@ -115,8 +118,10 @@ if "!REBUILD_MCP!"=="1" (
     )
 )
 
-set "DEPLOYED_SHA=!PENDING_SHA!"
+if "!REBUILD_WEB!"=="1" set "DEPLOYED_SHA=!PENDING_SHA!"
+set "SYNCED_SHA=!PENDING_SHA!"
 set "PENDING_SHA="
+if "!REBUILD_WEB!"=="1" call :show_deployment_summary
 echo Update complete. Monitoring for new commits...
 timeout /t %CHECK_INTERVAL% /nobreak >nul
 goto watch
@@ -170,8 +175,8 @@ exit /b 0
 git fetch --quiet origin %BRANCH%
 if errorlevel 1 exit /b 2
 for /f %%i in ('git rev-parse origin/%BRANCH%') do set "REMOTE_SHA=%%i"
-if not defined DEPLOYED_SHA for /f %%i in ('git rev-parse HEAD') do set "DEPLOYED_SHA=%%i"
-if /i not "!DEPLOYED_SHA!"=="!REMOTE_SHA!" exit /b 1
+if not defined SYNCED_SHA for /f %%i in ('git rev-parse HEAD') do set "SYNCED_SHA=%%i"
+if /i not "!SYNCED_SHA!"=="!REMOTE_SHA!" exit /b 1
 exit /b 0
 
 :ensure_running
@@ -206,6 +211,30 @@ for /l %%N in (1,1,30) do (
 echo ERROR: Denarius AI did not become healthy.
 docker compose logs --tail 50 %WEB_SERVICE%
 exit /b 1
+
+:show_deployment_summary
+if not defined DEPLOYED_SHA exit /b 0
+where powershell.exe >nul 2>&1
+if errorlevel 1 goto deployment_summary_fallback
+if not exist "%~dp0scripts\Get-DeploymentSummary.ps1" goto deployment_summary_fallback
+powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File "%~dp0scripts\Get-DeploymentSummary.ps1" -Commit "!DEPLOYED_SHA!" -RepositoryRoot "%CD%"
+if errorlevel 1 goto deployment_summary_fallback
+exit /b 0
+
+:deployment_summary_fallback
+set "DEPLOYED_VERSION="
+set "DEPLOYED_SHORT_SHA=!DEPLOYED_SHA:~0,7!"
+for /f "tokens=2 delims=<>" %%V in ('git show !DEPLOYED_SHA!:src/DenariusAI.Web/DenariusAI.Web.csproj 2^>nul ^| findstr /c:"<Version>"') do if not defined DEPLOYED_VERSION set "DEPLOYED_VERSION=%%V"
+if not defined DEPLOYED_VERSION for /f "tokens=2 delims=<>" %%V in ('git show !DEPLOYED_SHA!:Directory.Build.props 2^>nul ^| findstr /c:"<Version>"') do if not defined DEPLOYED_VERSION set "DEPLOYED_VERSION=%%V"
+if not defined DEPLOYED_VERSION set "DEPLOYED_VERSION=Not available"
+echo ============================================================
+echo Denarius AI deployment ready
+echo Version: !DEPLOYED_VERSION!
+echo Commit: !DEPLOYED_SHORT_SHA!
+echo PR: Not available
+echo Issue: Not available
+echo ============================================================
+exit /b 0
 
 :retry
 echo WARNING: Could not check GitHub. Retrying in %CHECK_INTERVAL% seconds...

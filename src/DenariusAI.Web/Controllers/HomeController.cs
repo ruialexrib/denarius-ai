@@ -62,9 +62,7 @@ public sealed class HomeController(
             && await dbContext.JournalEntries.AsNoTracking()
                 .AnyAsync(item => item.CreatedBy == "demo-seed", cancellationToken);
         var today = DateOnly.FromDateTime(DateTime.Today);
-        var reminders = user is null ? [] : await dbContext.Reminders.AsNoTracking()
-            .Where(item => item.EventDate.AddDays(-item.NoticeDays) <= today
-                && !item.Acknowledgements.Any(value => value.UserId == user.Id))
+        var reminders = user is null ? [] : await dbContext.ActiveAlerts(user.Id, today)
             .OrderBy(item => item.EventDate).Take(5)
             .Select(item => new DashboardReminderViewModel(item.Id, item.Text, item.EventDate, item.EventDate.DayNumber - today.DayNumber))
             .ToListAsync(cancellationToken);
