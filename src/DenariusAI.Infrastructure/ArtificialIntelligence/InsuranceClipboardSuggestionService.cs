@@ -19,7 +19,7 @@ public sealed class InsuranceClipboardSuggestionService(ILLMService llmService, 
     /// <inheritdoc />
     public async Task<InsuranceClipboardSuggestionDto> SuggestAsync(string text, CancellationToken cancellationToken = default)
     {
-        if (!IsAvailable) throw new InvalidOperationException("A Mistral não está configurada.");
+        if (!IsAvailable) throw new InvalidOperationException("O fornecedor de IA não está configurado.");
         var normalizedText = text?.Trim() ?? string.Empty;
         if (normalizedText.Length is 0 or > MaximumCharacters) throw new ArgumentException($"O texto deve ter entre 1 e {MaximumCharacters:N0} caracteres.", nameof(text));
         var settings = await settingsService.GetAsync(cancellationToken);
@@ -51,7 +51,7 @@ public sealed class InsuranceClipboardSuggestionService(ILLMService llmService, 
             if (firstLine >= 0 && closing > firstLine) normalized = normalized[(firstLine + 1)..closing].Trim();
         }
         try { return JsonSerializer.Deserialize<SuggestionEnvelope>(normalized, JsonOptions) ?? throw new JsonException(); }
-        catch (JsonException exception) { throw new InvalidOperationException("A Mistral devolveu uma sugestão num formato inválido. Tente novamente.", exception); }
+        catch (JsonException exception) { throw new InvalidOperationException("O modelo de IA devolveu uma sugestão num formato inválido. Tente novamente.", exception); }
     }
 
     /// <summary>Checks whether the model omitted every editable field.</summary>

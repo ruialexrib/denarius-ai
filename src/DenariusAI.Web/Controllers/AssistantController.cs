@@ -8,19 +8,16 @@ namespace DenariusAI.Web.Controllers;
 /// <summary>
 /// Coordinates AI assistant interactions and intelligent financial report generation.
 /// </summary>
-public sealed class AssistantController(IAssistantService assistantService, IApplicationSettingsService settingsService, ILogger<AssistantController> logger) : Controller
+public sealed class AssistantController(IAssistantService assistantService, ILLMService llmService, ILogger<AssistantController> logger) : Controller
 {
     /// <summary>
     /// Displays the assistant page with availability status and model information.
     /// </summary>
-    /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>The assistant view.</returns>
     [HttpGet]
-    public async Task<IActionResult> Index(CancellationToken cancellationToken)
+    public IActionResult Index()
     {
-        var settings = await settingsService.GetAsync(cancellationToken);
-        var model = string.Equals(settings.AiProvider, "Ollama", StringComparison.OrdinalIgnoreCase) ? settings.OllamaModel : settings.MistralModel;
-        return View(new AssistantPageViewModel { IsAvailable = assistantService.IsAvailable, Model = model });
+        return View(new AssistantPageViewModel { IsAvailable = assistantService.IsAvailable, Model = llmService.Model });
     }
 
     /// <summary>

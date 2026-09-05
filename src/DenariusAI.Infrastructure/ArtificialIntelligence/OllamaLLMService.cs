@@ -7,8 +7,23 @@ using Microsoft.Extensions.Logging;
 namespace DenariusAI.Infrastructure.ArtificialIntelligence;
 
 /// <summary>Calls a local or remote Ollama server using its non-streaming chat API.</summary>
-public sealed class OllamaLLMService(HttpClient httpClient, IApplicationSettingsService settingsService, ILogger<OllamaLLMService> logger)
+public sealed class OllamaLLMService(HttpClient httpClient, IApplicationSettingsService settingsService, ILogger<OllamaLLMService> logger) : ILLMProvider
 {
+    /// <summary>Gets the stable provider registration identifier.</summary>
+    public string Id => "Ollama";
+
+    /// <summary>Resolves the effective model and validates provider configuration.</summary>
+    /// <param name="settings">Persisted application settings.</param>
+    /// <returns>The provider display name, model and readiness.</returns>
+    public LlmProviderStatus GetStatus(IReadOnlyDictionary<string, string> settings)
+    {
+        var model = settings.GetValueOrDefault("Ollama.Model", "llama3.2");
+        var baseUrl = settings.GetValueOrDefault("Ollama.BaseUrl", "http://localhost:11434");
+        var configured = IsConfigured && !string.IsNullOrWhiteSpace(model)
+            && Uri.TryCreate(baseUrl, UriKind.Absolute, out var uri) && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps);
+        return new("Ollama", model, configured);
+    }
+
     /// <summary>Gets whether Ollama can be used without an API credential.</summary>
     public bool IsConfigured => true;
 
@@ -35,7 +50,7 @@ public sealed class OllamaLLMService(HttpClient httpClient, IApplicationSettings
         var endpoint = new Uri(new Uri(settings.OllamaBaseUrl.TrimEnd('/') + "/"), "api/chat");
         using var response = await httpClient.PostAsJsonAsync(endpoint,
             new OllamaRequest(settings.OllamaModel, messages.Select(x => new OllamaMessage(x.Role, x.Content)).ToArray(), false,
-                new OllamaOptions(settings.MistralTemperature, maxTokens)), cancellationToken);
+                new OllamaOptions(settings.AiTemperature, maxTokens)), cancellationToken);
         if (!response.IsSuccessStatusCode)
             throw new HttpRequestException($"O Ollama devolveu o estado HTTP {(int)response.StatusCode}.", null, response.StatusCode);
 
