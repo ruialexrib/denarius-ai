@@ -7,6 +7,9 @@ namespace DenariusAI.Domain.Entities;
 /// </summary>
 public sealed class Reminder : AuditableEntity
 {
+    /// <summary>
+    /// Initializes an empty reminder instance for persistence materialization.
+    /// </summary>
     private Reminder() { }
 
     /// <summary>
@@ -32,12 +35,16 @@ public sealed class Reminder : AuditableEntity
     /// </summary>
     public int NoticeDays { get; private set; }
 
+    /// <summary>Gets the identifier of the linked warranty, when applicable.</summary>
     public Guid? WarrantyId { get; private set; }
 
+    /// <summary>Gets the linked warranty, when this reminder belongs to a warranty.</summary>
     public Warranty? Warranty { get; private set; }
 
+    /// <summary>Gets the identifier of the linked savings certificate, when applicable.</summary>
     public Guid? SavingsCertificateId { get; private set; }
 
+    /// <summary>Gets the linked savings certificate, when this reminder belongs to a certificate.</summary>
     public SavingsCertificate? SavingsCertificate { get; private set; }
 
     /// <summary>
@@ -60,8 +67,12 @@ public sealed class Reminder : AuditableEntity
         Text = text.Trim(); EventDate = eventDate; NoticeDays = noticeDays;
     }
 
+    /// <summary>Links this reminder to a warranty.</summary>
+    /// <param name="warrantyId">The warranty identifier.</param>
     public void LinkToWarranty(Guid warrantyId) => WarrantyId = warrantyId;
 
+    /// <summary>Links this reminder to a savings certificate.</summary>
+    /// <param name="savingsCertificateId">The savings certificate identifier.</param>
     public void LinkToSavingsCertificate(Guid savingsCertificateId) => SavingsCertificateId = savingsCertificateId;
 }
 

@@ -93,5 +93,8 @@ public sealed class InsurancePolicy : AuditableEntity
     /// <summary>Reactivates a previously archived or cancelled policy.</summary>
     public void Activate() => Status = InsurancePolicyStatus.Active;
 
+    /// <summary>Trims an optional text value and maps blank input to <see langword="null"/>.</summary>
+    /// <param name="value">The optional value to normalize.</param>
+    /// <returns>The trimmed value, or <see langword="null"/> when the input is blank.</returns>
     private static string? Normalize(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 }
