@@ -31,7 +31,8 @@ public sealed class ApplicationSettingsService(DenariusDbContext dbContext, IOpt
             Get(values, "MarketData.Provider", "AlphaVantage"), Get(values, "MarketData.BaseUrl", "https://www.alphavantage.co/query"),
             UpgradeDefault(Get(values, "Prompts.InsuranceClipboard", ApplicationSettingsDefaults.InsuranceClipboardPrompt), ApplicationSettingsDefaults.LegacyInsuranceClipboardPrompt, ApplicationSettingsDefaults.InsuranceClipboardPrompt),
             Get(values, "Prompts.SavingsCertificateClipboard", ApplicationSettingsDefaults.SavingsCertificateClipboardPrompt),
-            Get(values, "AI.Provider", "Mistral"), Get(values, "Ollama.Model", "llama3.2"), Get(values, "Ollama.BaseUrl", "http://localhost:11434"));
+            Get(values, "AI.Provider", "Mistral"), Get(values, "Ollama.Model", "llama3.2"), Get(values, "Ollama.BaseUrl", "http://localhost:11434"),
+            GetInt(values, "AI.MaxInputBytes", 12000), Get(values, "Prompts.ContextGuidance", ApplicationSettingsDefaults.AiContextGuidancePrompt));
     }
 
     /// <summary>Validates and persists settings without changing provider credentials.</summary>
@@ -45,6 +46,8 @@ public sealed class ApplicationSettingsService(DenariusDbContext dbContext, IOpt
         Validate(settings);
         var values = new Dictionary<string, string>
         {
+            ["AI.MaxInputBytes"] = settings.AiMaxInputBytes.ToString(CultureInfo.InvariantCulture),
+            ["Prompts.ContextGuidance"] = settings.AiContextGuidancePrompt.Trim(),
             ["AI.Provider"] = settings.AiProvider.Trim(), ["Ollama.Model"] = settings.OllamaModel.Trim(), ["Ollama.BaseUrl"] = settings.OllamaBaseUrl.Trim(),
             ["Mistral.Model"] = settings.MistralModel.Trim(), ["Mistral.BaseUrl"] = settings.MistralBaseUrl.Trim(), ["AI.MaxTokens"] = settings.AiMaxTokens.ToString(CultureInfo.InvariantCulture), ["AI.Temperature"] = settings.AiTemperature.ToString(CultureInfo.InvariantCulture),
             ["Prompts.Assistant"] = settings.AssistantSystemPrompt.Trim(), ["Assistant.ContextMonths"] = settings.AssistantContextMonths.ToString(CultureInfo.InvariantCulture), ["Assistant.MaxTransactions"] = settings.AssistantMaxTransactions.ToString(CultureInfo.InvariantCulture), ["Assistant.HistoryMessages"] = settings.AssistantHistoryMessages.ToString(CultureInfo.InvariantCulture),
@@ -62,6 +65,8 @@ public sealed class ApplicationSettingsService(DenariusDbContext dbContext, IOpt
     /// <exception cref="ArgumentException">A setting is invalid.</exception>
     private static void Validate(ApplicationSettingsDto value)
     {
+        if (value.AiMaxInputBytes is < 4000 or > 64000) throw new ArgumentException("O limite de contexto deve estar entre 4000 e 64000 bytes.");
+        if (string.IsNullOrWhiteSpace(value.AiContextGuidancePrompt) || value.AiContextGuidancePrompt.Length > 10000) throw new ArgumentException("O prompt de contexto deve ter entre 1 e 10000 caracteres.");
         if (!string.Equals(value.AiProvider, "Mistral", StringComparison.OrdinalIgnoreCase) && !string.Equals(value.AiProvider, "Ollama", StringComparison.OrdinalIgnoreCase)) throw new ArgumentException("O fornecedor de IA deve ser Mistral ou Ollama.");
         if (string.IsNullOrWhiteSpace(value.MistralModel) || string.IsNullOrWhiteSpace(value.OllamaModel)) throw new ArgumentException("Os modelos de IA são obrigatórios.");
         if (!Uri.TryCreate(value.MistralBaseUrl, UriKind.Absolute, out var mistralUri) || mistralUri.Scheme != Uri.UriSchemeHttps) throw new ArgumentException("O endereço da Mistral deve ser um URL HTTPS válido.");

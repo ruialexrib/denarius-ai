@@ -24,6 +24,8 @@ namespace DenariusAI.Application.DTOs;
 /// <param name="AiProvider">Selected AI provider. Supported values are <c>Mistral</c> and <c>Ollama</c>.</param>
 /// <param name="OllamaModel">Ollama model identifier sent to the chat API.</param>
 /// <param name="OllamaBaseUrl">Base URL of the local or remote Ollama server.</param>
+/// <param name="AiMaxInputBytes">Maximum serialized chat message bytes for assistant and movement suggestions.</param>
+/// <param name="AiContextGuidancePrompt">Instructions for interpreting partial financial context.</param>
 public sealed record ApplicationSettingsDto(
     string MistralModel,
     string MistralBaseUrl,
@@ -47,4 +49,6 @@ public sealed record ApplicationSettingsDto(
     string SavingsCertificateClipboardPrompt = Application.Configuration.ApplicationSettingsDefaults.SavingsCertificateClipboardPrompt,
     string AiProvider = "Mistral",
     string OllamaModel = "llama3.2",
-    string OllamaBaseUrl = "http://localhost:11434");
+    string OllamaBaseUrl = "http://localhost:11434",
+    int AiMaxInputBytes = 12000,
+    string AiContextGuidancePrompt = Application.Configuration.ApplicationSettingsDefaults.AiContextGuidancePrompt);

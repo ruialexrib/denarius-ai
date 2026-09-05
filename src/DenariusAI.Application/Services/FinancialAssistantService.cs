@@ -1,4 +1,4 @@
-using System.Text.Json;
+using System.Net;
 using DenariusAI.Application.Abstractions.Persistence;
 using DenariusAI.Application.Abstractions.Services;
 using DenariusAI.Application.DTOs;
@@ -51,40 +51,102 @@ public sealed class FinancialAssistantService(
         var today = DateOnly.FromDateTime(DateTime.Today);
         var contextStart = today.AddMonths(-(settings.AssistantContextMonths - 1));
         var dataFrom = new DateOnly(contextStart.Year, contextStart.Month, 1);
-        var accounts = await accountService.ListAsync(cancellationToken: cancellationToken);
-        var allTransactions = await journalEntryService.ListAsync(cancellationToken);
-        var transactions = allTransactions.Where(item => item.Status == JournalEntryStatus.Active && item.Date >= dataFrom && item.Date <= today).OrderByDescending(item => item.Date).Take(settings.AssistantMaxTransactions).ToList();
-        var dashboard = await dashboardService.GetAsync(today.Year, today.Month, cancellationToken);
-        var budget = await budgetService.GetExecutionAsync(today.Year, today.Month, cancellationToken);
-        var analytics = await analyticsService.GetAsync(new(new DateOnly(today.Year, 1, 1), today), cancellationToken);
-        var unreconciled = await reconciliationService.ListAsync(from: dataFrom, to: today, status: ReconciliationStatus.Unreconciled, cancellationToken: cancellationToken);
-        var savingsCertificates = savingsRepository is null ? [] : await savingsRepository.ListAsync(cancellationToken);
-
-        var context = JsonSerializer.Serialize(new
+        var greeting = IsGreeting(question);
+        var history = greeting ? [] : request.History.TakeLast(Math.Min(settings.AssistantHistoryMessages, 4))
+            .Where(item => (item.Role is "user" or "assistant") && !string.IsNullOrWhiteSpace(item.Content))
+            .Select(item => new LlmMessageDto(item.Role, item.Content)).ToList();
+        var query = AiContextBudget.Normalize(question + " " + string.Join(" ", history.Where(item => item.Role == "user").Select(item => AiContextBudget.Shorten(item.Content, 1000))));
+        var facts = new Dictionary<string, object>();
+        var samples = new Dictionary<string, IReadOnlyList<object>>();
+        if (!greeting)
         {
-            generatedAt = today,
-            currency = "EUR",
-            period = new { from = dataFrom, to = today },
-            accounts,
-            currentMonth = dashboard,
-            currentBudget = budget,
-            currentYearAnalytics = analytics,
-            recentTransactions = transactions,
-            unreconciledTransactions = unreconciled
-            , savingsCertificates
-        });
+            var dashboard = await dashboardService.GetAsync(today.Year, today.Month, cancellationToken);
+            facts["currentMonth"] = new { dashboard.Year, dashboard.Month, dashboard.Income, dashboard.Expenses,
+                dashboard.MonthlyResult, dashboard.LiquidBalance, dashboard.TotalAssets, dashboard.SavingsAndInvestments,
+                dashboard.Budgeted, dashboard.BudgetActual, dashboard.BudgetAvailable, dashboard.BudgetExecution, dashboard.UnreconciledMovements };
+            if (ContainsAny(query, "certificado", "aforro"))
+                facts["savingsCertificateTotals"] = new { dashboard.SavingsCertificatesValue, dashboard.SavingsCertificatesYield,
+                    dashboard.MaturedSavingsCertificates, dashboard.MaturedSavingsCertificatesValue,
+                    dashboard.SavingsCertificatesFutureNetInterest, dashboard.SavingsCertificatesFutureValue };
+            if (ContainsAny(query, "conta", "saldo", "patrimonio"))
+                samples["accounts"] = (await accountService.ListAsync(cancellationToken: cancellationToken))
+                    .Select(item => (object)new { item.Name, type = item.AccountType.ToString(), item.Balance, item.Currency }).ToList();
+            if (ContainsAny(query, "movimento", "compra", "pagamento", "transac", "gaste", "despes"))
+                samples["recentTransactions"] = (await journalEntryService.ListAsync(cancellationToken))
+                    .Where(item => item.Status == JournalEntryStatus.Active && item.Date >= dataFrom && item.Date <= today)
+                    .OrderByDescending(item => AiContextBudget.Relevance(item.Description, query)).ThenByDescending(item => item.Date)
+                    .Select(item => (object)new { item.Date, description = AiContextBudget.Shorten(item.Description, 160), item.TotalDebit, item.TotalCredit, item.MovementType }).ToList();
+            if (ContainsAny(query, "orcament", "categoria"))
+                samples["currentBudget"] = (await budgetService.GetExecutionAsync(today.Year, today.Month, cancellationToken))
+                    .Where(item => item.Budgeted != 0 || item.Actual != 0).Cast<object>().ToList();
+            if (ContainsAny(query, "ano", "tendencia", "evolu", "taxa", "poupan", "maiores"))
+            {
+                var analytics = await analyticsService.GetAsync(new(new DateOnly(today.Year, 1, 1), today), cancellationToken);
+                facts["currentYearAnalytics"] = new { from = new DateOnly(today.Year, 1, 1), to = today,
+                    analytics.Income, analytics.Expenses, analytics.Savings, analytics.SavingsRate, analytics.NetWorth };
+                samples["currentYearCategories"] = analytics.Categories.OrderByDescending(item => item.Amount)
+                    .Select(item => (object)new { item.Name, item.Amount }).ToList();
+                samples["currentYearTrend"] = analytics.Trend.Cast<object>().ToList();
+            }
+            if (ContainsAny(query, "reconcili"))
+                samples["unreconciledTransactions"] = (await reconciliationService.ListAsync(from: dataFrom, to: today,
+                    status: ReconciliationStatus.Unreconciled, cancellationToken: cancellationToken))
+                    .Select(item => (object)new { item.Date, description = AiContextBudget.Shorten(item.Description, 160), item.Debit, item.Credit }).ToList();
+            if (savingsRepository is not null && ContainsAny(query, "certificado", "aforro"))
+                samples["savingsCertificates"] = (await savingsRepository.ListAsync(cancellationToken)).Cast<object>().ToList();
+        }
 
-        var messages = new List<LlmMessageDto>
+        var prompt = settings.AssistantSystemPrompt + "\n\n" + settings.AiContextGuidancePrompt;
+        var limit = Math.Min(settings.AssistantMaxTransactions, 12);
+        var previousBytes = int.MaxValue;
+        for (var attempt = 0; attempt < 2; attempt++)
         {
-            new("system", settings.AssistantSystemPrompt),
-            new("user", $"FINANCIAL_CONTEXT_JSON:\n{context}")
-        };
-        messages.AddRange(request.History.TakeLast(settings.AssistantHistoryMessages)
-            .Where(item => item.Role is "user" or "assistant" && !string.IsNullOrWhiteSpace(item.Content))
-            .Select(item => new LlmMessageDto(item.Role, item.Content.Length > 2000 ? item.Content[..2000] : item.Content)));
-        messages.Add(new("user", question));
-
-        var completion = await llmService.CompleteAsync(messages, cancellationToken);
-        return new(completion.Content, completion.Model, dataFrom, today, transactions.Count);
+            var maxBytes = attempt == 0 ? settings.AiMaxInputBytes : settings.AiMaxInputBytes / 2;
+            List<LlmMessageDto>? messages;
+            do
+            {
+                var context = greeting ? null : "FINANCIAL_CONTEXT_JSON:\n" + AiContextBudget.Serialize(new
+                {
+                    generatedAt = today, currency = "EUR", transactionPeriod = new { from = dataFrom, to = today },
+                    facts,
+                    samples = samples.ToDictionary(item => item.Key, item => new { available = item.Value.Count,
+                        included = Math.Min(item.Value.Count, limit), partial = item.Value.Count > limit, rows = item.Value.Take(limit) })
+                });
+                messages = AiContextBudget.Build(prompt, context, attempt == 0 ? history : [], question, maxBytes);
+                if (messages is not null || limit == 0) break;
+                limit /= 2;
+            } while (true);
+            if (messages is null)
+                return new("O contexto excede o limite do pedido. Reduza os prompts nas Definições ou ajuste o limite de contexto para o fornecedor utilizado.", Model, dataFrom, today, 0);
+            var requestBytes = AiContextBudget.Measure(messages);
+            if (attempt > 0 && requestBytes >= previousBytes)
+                return new("O fornecedor recusou o pedido por exceder o limite de contexto. Reduza os prompts nas Definições e tente novamente.", Model, dataFrom, today, 0);
+            previousBytes = requestBytes;
+            try
+            {
+                var completion = await llmService.CompleteAsync(messages, Math.Min(settings.AiMaxTokens, 1024), cancellationToken);
+                return new(completion.Content, completion.Model, dataFrom, today,
+                    samples.TryGetValue("recentTransactions", out var transactions) ? Math.Min(transactions.Count, limit) : 0);
+            }
+            catch (HttpRequestException exception) when (exception.StatusCode == HttpStatusCode.RequestEntityTooLarge)
+            {
+                if (attempt == 1)
+                    return new("O fornecedor recusou o pedido por exceder o limite de contexto. Reduza os prompts ou o limite de contexto nas Definições e tente novamente.", Model, dataFrom, today, 0);
+                limit /= 2;
+            }
+        }
+        throw new InvalidOperationException("Não foi possível preparar o contexto de IA.");
     }
+
+    /// <summary>Recognizes standalone greetings without treating a financial question as a greeting.</summary>
+    /// <param name="question">The current question.</param>
+    /// <returns>True for an exact greeting or acknowledgement.</returns>
+    private static bool IsGreeting(string question) => AiContextBudget.Normalize(question).Trim(' ', '.', '!', '?')
+        is "ola" or "bom dia" or "boa tarde" or "boa noite" or "obrigado" or "obrigada" or "oi" or "hello" or "hi";
+
+    /// <summary>Checks whether a question requests one of the supported context areas.</summary>
+    /// <param name="query">The normalized query.</param>
+    /// <param name="terms">The relevant word stems.</param>
+    /// <returns>True when at least one term occurs.</returns>
+    private static bool ContainsAny(string query, params string[] terms) => terms.Any(term => query.Contains(term, StringComparison.Ordinal));
 }
