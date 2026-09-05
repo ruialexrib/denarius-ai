@@ -1,8 +1,53 @@
 @using System.Security.Claims
 @using Microsoft.EntityFrameworkCore
+@using DenariusAI.Web.ViewModels
+@using DenariusAI.Infrastructure.Persistence
 @inject DenariusAI.Infrastructure.Persistence.DenariusDbContext ReminderDb
-@{ var reminderUserId = User.FindFirstValue(ClaimTypes.NameIdentifier); var reminderToday = DateOnly.FromDateTime(DateTime.Today); var reminderCount = string.IsNullOrWhiteSpace(reminderUserId) ? 0 : await ReminderDb.Reminders.AsNoTracking().CountAsync(item => item.EventDate.AddDays(-item.NoticeDays) <= reminderToday && !item.Acknowledgements.Any(value => value.UserId == reminderUserId)); }
-@if (reminderCount > 0)
-{
-<a class="alert-button has-alerts top-with-tooltip" asp-controller="Reminders" asp-action="Index" aria-label="Lembretes: @reminderCount alertas ativos"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 2.8 20h18.4L12 3Z" /><path d="M12 8v6M12 17.2v.1" /></svg><span class="alert-count">@(reminderCount > 99 ? "99+" : reminderCount)</span><span class="top-tooltip" role="tooltip"><strong>Lembretes</strong><small>@reminderCount @(reminderCount == 1 ? "aviso ativo" : "avisos ativos") para consultar</small></span></a>
+@{
+    const int reminderPreviewLimit = 6;
+    var reminderUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+    var reminderToday = DateOnly.FromDateTime(DateTime.Today);
+    var reminderCount = 0;
+    var reminderPreview = new List<DashboardReminderViewModel>();
+    if (!string.IsNullOrWhiteSpace(reminderUserId))
+    {
+        var activeAlerts = ReminderDb.ActiveAlerts(reminderUserId, reminderToday);
+        reminderCount = await activeAlerts.CountAsync(Context.RequestAborted);
+        reminderPreview = await activeAlerts
+            .OrderBy(item => item.EventDate)
+            .Take(reminderPreviewLimit)
+            .Select(item => new DashboardReminderViewModel(item.Id, item.Text, item.EventDate, item.EventDate.DayNumber - reminderToday.DayNumber))
+            .ToListAsync(Context.RequestAborted);
+    }
+    var reminderHiddenCount = reminderCount - reminderPreview.Count;
 }
+<details class="reminder-menu top-with-tooltip">
+<summary class="alert-button @(reminderCount > 0 ? "has-alerts" : null)" aria-label="Lembretes: @reminderCount alertas ativos"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 2.8 20h18.4L12 3Z" /><path d="M12 8v6M12 17.2v.1" /></svg>@if (reminderCount > 0)
+{
+<span class="alert-count">@(reminderCount > 99 ? "99+" : reminderCount)</span>
+}<span class="top-tooltip" role="tooltip"><strong>Lembretes</strong><small>@reminderCount @(reminderCount == 1 ? "aviso ativo" : "avisos ativos") para consultar</small></span></summary>
+<div class="reminder-dropdown">
+<div class="reminder-dropdown-heading"><strong>Lembretes</strong><small>@(reminderCount == 0 ? "Sem avisos pendentes" : $"{reminderCount} {(reminderCount == 1 ? "aviso ativo" : "avisos ativos")}")</small></div>
+@if (reminderPreview.Count == 0)
+{
+<p class="reminder-dropdown-empty">Não existem lembretes a aguardar confirmação de momento.</p>
+}
+else
+{
+<ul class="reminder-dropdown-list">
+@foreach (var reminder in reminderPreview)
+{
+<li class="reminder-dropdown-item @(reminder.DaysRemaining < 0 ? "overdue" : reminder.DaysRemaining == 0 ? "today" : null)">
+<div><strong>@reminder.Text</strong><small>@reminder.EventDate.ToString("dd/MM/yyyy") · @(reminder.DaysRemaining < 0 ? $"atrasado {-reminder.DaysRemaining} dias" : reminder.DaysRemaining == 0 ? "hoje" : $"faltam {reminder.DaysRemaining} dias")</small></div>
+<form asp-controller="Reminders" asp-action="Acknowledge" method="post"><input type="hidden" name="id" value="@reminder.Id" /><input type="hidden" name="returnUrl" value="@Context.Request.Path@Context.Request.QueryString" /><button class="button compact secondary" type="submit">Confirmar</button></form>
+</li>
+}
+</ul>
+@if (reminderHiddenCount > 0)
+{
+<p class="reminder-dropdown-more">+ @reminderHiddenCount @(reminderHiddenCount == 1 ? "aviso adicional" : "avisos adicionais")</p>
+}
+}
+<a class="reminder-dropdown-footer" asp-controller="Reminders" asp-action="Index">Ver todos os lembretes</a>
+</div>
+</details>
