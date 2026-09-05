@@ -13,6 +13,8 @@ jobs:
   application-quality:
     name: Application, database, containers, and tests
     uses: ./.github/workflows/ci.yml
+    with:
+      run_all: true
 
   dependency-audit:
     name: Dependency vulnerability audit
