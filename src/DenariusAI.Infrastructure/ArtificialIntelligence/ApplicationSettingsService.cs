@@ -11,7 +11,9 @@ namespace DenariusAI.Infrastructure.ArtificialIntelligence;
 /// <summary>Reads and updates effective application settings with legacy-key compatibility.</summary>
 /// <param name="dbContext">The application settings store.</param>
 /// <param name="mistralOptions">Installation defaults retained for existing deployments.</param>
-public sealed class ApplicationSettingsService(DenariusDbContext dbContext, IOptions<MistralOptions> mistralOptions) : IApplicationSettingsService
+/// <param name="groqCloudOptions">Optional GroqCloud installation defaults.</param>
+public sealed class ApplicationSettingsService(DenariusDbContext dbContext, IOptions<MistralOptions> mistralOptions,
+    IOptions<GroqCloudOptions>? groqCloudOptions = null) : IApplicationSettingsService
 {
     /// <summary>Loads effective settings, preferring provider-neutral generation keys.</summary>
     /// <param name="cancellationToken">Token used to cancel the database operation.</param>
@@ -20,6 +22,7 @@ public sealed class ApplicationSettingsService(DenariusDbContext dbContext, IOpt
     {
         var values = await dbContext.ApplicationSettings.AsNoTracking().ToDictionaryAsync(item => item.Key, item => item.Value, cancellationToken);
         var defaults = mistralOptions.Value;
+        var groqDefaults = groqCloudOptions?.Value ?? new GroqCloudOptions();
         return new(
             Get(values, "Mistral.Model", defaults.Model), Get(values, "Mistral.BaseUrl", defaults.BaseUrl), GetInt(values, "AI.MaxTokens", GetInt(values, "Mistral.MaxTokens", defaults.MaxTokens)), GetDouble(values, "AI.Temperature", GetDouble(values, "Mistral.Temperature", defaults.Temperature)),
             Get(values, "Prompts.Assistant", ApplicationSettingsDefaults.AssistantPrompt), GetInt(values, "Assistant.ContextMonths", 12), GetInt(values, "Assistant.MaxTransactions", 200), GetInt(values, "Assistant.HistoryMessages", 10),
@@ -32,7 +35,9 @@ public sealed class ApplicationSettingsService(DenariusDbContext dbContext, IOpt
             UpgradeDefault(Get(values, "Prompts.InsuranceClipboard", ApplicationSettingsDefaults.InsuranceClipboardPrompt), ApplicationSettingsDefaults.LegacyInsuranceClipboardPrompt, ApplicationSettingsDefaults.InsuranceClipboardPrompt),
             Get(values, "Prompts.SavingsCertificateClipboard", ApplicationSettingsDefaults.SavingsCertificateClipboardPrompt),
             Get(values, "AI.Provider", "Mistral"), Get(values, "Ollama.Model", "llama3.2"), Get(values, "Ollama.BaseUrl", "http://localhost:11434"),
-            GetInt(values, "AI.MaxInputBytes", 12000), Get(values, "Prompts.ContextGuidance", ApplicationSettingsDefaults.AiContextGuidancePrompt));
+            GetInt(values, "AI.MaxInputBytes", 12000), Get(values, "Prompts.ContextGuidance", ApplicationSettingsDefaults.AiContextGuidancePrompt),
+            Get(values, "GroqCloud.Model", groqDefaults.Model), Get(values, "GroqCloud.BaseUrl", groqDefaults.BaseUrl),
+            Get(values, "GroqCloud.ReasoningEffort", groqDefaults.ReasoningEffort));
     }
 
     /// <summary>Validates and persists settings without changing provider credentials.</summary>
@@ -46,6 +51,8 @@ public sealed class ApplicationSettingsService(DenariusDbContext dbContext, IOpt
         Validate(settings);
         var values = new Dictionary<string, string>
         {
+            ["GroqCloud.Model"] = settings.GroqCloudModel.Trim(), ["GroqCloud.BaseUrl"] = settings.GroqCloudBaseUrl.Trim(),
+            ["GroqCloud.ReasoningEffort"] = settings.GroqCloudReasoningEffort,
             ["AI.MaxInputBytes"] = settings.AiMaxInputBytes.ToString(CultureInfo.InvariantCulture),
             ["Prompts.ContextGuidance"] = settings.AiContextGuidancePrompt.Trim(),
             ["AI.Provider"] = settings.AiProvider.Trim(), ["Ollama.Model"] = settings.OllamaModel.Trim(), ["Ollama.BaseUrl"] = settings.OllamaBaseUrl.Trim(),
@@ -67,7 +74,10 @@ public sealed class ApplicationSettingsService(DenariusDbContext dbContext, IOpt
     {
         if (value.AiMaxInputBytes is < 4000 or > 64000) throw new ArgumentException("O limite de contexto deve estar entre 4000 e 64000 bytes.");
         if (string.IsNullOrWhiteSpace(value.AiContextGuidancePrompt) || value.AiContextGuidancePrompt.Length > 10000) throw new ArgumentException("O prompt de contexto deve ter entre 1 e 10000 caracteres.");
-        if (!string.Equals(value.AiProvider, "Mistral", StringComparison.OrdinalIgnoreCase) && !string.Equals(value.AiProvider, "Ollama", StringComparison.OrdinalIgnoreCase)) throw new ArgumentException("O fornecedor de IA deve ser Mistral ou Ollama.");
+        if (!new[] { "Mistral", "Ollama", "GroqCloud" }.Contains(value.AiProvider.Trim(), StringComparer.OrdinalIgnoreCase)) throw new ArgumentException("O fornecedor de IA deve ser Mistral, Ollama ou GroqCloud.");
+        if (string.IsNullOrWhiteSpace(value.GroqCloudModel) || value.GroqCloudModel.Length > 100) throw new ArgumentException("O modelo GroqCloud é obrigatório e deve ter até 100 caracteres.");
+        if (!GroqCloudLLMService.IsValidBaseUrl(value.GroqCloudBaseUrl)) throw new ArgumentException("O endereço do GroqCloud deve ser um URL HTTPS válido, sem credenciais, parâmetros ou fragmentos.");
+        if (!GroqCloudLLMService.IsValidReasoningEffort(value.GroqCloudReasoningEffort)) throw new ArgumentException("O esforço de raciocínio do GroqCloud deve ser low, medium ou high.");
         if (string.IsNullOrWhiteSpace(value.MistralModel) || string.IsNullOrWhiteSpace(value.OllamaModel)) throw new ArgumentException("Os modelos de IA são obrigatórios.");
         if (!Uri.TryCreate(value.MistralBaseUrl, UriKind.Absolute, out var mistralUri) || mistralUri.Scheme != Uri.UriSchemeHttps) throw new ArgumentException("O endereço da Mistral deve ser um URL HTTPS válido.");
         if (!Uri.TryCreate(value.OllamaBaseUrl, UriKind.Absolute, out var ollamaUri) || (ollamaUri.Scheme != Uri.UriSchemeHttp && ollamaUri.Scheme != Uri.UriSchemeHttps)) throw new ArgumentException("O endereço do Ollama deve ser um URL HTTP ou HTTPS válido.");
