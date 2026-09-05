@@ -3,8 +3,8 @@ namespace DenariusAI.Application.DTOs;
 /// <summary>Represents the application settings configuration.</summary>
 /// <param name="MistralModel">Mistral model identifier.</param>
 /// <param name="MistralBaseUrl">Base URL of the Mistral API.</param>
-/// <param name="MistralMaxTokens">Maximum number of generated tokens used by the configured AI provider.</param>
-/// <param name="MistralTemperature">Generation temperature used by the configured AI provider.</param>
+/// <param name="AiMaxTokens">Maximum number of generated tokens used by the configured AI provider.</param>
+/// <param name="AiTemperature">Generation temperature used by the configured AI provider.</param>
 /// <param name="AssistantSystemPrompt">System prompt for the financial assistant.</param>
 /// <param name="AssistantContextMonths">Number of months included in assistant context.</param>
 /// <param name="AssistantMaxTransactions">Maximum number of transactions included in assistant context.</param>
@@ -27,8 +27,8 @@ namespace DenariusAI.Application.DTOs;
 public sealed record ApplicationSettingsDto(
     string MistralModel,
     string MistralBaseUrl,
-    int MistralMaxTokens,
-    double MistralTemperature,
+    int AiMaxTokens,
+    double AiTemperature,
     string AssistantSystemPrompt,
     int AssistantContextMonths,
     int AssistantMaxTransactions,

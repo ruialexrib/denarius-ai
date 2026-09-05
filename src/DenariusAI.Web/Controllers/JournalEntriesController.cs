@@ -133,7 +133,7 @@ public sealed class JournalEntriesController(IJournalEntryService service, IAcco
             logger.LogInformation("Journal entry suggestion processed. Complete: {IsComplete}.", result.IsComplete);
             return Json(new { isComplete = result.IsComplete, message = result.Message, classificationExplanation = result.ClassificationExplanation, suggestion = result.Suggestion });
         }
-        catch (InvalidOperationException) { return StatusCode(StatusCodes.Status503ServiceUnavailable, new { error = "A integração Mistral não está configurada." }); }
+        catch (InvalidOperationException) { return StatusCode(StatusCodes.Status503ServiceUnavailable, new { error = "A integração de IA não está configurada." }); }
         catch (Exception exception) when (exception is HttpRequestException or TaskCanceledException)
         {
             logger.LogWarning(exception, "Journal entry suggestion request failed.");

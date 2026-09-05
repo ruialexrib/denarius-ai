@@ -95,6 +95,8 @@ public static class DependencyInjection
         services.AddScoped<ISavingsCertificateClipboardSuggestionService, SavingsCertificateClipboardSuggestionService>();
         services.AddHttpClient<MistralLLMService>(client => client.Timeout = TimeSpan.FromSeconds(60));
         services.AddHttpClient<OllamaLLMService>(client => client.Timeout = TimeSpan.FromSeconds(120));
+        services.AddScoped<ILLMProvider>(provider => provider.GetRequiredService<MistralLLMService>());
+        services.AddScoped<ILLMProvider>(provider => provider.GetRequiredService<OllamaLLMService>());
         services.AddScoped<ILLMService, ConfigurableLLMService>();
         services.AddHttpClient<IStockMarketDataService, AlphaVantageStockMarketDataService>(client => client.Timeout = TimeSpan.FromSeconds(60))
             .RemoveAllLoggers();

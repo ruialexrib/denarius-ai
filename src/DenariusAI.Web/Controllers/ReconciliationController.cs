@@ -134,6 +134,10 @@ public sealed class ReconciliationController(IReconciliationService service, IAc
         return View(new ReconciliationPasteViewModel { BudgetId = currentBudget ?? Guid.Empty, BankAccounts = await BankAccountItemsAsync(cancellationToken), Budgets = await BudgetItemsAsync(cancellationToken) });
     }
 
+    /// <summary>Builds a reviewable import proposal from pasted bank movements.</summary>
+    /// <param name="model">The pasted content and selected accounting context.</param>
+    /// <param name="cancellationToken">Token used to cancel the request.</param>
+    /// <returns>The review page or validation feedback.</returns>
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> AnalyzeConversation(ReconciliationPasteViewModel model, CancellationToken cancellationToken)
     {
@@ -145,7 +149,7 @@ public sealed class ReconciliationController(IReconciliationService service, IAc
         if (budget is null) ModelState.AddModelError(nameof(model.BudgetId), "Selecione um orçamento válido.");
         if (string.IsNullOrWhiteSpace(model.MovementsText) || model.MovementsText.Trim().Length < 5) ModelState.AddModelError(nameof(model.MovementsText), "Cole os movimentos que pretende analisar.");
         if (model.MovementsText?.Length > 50000) ModelState.AddModelError(nameof(model.MovementsText), "O texto não pode exceder 50 000 caracteres.");
-        if (!llmService.IsConfigured) ModelState.AddModelError(string.Empty, "Configure a integração Mistral antes de analisar os movimentos.");
+        if (!llmService.IsConfigured) ModelState.AddModelError(string.Empty, "Configure a integração de IA antes de analisar os movimentos.");
         if (!ModelState.IsValid) return View("Import", model);
         var selectedBank = bank!;
         var selectedBudget = budget!;

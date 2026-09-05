@@ -6,6 +6,7 @@ using UglyToad.PdfPig;
 
 namespace DenariusAI.Infrastructure.ArtificialIntelligence;
 
+/// <summary>Extracts PDF metadata proposals using the configured LLM.</summary>
 public sealed class CorrespondenceMetadataSuggestionService(
     ILLMService llmService,
     IApplicationSettingsService settingsService) : ICorrespondenceMetadataSuggestionService
@@ -17,12 +18,16 @@ public sealed class CorrespondenceMetadataSuggestionService(
         PropertyNameCaseInsensitive = true
     };
 
+    /// <summary>Builds an editable metadata proposal without persisting it.</summary>
+    /// <param name="pdfBase64">The stored PDF encoded as base64.</param>
+    /// <param name="cancellationToken">Token used to cancel the operation.</param>
+    /// <returns>The proposed metadata and extraction counts.</returns>
     public async Task<CorrespondenceMetadataSuggestionResultDto> SuggestAsync(
         string pdfBase64,
         CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(pdfBase64)) throw new InvalidOperationException("A correspondência não tem um PDF para analisar.");
-        if (!llmService.IsConfigured) throw new InvalidOperationException("A Mistral não está configurada.");
+        if (!llmService.IsConfigured) throw new InvalidOperationException("O fornecedor de IA não está configurado.");
 
         byte[] bytes;
         try { bytes = Convert.FromBase64String(pdfBase64); }
@@ -52,6 +57,9 @@ public sealed class CorrespondenceMetadataSuggestionService(
         return new(metadata, text.Length, pages);
     }
 
+    /// <summary>Extracts bounded text from the supplied PDF.</summary>
+    /// <param name="bytes">The PDF bytes.</param>
+    /// <returns>The extracted text and processed page count.</returns>
     private static (string Text, int Pages) ExtractText(byte[] bytes)
     {
         try
@@ -72,6 +80,9 @@ public sealed class CorrespondenceMetadataSuggestionService(
         catch (Exception exception) { throw new InvalidOperationException("Não foi possível ler o PDF guardado.", exception); }
     }
 
+    /// <summary>Validates the structured model response.</summary>
+    /// <param name="content">The model output.</param>
+    /// <returns>The parsed metadata envelope.</returns>
     private static MetadataEnvelope Parse(string content)
     {
         var normalized = content.Trim();
@@ -82,11 +93,17 @@ public sealed class CorrespondenceMetadataSuggestionService(
             if (firstLine >= 0 && closing > firstLine) normalized = normalized[(firstLine + 1)..closing].Trim();
         }
         try { return JsonSerializer.Deserialize<MetadataEnvelope>(normalized, JsonOptions) ?? throw new JsonException(); }
-        catch (JsonException exception) { throw new InvalidOperationException("A Mistral devolveu metadados num formato inválido. Tente novamente.", exception); }
+        catch (JsonException exception) { throw new InvalidOperationException("O modelo de IA devolveu metadados num formato inválido. Tente novamente.", exception); }
     }
 
+    /// <summary>Bounds a proposed value to its destination field length.</summary>
+    /// <param name="value">The proposed value.</param>
+    /// <param name="length">The maximum length.</param>
+    /// <returns>The bounded value.</returns>
     private static string Truncate(string value, int length) => value.Length <= length ? value : value[..length];
 
+    /// <summary>Represents the structured metadata response.</summary>
     private sealed record MetadataEnvelope(IReadOnlyList<MetadataItem>? Metadata);
+    /// <summary>Represents a proposed metadata value with confidence.</summary>
     private sealed record MetadataItem(string Key, string Value, string? Confidence);
 }

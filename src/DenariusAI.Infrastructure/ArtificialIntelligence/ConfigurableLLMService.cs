@@ -1,72 +1,69 @@
 using DenariusAI.Application.Abstractions.Services;
 using DenariusAI.Application.DTOs;
 using DenariusAI.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
 
 namespace DenariusAI.Infrastructure.ArtificialIntelligence;
 
-/// <summary>Routes LLM calls to the provider selected in application settings.</summary>
+/// <summary>Routes application LLM requests to registered provider adapters.</summary>
+/// <param name="providers">The adapters registered by infrastructure configuration.</param>
+/// <param name="settingsService">The effective application settings.</param>
+/// <param name="dbContext">Persisted settings for synchronous availability properties.</param>
 public sealed class ConfigurableLLMService(
-    MistralLLMService mistralService,
-    OllamaLLMService ollamaService,
+    IEnumerable<ILLMProvider> providers,
     IApplicationSettingsService settingsService,
     DenariusDbContext dbContext) : ILLMService
 {
-    /// <summary>Gets the providers supported by this router.</summary>
-    public string Provider => "Mistral / Ollama";
+    private readonly IReadOnlyDictionary<string, ILLMProvider> _providers =
+        providers.ToDictionary(provider => provider.Id, StringComparer.OrdinalIgnoreCase);
 
-    /// <summary>Gets a provider-neutral model description because the selected model is stored in application settings.</summary>
-    public string Model => "Configured in application settings";
+    /// <summary>Gets the selected provider's display name.</summary>
+    public string Provider => GetStatus().Provider;
 
-    /// <summary>Gets whether the provider selected in persisted application settings is ready for use.</summary>
-    public bool IsConfigured
+    /// <summary>Gets the selected provider's effective model.</summary>
+    public string Model => GetStatus().Model;
+
+    /// <summary>Gets whether the selected adapter has the required configuration.</summary>
+    public bool IsConfigured => GetStatus().IsConfigured;
+
+    /// <summary>Reads current settings so saved provider changes apply immediately.</summary>
+    /// <returns>The selected adapter's status, or unavailable for an unknown provider.</returns>
+    private LlmProviderStatus GetStatus()
     {
-        get
-        {
-            var provider = dbContext.ApplicationSettings
-                .Where(setting => setting.Key == "AI.Provider")
-                .Select(setting => setting.Value)
-                .FirstOrDefault() ?? "Mistral";
-
-            if (string.Equals(provider, "Ollama", StringComparison.OrdinalIgnoreCase))
-            {
-                var ollamaSettings = dbContext.ApplicationSettings
-                    .Where(setting => setting.Key == "Ollama.Model" || setting.Key == "Ollama.BaseUrl")
-                    .ToDictionary(setting => setting.Key, setting => setting.Value);
-                var model = ollamaSettings.GetValueOrDefault("Ollama.Model", "llama3.2");
-                var baseUrl = ollamaSettings.GetValueOrDefault("Ollama.BaseUrl", "http://localhost:11434");
-                return ollamaService.IsConfigured && !string.IsNullOrWhiteSpace(model) && !string.IsNullOrWhiteSpace(baseUrl);
-            }
-
-            return mistralService.IsConfigured;
-        }
+        var values = dbContext.ApplicationSettings.AsNoTracking()
+            .ToDictionary(setting => setting.Key, setting => setting.Value);
+        var id = values.GetValueOrDefault("AI.Provider", "Mistral").Trim();
+        return _providers.TryGetValue(id, out var provider)
+            ? provider.GetStatus(values)
+            : new LlmProviderStatus(id, string.Empty, false);
     }
 
-    /// <summary>Completes a chat using the token limit configured in application settings.</summary>
-    /// <param name="messages">Messages to send to the selected provider.</param>
+    /// <summary>Completes a chat with the configured common output limit.</summary>
+    /// <param name="messages">The conversation to complete.</param>
     /// <param name="cancellationToken">Token used to cancel the operation.</param>
-    /// <returns>The generated completion.</returns>
+    /// <returns>The selected provider's completion.</returns>
     public async Task<LlmCompletionDto> CompleteAsync(IReadOnlyCollection<LlmMessageDto> messages, CancellationToken cancellationToken = default)
     {
         var settings = await settingsService.GetAsync(cancellationToken);
-        return await CompleteAsync(messages, settings.MistralMaxTokens, cancellationToken);
+        return await Resolve(settings.AiProvider).CompleteAsync(messages, settings.AiMaxTokens, cancellationToken);
     }
 
-    /// <summary>Completes a chat using the provider selected in application settings.</summary>
-    /// <param name="messages">Messages to send to the selected provider.</param>
-    /// <param name="maxTokens">Maximum number of tokens to generate.</param>
+    /// <summary>Completes a chat with an explicit workflow output limit.</summary>
+    /// <param name="messages">The conversation to complete.</param>
+    /// <param name="maxTokens">The maximum output token count.</param>
     /// <param name="cancellationToken">Token used to cancel the operation.</param>
-    /// <returns>The generated completion.</returns>
+    /// <returns>The selected provider's completion.</returns>
     public async Task<LlmCompletionDto> CompleteAsync(IReadOnlyCollection<LlmMessageDto> messages, int maxTokens, CancellationToken cancellationToken = default)
     {
         var settings = await settingsService.GetAsync(cancellationToken);
-        if (string.Equals(settings.AiProvider, "Ollama", StringComparison.OrdinalIgnoreCase))
-        {
-            if (!ollamaService.IsConfigured || string.IsNullOrWhiteSpace(settings.OllamaModel) || string.IsNullOrWhiteSpace(settings.OllamaBaseUrl))
-                throw new InvalidOperationException("O Ollama não está configurado.");
-            return await ollamaService.CompleteAsync(messages, maxTokens, cancellationToken);
-        }
-
-        if (!mistralService.IsConfigured) throw new InvalidOperationException("A API key da Mistral não está configurada.");
-        return await mistralService.CompleteAsync(messages, maxTokens, cancellationToken);
+        return await Resolve(settings.AiProvider).CompleteAsync(messages, maxTokens, cancellationToken);
     }
+
+    /// <summary>Resolves an adapter without silently selecting a different provider.</summary>
+    /// <param name="id">The configured provider identifier.</param>
+    /// <returns>The registered adapter.</returns>
+    /// <exception cref="InvalidOperationException">The selected provider is not registered.</exception>
+    private ILLMProvider Resolve(string id) => _providers.TryGetValue(id.Trim(), out var provider)
+        ? provider
+        : throw new InvalidOperationException("O fornecedor de IA selecionado não é suportado. Verifique as Definições.");
 }

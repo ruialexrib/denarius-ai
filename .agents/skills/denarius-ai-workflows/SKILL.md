@@ -1,18 +1,20 @@
 ---
 name: denarius-ai-workflows
-description: Build or review DenariusAI Mistral prompts, AI suggestions, structured responses, financial context tools, confidence, reports, and human-confirmation workflows.
+description: Build or review DenariusAI provider-neutral prompts, AI suggestions, structured responses, financial context tools, confidence, reports, and human-confirmation workflows.
 ---
 
 # DenariusAI AI workflows
 
-Use this skill for Mistral integration, prompts, assistant behavior, classifications, welcome messages, and intelligent financial reports.
+Use this skill for LLM integration, prompts, assistant behavior, classifications, welcome messages, and intelligent financial reports, regardless of the selected provider.
 
 ## Configuration
 
 - Every operational prompt used by the web application must have an administrator-editable setting with a safe default in `ApplicationSettingsDefaults`.
 - The runtime service must read the effective setting. Do not display one prompt in Settings while executing a different hard-coded prompt.
 - Keep prompts in European Portuguese where the model communicates with the application or user in Portuguese.
-- Preserve `mistral-small-2603` as the installation default unless the user explicitly requests a model change.
+- Preserve the existing provider and model defaults unless the user explicitly requests a change. For Mistral, the installation model remains `mistral-small-2603`.
+- Keep business workflows dependent on `ILLMService`; isolate provider protocols, credentials and configuration in infrastructure adapters.
+- Use provider-neutral names for shared generation parameters and generic error messages. Preserve compatibility when renaming persisted settings.
 - Never place API keys, credentials, personal data, or hidden environment values in prompts or logs.
 
 ## Model boundary
@@ -20,7 +22,7 @@ Use this skill for Mistral integration, prompts, assistant behavior, classificat
 - Supply the model with a bounded, explicit context and only IDs it is permitted to return.
 - Calculate accounting totals, balances, budget execution, projections, variances, and percentages in deterministic application services before model invocation.
 - Use the model to summarize, explain, classify, or propose; do not rely on it as the source of financial arithmetic.
-- The web application's built-in AI may call internal read-only services equivalent to MCP tools. It does not require the optional MCP container merely to use Mistral.
+- The web application's built-in AI may call internal read-only services equivalent to MCP tools. It does not require the optional MCP container to use a configured LLM provider.
 - Add or extend read-only financial data tools when a report lacks required facts. Keep queries scoped to the authenticated user's authorized data.
 
 ## Structured workflows

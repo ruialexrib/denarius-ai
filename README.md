@@ -209,3 +209,9 @@ When either value is absent, the Google button is not displayed and local authen
 ## License
 
 Distributed under the [MIT License](LICENSE). Copyright © 2026 [Rui Ribeiro](https://github.com/ruialexrib).
+
+### AI provider boundary and configuration compatibility
+
+Application workflows depend on `ILLMService`. Infrastructure registers `ILLMProvider` adapters and the configurable router selects the adapter named by `AI.Provider` (case-insensitive). Unknown providers fail explicitly; they never silently route to Mistral. A future provider requires an adapter, registration and provider configuration UI/validation, without changes to financial workflows.
+
+Shared generation settings are `AI.MaxTokens` and `AI.Temperature`. Existing installations continue to read `Mistral.MaxTokens` and `Mistral.Temperature` when the corresponding neutral key is absent or invalid, then fall back to the existing Mistral installation options. Saving settings writes the neutral keys. Legacy keys are retained for compatibility, but neutral keys take precedence. Provider-specific models, endpoints and credentials keep their existing keys; Mistral and Ollama defaults remain unchanged. This key-value compatibility change requires no database schema migration.

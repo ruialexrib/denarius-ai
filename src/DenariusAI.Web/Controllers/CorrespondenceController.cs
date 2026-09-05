@@ -10,6 +10,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace DenariusAI.Web.Controllers;
 
+/// <summary>Coordinates correspondence documents and user-confirmed metadata.</summary>
 [Authorize]
 public sealed class CorrespondenceController(
     DenariusDbContext dbContext,
@@ -71,6 +72,10 @@ public sealed class CorrespondenceController(
         return View(ToMetadataPage(item));
     }
 
+    /// <summary>Proposes PDF metadata without saving financial or document records.</summary>
+    /// <param name="id">The correspondence identifier.</param>
+    /// <param name="cancellationToken">Token used to cancel the request.</param>
+    /// <returns>The metadata proposal or validation feedback.</returns>
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> AnalyzeMetadata(Guid id, CancellationToken cancellationToken)
     {
@@ -94,7 +99,7 @@ public sealed class CorrespondenceController(
         }
         catch (HttpRequestException)
         {
-            ModelState.AddModelError(string.Empty, "Não foi possível contactar a Mistral. Tente novamente."); return View("Metadata", model);
+            ModelState.AddModelError(string.Empty, "Não foi possível contactar o fornecedor de IA. Tente novamente."); return View("Metadata", model);
         }
     }
 
