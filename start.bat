@@ -51,6 +51,7 @@ if errorlevel 1 goto startup_error
 call :wait_for_web
 if errorlevel 1 goto startup_error
 for /f %%i in ('git rev-parse HEAD') do set "DEPLOYED_SHA=%%i"
+call :show_deployment_summary
 
 :watch
 call :check_update
@@ -117,6 +118,7 @@ if "!REBUILD_MCP!"=="1" (
 
 set "DEPLOYED_SHA=!PENDING_SHA!"
 set "PENDING_SHA="
+if "!REBUILD_WEB!"=="1" call :show_deployment_summary
 echo Update complete. Monitoring for new commits...
 timeout /t %CHECK_INTERVAL% /nobreak >nul
 goto watch
@@ -206,6 +208,30 @@ for /l %%N in (1,1,30) do (
 echo ERROR: Denarius AI did not become healthy.
 docker compose logs --tail 50 %WEB_SERVICE%
 exit /b 1
+
+:show_deployment_summary
+if not defined DEPLOYED_SHA exit /b 0
+where powershell.exe >nul 2>&1
+if errorlevel 1 goto deployment_summary_fallback
+if not exist "%~dp0scripts\Get-DeploymentSummary.ps1" goto deployment_summary_fallback
+powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File "%~dp0scripts\Get-DeploymentSummary.ps1" -Commit "!DEPLOYED_SHA!" -RepositoryRoot "%CD%"
+if errorlevel 1 goto deployment_summary_fallback
+exit /b 0
+
+:deployment_summary_fallback
+set "DEPLOYED_VERSION="
+set "DEPLOYED_SHORT_SHA=!DEPLOYED_SHA:~0,7!"
+for /f "tokens=2 delims=<>" %%V in ('git show !DEPLOYED_SHA!:src/DenariusAI.Web/DenariusAI.Web.csproj 2^>nul ^| findstr /c:"<Version>"') do if not defined DEPLOYED_VERSION set "DEPLOYED_VERSION=%%V"
+if not defined DEPLOYED_VERSION for /f "tokens=2 delims=<>" %%V in ('git show !DEPLOYED_SHA!:Directory.Build.props 2^>nul ^| findstr /c:"<Version>"') do if not defined DEPLOYED_VERSION set "DEPLOYED_VERSION=%%V"
+if not defined DEPLOYED_VERSION set "DEPLOYED_VERSION=Not available"
+echo ============================================================
+echo Denarius AI deployment ready
+echo Version: !DEPLOYED_VERSION!
+echo Commit: !DEPLOYED_SHORT_SHA!
+echo PR: Not available
+echo Issue: Not available
+echo ============================================================
+exit /b 0
 
 :retry
 echo WARNING: Could not check GitHub. Retrying in %CHECK_INTERVAL% seconds...
