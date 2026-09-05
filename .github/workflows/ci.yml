@@ -6,6 +6,12 @@ on:
   pull_request:
     branches: [main]
   workflow_call:
+    inputs:
+      run_all:
+        description: Force all CI gates when invoked as a reusable workflow.
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -34,7 +40,7 @@ jobs:
           fetch-depth: 0
 
       - name: Detect affected areas
-        if: github.event_name != 'workflow_call'
+        if: ${{ !inputs.run_all }}
         id: changes
         uses: dorny/paths-filter@v3
         with:
@@ -93,7 +99,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          if [[ "${{ github.event_name }}" == "workflow_call" ]]; then
+          if [[ "${{ inputs.run_all }}" == "true" ]]; then
             echo 'dotnet=true' >> "$GITHUB_OUTPUT"
             echo 'database=true' >> "$GITHUB_OUTPUT"
             echo 'docker=true' >> "$GITHUB_OUTPUT"
@@ -126,12 +132,13 @@ jobs:
       - name: Verify .NET formatting for changed C# files
         shell: bash
         env:
+          RUN_ALL: ${{ inputs.run_all }}
           EVENT_NAME: ${{ github.event_name }}
           PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
           PUSH_BASE_SHA: ${{ github.event.before }}
         run: |
           set -euo pipefail
-          if [[ "$EVENT_NAME" == "workflow_call" ]]; then
+          if [[ "$RUN_ALL" == "true" ]]; then
             mapfile -t changed_cs < <(git ls-files '*.cs')
           else
             if [[ "$EVENT_NAME" == "pull_request" ]]; then
