@@ -40,6 +40,7 @@ jobs:
         with:
           filters: |
             dotnet:
+              - '.github/workflows/ci.yml'
               - '**/*.cs'
               - '**/*.csproj'
               - '**/*.props'
@@ -50,11 +51,13 @@ jobs:
               - '.config/dotnet-tools.json'
               - 'tests/**'
             database:
+              - '.github/workflows/ci.yml'
               - 'src/DenariusAI.Domain/**'
               - 'src/DenariusAI.Infrastructure/Persistence/**'
               - 'src/DenariusAI.Web/Program.cs'
               - '.config/dotnet-tools.json'
             docker:
+              - '.github/workflows/ci.yml'
               - 'Dockerfile'
               - 'docker-compose*.yml'
               - '.dockerignore'
@@ -62,12 +65,14 @@ jobs:
               - 'global.json'
               - 'src/**'
             mcp:
+              - '.github/workflows/ci.yml'
               - 'src/DenariusAI.Mcp/**'
               - 'tests/DenariusAI.McpTests/**'
               - 'src/DenariusAI.Application/**'
               - 'src/DenariusAI.Domain/**'
               - 'src/DenariusAI.Infrastructure/**'
             ai:
+              - '.github/workflows/ci.yml'
               - 'src/DenariusAI.Infrastructure/ArtificialIntelligence/**'
               - 'src/DenariusAI.Application/Abstractions/Services/ILLMService.cs'
               - 'src/DenariusAI.Application/Services/*Assistant*'
@@ -384,11 +389,15 @@ jobs:
         run: |
           set -euo pipefail
           for attempt in {1..60}; do
-            db_status="$(docker inspect --format='{{.State.Health.Status}}' denarius-ai-db 2>/dev/null || true)"
-            web_status="$(docker inspect --format='{{.State.Health.Status}}' denarius-ai-web 2>/dev/null || true)"
-            if [[ "$db_status" == 'healthy' && "$web_status" == 'healthy' ]] && curl --fail --silent http://127.0.0.1:8080/health >/dev/null; then
-              echo 'Compose database and web services are healthy.'
-              exit 0
+            db_id="$(docker compose ps -q denarius-ai-db)"
+            web_id="$(docker compose ps -q denarius-ai-web)"
+            if [[ -n "$db_id" && -n "$web_id" ]]; then
+              db_status="$(docker inspect --format='{{.State.Health.Status}}' "$db_id" 2>/dev/null || true)"
+              web_status="$(docker inspect --format='{{.State.Health.Status}}' "$web_id" 2>/dev/null || true)"
+              if [[ "$db_status" == 'healthy' && "$web_status" == 'healthy' ]] && curl --fail --silent http://127.0.0.1:8080/health >/dev/null; then
+                echo 'Compose database and web services are healthy.'
+                exit 0
+              fi
             fi
             sleep 5
           done
