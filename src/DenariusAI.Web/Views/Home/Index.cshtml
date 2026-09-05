@@ -41,10 +41,6 @@
 {
 <section class="demo-data-notice" role="status"><span class="demo-data-notice-icon" aria-hidden="true">i</span><div><strong>Está a consultar dados de demonstração</strong><p>Estes dados servem para explorar o DenariusAI. Quando estiver pronto, pode eliminá-los em <a asp-controller="Settings" asp-action="ResetFinancialData">Definições</a> e começar com os seus próprios dados.</p></div><form asp-action="AcknowledgeDemonstrationData" method="post"><button class="button" type="submit">Tomei conhecimento</button></form></section>
 }
-@if (Model.ActiveReminders.Count > 0)
-{
-<section class="reminder-dashboard" role="status"><div class="reminder-dashboard-heading"><div><p class="eyebrow">Lembretes ativos</p><h2>Tem @Model.ActiveReminders.Count aviso(s) a aguardar confirmação</h2></div><a class="text-link" asp-controller="Reminders" asp-action="Index">Ver todos</a></div>@foreach(var reminder in Model.ActiveReminders){<div class="reminder-dashboard-item"><div><strong>@reminder.Text</strong><small>@reminder.EventDate.ToString("dd/MM/yyyy") · @(reminder.DaysRemaining < 0 ? $"atrasado {-reminder.DaysRemaining} dias" : reminder.DaysRemaining == 0 ? "hoje" : $"faltam {reminder.DaysRemaining} dias")</small></div><form asp-controller="Reminders" asp-action="Acknowledge" method="post"><input type="hidden" name="id" value="@reminder.Id" /><input type="hidden" name="returnUrl" value="@Context.Request.Path@Context.Request.QueryString" /><button class="button secondary" type="submit">Tomei conhecimento</button></form></div>}</section>
-}
 <section class="dashboard-welcome"><span class="dashboard-welcome-icon" aria-hidden="true">✦</span><div><p class="eyebrow">A sua visão financeira</p><h2>Bem-vindo ao DenariusAI</h2><p>@Model.WelcomeMessage</p><small>@(Model.WelcomeGeneratedByAi ? "Resumo contextual gerado por IA" : "Orientação geral do DenariusAI")</small></div></section>
 <section class="dashboard-overview">
 <article class="panel budget-overview">
