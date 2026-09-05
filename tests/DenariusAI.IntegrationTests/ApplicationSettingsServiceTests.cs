@@ -6,8 +6,10 @@ using Microsoft.Extensions.Options;
 
 namespace DenariusAI.IntegrationTests;
 
+/// <summary>Verifies persisted settings and compatibility defaults.</summary>
 public sealed class ApplicationSettingsServiceTests
 {
+    /// <summary>Verifies legacy prompts upgrade without changing custom instructions.</summary>
     [Fact]
     public async Task LegacyBehaviorPromptsAreUpgradedToTheVisibleDefaults()
     {
@@ -30,6 +32,7 @@ public sealed class ApplicationSettingsServiceTests
         Assert.Equal(DenariusAI.Application.Configuration.ApplicationSettingsDefaults.InsuranceClipboardPrompt, loaded.InsuranceClipboardPrompt);
     }
 
+    /// <summary>Verifies settings persist and are immediately effective.</summary>
     [Fact]
     public async Task UpdatedSettingsArePersistedAndReadImmediately()
     {
@@ -42,7 +45,7 @@ public sealed class ApplicationSettingsServiceTests
         var loaded = await service.GetAsync();
 
         Assert.Equal(updated, loaded);
-        Assert.Equal(23, await context.ApplicationSettings.CountAsync());
+        Assert.Equal(25, await context.ApplicationSettings.CountAsync());
         Assert.Equal(updated.ReconciliationExtractionPrompt, loaded.ReconciliationExtractionPrompt);
         Assert.Equal(updated.ReconciliationClassificationPrompt, loaded.ReconciliationClassificationPrompt);
         Assert.Equal(updated.FinancialAnalysisPrompt, loaded.FinancialAnalysisPrompt);

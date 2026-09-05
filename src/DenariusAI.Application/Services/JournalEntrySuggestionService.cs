@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Net;
 using DenariusAI.Application.Abstractions.Services;
 using DenariusAI.Application.DTOs;
 
@@ -46,9 +47,14 @@ public sealed class JournalEntrySuggestionService(
         var categories = await categoryService.ListAsync(activeOnly: true, cancellationToken: cancellationToken);
         var groups = await groupService.ListAsync(true, cancellationToken);
         var budgets = await budgetService.ListPeriodsAsync(cancellationToken);
+        var history = request.History.TakeLast(Math.Min(settings.JournalSuggestionHistoryMessages, 4))
+            .Where(item => (item.Role is "user" or "assistant") && !string.IsNullOrWhiteSpace(item.Content))
+            .Select(item => new LlmMessageDto(item.Role, item.Content)).ToList();
+        var query = userMessage + " " + string.Join(" ", history.Where(item => item.Role == "user").Select(item => AiContextBudget.Shorten(item.Content, 1000)));
         var recentSummaries = (await journalEntryService.ListAsync(cancellationToken))
             .Where(item => item.Status == DenariusAI.Domain.Enums.JournalEntryStatus.Active)
-            .OrderByDescending(item => item.Date).Take(50).ToList();
+            .Where(item => AiContextBudget.Relevance(item.Description, query) > 0)
+            .OrderByDescending(item => AiContextBudget.Relevance(item.Description, query)).ThenByDescending(item => item.Date).Take(3).ToList();
         var recentDetails = new List<JournalEntryDetailsDto>(recentSummaries.Count);
         foreach (var summary in recentSummaries)
         {
@@ -57,36 +63,88 @@ public sealed class JournalEntrySuggestionService(
         }
         var groupNames = groups.ToDictionary(item => item.Id, item => item.Name);
         var groupKinds = groups.ToDictionary(item => item.Id, item => item.Kind.ToString());
-        var catalog = JsonSerializer.Serialize(new
+        var today = DateOnly.FromDateTime(DateTime.Today);
+        var rankedAccounts = accounts.OrderByDescending(item => AiContextBudget.Relevance(item.Name, query))
+            .ThenBy(item => item.Name).ToList();
+        var exampleCategoryIds = recentDetails.SelectMany(item => item.Lines).Where(item => item.CategoryId.HasValue)
+            .Select(item => item.CategoryId!.Value).ToHashSet();
+        var rankedCategories = categories.OrderByDescending(item => AiContextBudget.Relevance(item.Name, query))
+            .ThenByDescending(item => exampleCategoryIds.Contains(item.Id)).ThenBy(item => item.Name).ToList();
+        var rankedBudgets = budgets.OrderByDescending(item => AiContextBudget.Relevance(item.Name, query))
+            .ThenByDescending(item => item.Year == today.Year && item.Month == today.Month)
+            .ThenByDescending(item => item.Year).ThenByDescending(item => item.Month).ToList();
+        var prompt = settings.JournalSuggestionSystemPrompt + "\n\n" + settings.AiContextGuidancePrompt;
+        var categoryLimit = 24;
+        var accountLimit = 20;
+        var budgetLimit = 6;
+        var exampleLimit = 3;
+        IReadOnlyList<AccountDto> sentAccounts = [];
+        IReadOnlyList<CategoryDto> sentCategories = [];
+        IReadOnlyList<BudgetPeriodDto> sentBudgets = [];
+        LlmCompletionDto? completion = null;
+        var previousBytes = int.MaxValue;
+        for (var attempt = 0; attempt < 2; attempt++)
         {
-            today = DateOnly.FromDateTime(DateTime.Today), currency = "EUR",
-            groups = groups.Select(item => new { item.Id, item.Name, type = item.Kind.ToString() }),
-            accounts = accounts.Select(item => new { item.Id, item.Name, type = item.AccountType.ToString(), item.CategoryId, item.Currency }),
-            categories = categories.Select(item => new { item.Id, item.Name, item.FinancialGroupId, group = groupNames.GetValueOrDefault(item.FinancialGroupId), type = groupKinds.GetValueOrDefault(item.FinancialGroupId) }),
-            budgets = budgets.Select(item => new { item.Id, item.Name }),
-            recentJournalEntries = recentDetails.Select(entry => new
+            List<LlmMessageDto>? messages;
+            var maxBytes = attempt == 0 ? settings.AiMaxInputBytes : settings.AiMaxInputBytes / 2;
+            do
             {
-                entry.Id, entry.Date, entry.Description, entry.Reference, entry.BudgetId, entry.BudgetName,
-                lines = entry.Lines.Select(line => new { line.AccountId, line.AccountName, line.CategoryId, line.CategoryName, line.Debit, line.Credit, line.Description })
-            })
-        });
-        var messages = new List<LlmMessageDto>
-        {
-            new("system", settings.JournalSuggestionSystemPrompt),
-            new("user", $"CATALOG_JSON:\n{catalog}")
-        };
-        messages.AddRange(request.History.TakeLast(settings.JournalSuggestionHistoryMessages).Where(item => (item.Role is "user" or "assistant") && !string.IsNullOrWhiteSpace(item.Content)).Select(item => new LlmMessageDto(item.Role, item.Content)));
-        messages.Add(new("user", userMessage));
-
-        var completion = await llmService.CompleteAsync(messages, cancellationToken);
+                sentAccounts = rankedAccounts.Take(accountLimit).ToList();
+                sentCategories = rankedCategories.Take(categoryLimit).ToList();
+                sentBudgets = rankedBudgets.Take(budgetLimit).ToList();
+                var accountIds = sentAccounts.Select(item => item.Id).ToHashSet();
+                var categoryIds = sentCategories.Select(item => item.Id).ToHashSet();
+                var examples = recentDetails.Where(entry => entry.Lines.All(line => accountIds.Contains(line.AccountId)
+                    && (!line.CategoryId.HasValue || categoryIds.Contains(line.CategoryId.Value)))).Take(exampleLimit);
+                var catalog = AiContextBudget.Serialize(new
+                {
+                    today, currency = "EUR",
+                    partial = new { accounts = accounts.Count > sentAccounts.Count, categories = categories.Count > sentCategories.Count,
+                        budgets = budgets.Count > sentBudgets.Count, examples = true },
+                    accounts = sentAccounts.Select(item => new { item.Id, name = AiContextBudget.Shorten(item.Name, 100), type = item.AccountType.ToString(),
+                        categoryId = item.CategoryId.HasValue && categoryIds.Contains(item.CategoryId.Value) ? item.CategoryId : null, item.Currency }),
+                    categories = sentCategories.Select(item => new { item.Id, name = AiContextBudget.Shorten(item.Name, 100),
+                        group = AiContextBudget.Shorten(groupNames.GetValueOrDefault(item.FinancialGroupId) ?? "", 80), type = groupKinds.GetValueOrDefault(item.FinancialGroupId) }),
+                    budgets = sentBudgets.Select(item => new { item.Id, item.Year, item.Month }),
+                    recentJournalEntries = examples.Select(entry => new { entry.Date, description = AiContextBudget.Shorten(entry.Description, 120),
+                        lines = entry.Lines.Select(line => new { line.AccountId, line.CategoryId, line.Debit, line.Credit }) })
+                });
+                messages = AiContextBudget.Build(prompt, "CATALOG_JSON:\n" + catalog, attempt == 0 ? history : [], userMessage, maxBytes);
+                if (messages is not null || accountLimit <= 2 && categoryLimit == 0 && budgetLimit == 0 && exampleLimit == 0) break;
+                exampleLimit = 0;
+                categoryLimit /= 2;
+                budgetLimit /= 2;
+                accountLimit = Math.Max(2, accountLimit / 2);
+            } while (true);
+            if (messages is null)
+                return new(false, "O contexto excede o limite do pedido. Reduza os prompts nas Definições ou ajuste o limite de contexto para o fornecedor utilizado.", null, null);
+            var requestBytes = AiContextBudget.Measure(messages);
+            if (attempt > 0 && requestBytes >= previousBytes)
+                return new(false, "O fornecedor recusou o pedido por exceder o limite de contexto. Reduza os prompts nas Definições e tente novamente.", null, null);
+            previousBytes = requestBytes;
+            try
+            {
+                completion = await llmService.CompleteAsync(messages, Math.Min(settings.AiMaxTokens, 1024), cancellationToken);
+                break;
+            }
+            catch (HttpRequestException exception) when (exception.StatusCode == HttpStatusCode.RequestEntityTooLarge)
+            {
+                if (attempt == 1)
+                    return new(false, "O fornecedor recusou o pedido por exceder o limite de contexto. Reduza os prompts ou o limite de contexto nas Definições e tente novamente.", null, null);
+                exampleLimit = 0;
+                categoryLimit /= 2;
+                budgetLimit /= 2;
+            }
+        }
+        if (completion is null) return new(false, "Não foi possível preparar a sugestão. Tente novamente.", null, null);
         var parsed = Parse(completion.Content);
         if (!string.Equals(parsed.Status, "complete", StringComparison.OrdinalIgnoreCase) || parsed.Suggestion is null)
             return new(false, string.IsNullOrWhiteSpace(parsed.Message) ? "Que informação falta para completar o movimento?" : parsed.Message, parsed.ClassificationExplanation, null);
 
-        var validation = Validate(parsed.Suggestion, accounts, categories, budgets);
+        var validation = Validate(parsed.Suggestion, sentAccounts, sentCategories, sentBudgets);
         if (validation is not null) return new(false, validation, parsed.ClassificationExplanation, null);
         var suggestion = parsed.Suggestion;
-        var budgetId = suggestion.BudgetId ?? budgets.FirstOrDefault(item => item.Year == suggestion.Date!.Value.Year && item.Month == suggestion.Date.Value.Month)?.Id;
+        var budgetId = suggestion.BudgetId ?? sentBudgets.FirstOrDefault(item => item.Year == suggestion.Date!.Value.Year && item.Month == suggestion.Date.Value.Month)?.Id;
         return new(true, string.IsNullOrWhiteSpace(parsed.Message) ? "Sugestão pronta para revisão." : parsed.Message,
             string.IsNullOrWhiteSpace(parsed.ClassificationExplanation) ? "A classificação foi baseada nos catálogos disponíveis e em movimentos recentes semelhantes; confirme a proposta antes de guardar." : parsed.ClassificationExplanation.Trim(),
             new(suggestion.Date!.Value, suggestion.Description!.Trim(), suggestion.Reference, suggestion.Notes, budgetId,
