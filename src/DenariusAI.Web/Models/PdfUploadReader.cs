@@ -2,10 +2,21 @@ using Microsoft.AspNetCore.Http;
 
 namespace DenariusAI.Web.Models;
 
+/// <summary>
+/// Validates uploaded PDF files and converts their contents to the representation stored by document workflows.
+/// </summary>
 internal static class PdfUploadReader
 {
+    /// <summary>Defines the maximum accepted PDF upload size in bytes.</summary>
     public const long MaximumLength = 10 * 1024 * 1024;
 
+    /// <summary>
+    /// Validates and reads an uploaded PDF file.
+    /// </summary>
+    /// <param name="file">The uploaded file to validate and read.</param>
+    /// <param name="cancellationToken">The token used to cancel the asynchronous copy operation.</param>
+    /// <returns>The sanitized file name and Base64-encoded PDF contents.</returns>
+    /// <exception cref="InvalidOperationException">Thrown when the file is empty, too large, has a non-PDF extension or lacks a PDF signature.</exception>
     public static async Task<(string FileName, string Base64)> ReadAsync(IFormFile file, CancellationToken cancellationToken)
     {
         if (file.Length is <= 0 or > MaximumLength)
