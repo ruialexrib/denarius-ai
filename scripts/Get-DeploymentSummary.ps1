@@ -86,6 +86,25 @@ function Get-ClosingIssueNumbers {
     return @($numbers | Sort-Object)
 }
 
+function Invoke-GitHubRequest {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Uri,
+
+        [Parameter(Mandatory = $true)]
+        [hashtable]$Headers
+    )
+
+    $request = @{
+        Uri = $Uri
+        Headers = $Headers
+        TimeoutSec = 5
+        ErrorAction = 'Stop'
+    }
+
+    return Invoke-RestMethod @request
+}
+
 function Get-GitHubProvenance {
     param(
         [Parameter(Mandatory = $true)]
@@ -104,10 +123,9 @@ function Get-GitHubProvenance {
     }
 
     try {
-        $pullRequests = Invoke-RestMethod \
+        $pullRequests = Invoke-GitHubRequest \
             -Uri "https://api.github.com/repos/$Repository/commits/$Commit/pulls" \
-            -Headers $headers \
-            -TimeoutSec 5
+            -Headers $headers
 
         $pullRequest = $pullRequests |
             Where-Object { $null -ne $_.merged_at } |
@@ -127,10 +145,9 @@ function Get-GitHubProvenance {
         $issues = @()
         foreach ($issueNumber in $issueNumbers) {
             try {
-                $issue = Invoke-RestMethod \
+                $issue = Invoke-GitHubRequest \
                     -Uri "https://api.github.com/repos/$Repository/issues/$issueNumber" \
-                    -Headers $headers \
-                    -TimeoutSec 5
+                    -Headers $headers
 
                 if ($null -eq $issue.pull_request) {
                     $issues += "#$issueNumber - $($issue.title)"
