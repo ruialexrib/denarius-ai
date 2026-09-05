@@ -14,8 +14,70 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  hygiene:
+    name: Repository hygiene
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+
+      - name: Verify .NET formatting
+        run: dotnet format DenariusAI.slnx whitespace --verify-no-changes
+
+      - name: Check for unresolved merge-conflict markers
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if git grep -n -E '^(<<<<<<< |>>>>>>> )' -- \
+            '*.cs' '*.csproj' '*.props' '*.targets' '*.json' '*.yml' '*.yaml' \
+            '*.xml' '*.cshtml' '*.js' '*.css' '*.sh' '*.bat' '*.ps1'; then
+            echo 'Unresolved merge-conflict markers were found in tracked source or configuration files.' >&2
+            exit 1
+          fi
+
+          echo 'No unresolved merge-conflict markers found.'
+
+      - name: Check for prohibited tracked files
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          prohibited=()
+          while IFS= read -r path; do
+            if [[ "$path" =~ (^|/)\.env($|\.) ]] && [[ ! "$path" =~ (^|/)\.env\.example$ ]]; then
+              prohibited+=("$path")
+              continue
+            fi
+
+            if [[ "$path" =~ (^|/)(secrets\.json|appsettings\.Local\.json)$ ]]; then
+              prohibited+=("$path")
+              continue
+            fi
+
+            if [[ "$path" =~ \.(bak|bacpac|mdf|ldf|db|db3|sqlite|sqlite3)$ ]]; then
+              prohibited+=("$path")
+            fi
+          done < <(git ls-files)
+
+          if (( ${#prohibited[@]} > 0 )); then
+            echo 'Prohibited tracked files were found:' >&2
+            printf ' - %s\n' "${prohibited[@]}" >&2
+            exit 1
+          fi
+
+          echo 'No prohibited tracked files found.'
+
   dotnet:
     name: Build and test .NET
+    needs: hygiene
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
@@ -54,6 +116,7 @@ jobs:
 
   docker:
     name: Build Docker (${{ matrix.component }})
+    needs: hygiene
     runs-on: ubuntu-latest
     timeout-minutes: 25
     strategy:
@@ -81,4 +144,3 @@ jobs:
           push: false
           cache-from: type=gha,scope=${{ matrix.component }}
           cache-to: type=gha,mode=max,scope=${{ matrix.component }}
-
