@@ -5,12 +5,22 @@ using QuestPDF.Infrastructure;
 
 namespace DenariusAI.Web.Models;
 
+/// <summary>
+/// Generates PDF documents for AI-assisted financial reports rendered from Markdown content.
+/// </summary>
 public static class FinancialReportPdf
 {
     private const string Ink = "#17243A";
     private const string Muted = "#607086";
     private const string Accent = "#159A70";
 
+    /// <summary>
+    /// Generates a financial report PDF for the supplied period and Markdown content.
+    /// </summary>
+    /// <param name="markdown">The report content expressed as Markdown.</param>
+    /// <param name="from">The first date in the analysed period.</param>
+    /// <param name="to">The last date in the analysed period.</param>
+    /// <returns>The generated PDF document bytes.</returns>
     public static byte[] Generate(string? markdown, DateOnly from, DateOnly to)
     {
         QuestPDF.Settings.License = LicenseType.Community;
@@ -42,6 +52,11 @@ public static class FinancialReportPdf
         })).GeneratePdf();
     }
 
+    /// <summary>
+    /// Renders the supported Markdown structures into a QuestPDF column.
+    /// </summary>
+    /// <param name="column">The target PDF column.</param>
+    /// <param name="markdown">The normalized Markdown content.</param>
     private static void RenderMarkdown(ColumnDescriptor column, string markdown)
     {
         var lines = markdown.Replace("\r", string.Empty).Split('\n');
@@ -81,8 +96,23 @@ public static class FinancialReportPdf
         }
     }
 
+    /// <summary>Removes supported Markdown formatting markers from a text value.</summary>
+    /// <param name="value">The Markdown text to clean.</param>
+    /// <returns>The cleaned plain text.</returns>
     private static string Clean(string value) => Regex.Replace(value, @"(?:\*\*|__|\*|_|`)", string.Empty).Trim();
+
+    /// <summary>Determines whether a line has the pipe-delimited shape of a Markdown table row.</summary>
+    /// <param name="value">The line to inspect.</param>
+    /// <returns><see langword="true"/> for a table-shaped row; otherwise <see langword="false"/>.</returns>
     private static bool IsTableRow(string value) => value.Trim().Trim('|').Contains('|');
+
+    /// <summary>Determines whether a line is a Markdown table separator.</summary>
+    /// <param name="value">The line to inspect.</param>
+    /// <returns><see langword="true"/> when all cells are valid separator markers; otherwise <see langword="false"/>.</returns>
     private static bool IsTableSeparator(string value) => Cells(value).All(cell => Regex.IsMatch(cell, @"^:?-{3,}:?$"));
+
+    /// <summary>Splits a pipe-delimited table row into trimmed cells.</summary>
+    /// <param name="value">The table row to split.</param>
+    /// <returns>The trimmed table cells.</returns>
     private static string[] Cells(string value) => value.Trim().Trim('|').Split('|').Select(cell => cell.Trim()).ToArray();
 }
