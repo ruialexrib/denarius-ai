@@ -32,7 +32,7 @@ public sealed class SavingsCertificateClipboardSuggestionServiceTests
         Assert.Equal(new DateOnly(2026, 8, 14), result.InvestmentDate);
         Assert.Equal(4200.50m, result.InvestmentValue);
         Assert.Equal(4200.50m, result.CurrentValue);
-        Assert.Equal(new DateOnly(2026, 11, 14), result.NextCapitalizationDate);
+        Assert.Equal(new DateOnly(2026, 11, 14), result.NextCapitalization);
         Assert.Contains("F", result.SeriesNumber, StringComparison.Ordinal);
         Assert.Contains("Pedido 123456", result.SeriesNumber, StringComparison.Ordinal);
         Assert.Contains("42 unidades", result.Description, StringComparison.Ordinal);
@@ -53,7 +53,7 @@ public sealed class SavingsCertificateClipboardSuggestionServiceTests
 
         Assert.Equal(1234.56m, result.InvestmentValue);
         Assert.Equal("low", result.Confidence);
-        Assert.Equal(new DateOnly(2026, 4, 30), result.NextCapitalizationDate);
+        Assert.Equal(new DateOnly(2026, 4, 30), result.NextCapitalization);
     }
 
     /// <summary>Verifies unavailable providers and invalid clipboard sizes fail before calling the model.</summary>
