@@ -2,6 +2,7 @@
 @using DenariusAI.Web.Controllers
 @{ ViewData["Title"] = "Movimentos"; var activeCount = Model.Items.Count(item => item.Status == DenariusAI.Domain.Enums.JournalEntryStatus.Active); var reconciledCount = Model.Items.Count(item => item.ReconciliationStatus == DenariusAI.Domain.Enums.ReconciliationStatus.Reconciled); var pageValue = Model.Items.Sum(item => item.TotalDebit); }
 <link rel="stylesheet" href="~/css/summary-cards.css" asp-append-version="true" />
+<link rel="stylesheet" href="~/css/journal-entry-filters.css" asp-append-version="true" />
 <div class="page-header"><div><p class="eyebrow">Finanças</p><h1>Movimentos</h1><p class="page-subtitle">Registe, consulte e filtre operações contabilísticas entre contas.</p></div><a class="button" asp-action="Create">Novo movimento</a></div>
 <section class="area-summary" aria-label="Resumo dos movimentos"><article class="summary-primary"><span>Movimentos</span><strong>@Model.Pagination.TotalItems</strong><small>Total correspondente aos filtros atuais</small></article><article class="summary-positive"><span>Ativos nesta página</span><strong>@activeCount</strong><small>Movimentos contabilísticos em vigor</small></article><article class="summary-info"><span>Reconciliados nesta página</span><strong>@reconciledCount</strong><small>Movimentos já confirmados em extrato</small></article><article><span>Valor nesta página</span><strong>@pageValue.ToString("N2") €</strong><small>Total dos débitos apresentados</small></article></section>
 <section class="panel entity-panel journal-list-panel">

@@ -1,0 +1,59 @@
+.journal-filters {
+    grid-template-columns:
+        minmax(112px, .62fr)
+        minmax(112px, .62fr)
+        minmax(108px, .60fr)
+        minmax(135px, .88fr)
+        minmax(150px, 1.20fr)
+        minmax(135px, .82fr)
+        auto
+        auto;
+    align-items: end;
+}
+
+.journal-filters > .button {
+    width: auto;
+    min-width: 88px;
+    justify-self: end;
+    white-space: nowrap;
+}
+
+.journal-filters > .page-size {
+    min-width: max-content;
+}
+
+@media (max-width: 1050px) {
+    .journal-filters {
+        grid-template-columns:
+            minmax(104px, .70fr)
+            minmax(104px, .70fr)
+            minmax(90px, .60fr)
+            minmax(115px, .85fr)
+            minmax(135px, 1.15fr)
+            minmax(115px, .80fr)
+            auto
+            auto;
+        gap: 8px;
+    }
+}
+
+@media (max-width: 860px) {
+    .journal-filters {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .journal-filters > .button {
+        width: 100%;
+        justify-self: stretch;
+    }
+
+    .journal-filters > .page-size {
+        min-width: 0;
+    }
+}
+
+@media (max-width: 560px) {
+    .journal-filters {
+        grid-template-columns: 1fr;
+    }
+}
