@@ -89,14 +89,19 @@ public static class DependencyInjection
         services.AddScoped<IDemonstrationDataService, DemonstrationDataService>();
         services.AddScoped<IApplicationBackupService, ApplicationBackupService>();
         services.Configure<MistralOptions>(configuration.GetSection(MistralOptions.SectionName));
+        services.Configure<GroqCloudOptions>(configuration.GetSection(GroqCloudOptions.SectionName));
         services.AddScoped<IApplicationSettingsService, ApplicationSettingsService>();
         services.AddScoped<ICorrespondenceMetadataSuggestionService, CorrespondenceMetadataSuggestionService>();
         services.AddScoped<IInsuranceClipboardSuggestionService, InsuranceClipboardSuggestionService>();
         services.AddScoped<ISavingsCertificateClipboardSuggestionService, SavingsCertificateClipboardSuggestionService>();
         services.AddHttpClient<MistralLLMService>(client => client.Timeout = TimeSpan.FromSeconds(60));
         services.AddHttpClient<OllamaLLMService>(client => client.Timeout = TimeSpan.FromSeconds(120));
+        services.AddHttpClient<GroqCloudLLMService>(client => client.Timeout = TimeSpan.FromSeconds(60))
+            .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false })
+            .RemoveAllLoggers();
         services.AddScoped<ILLMProvider>(provider => provider.GetRequiredService<MistralLLMService>());
         services.AddScoped<ILLMProvider>(provider => provider.GetRequiredService<OllamaLLMService>());
+        services.AddScoped<ILLMProvider>(provider => provider.GetRequiredService<GroqCloudLLMService>());
         services.AddScoped<ILLMService, ConfigurableLLMService>();
         services.AddHttpClient<IStockMarketDataService, AlphaVantageStockMarketDataService>(client => client.Timeout = TimeSpan.FromSeconds(60))
             .RemoveAllLoggers();

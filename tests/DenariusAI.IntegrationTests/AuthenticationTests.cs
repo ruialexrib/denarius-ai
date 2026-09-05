@@ -11,6 +11,9 @@ namespace DenariusAI.IntegrationTests;
 public sealed class AuthenticationTests
 {
     [Theory]
+    [InlineData("GroqCloud", "True", true)]
+    [InlineData("groqcloud", "True", true)]
+    [InlineData("GroqCloud", null, false)]
     [InlineData("Mistral", "True", true)]
     [InlineData("mistral", "True", true)]
     [InlineData("Ollama", "True", false)]
