@@ -7,12 +7,18 @@
     const int reminderPreviewLimit = 6;
     var reminderUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
     var reminderToday = DateOnly.FromDateTime(DateTime.Today);
-    var reminderAlerts = string.IsNullOrWhiteSpace(reminderUserId) ? new List<DashboardReminderViewModel>() : await ReminderDb.ActiveAlerts(reminderUserId, reminderToday)
-        .OrderBy(item => item.EventDate)
-        .Select(item => new DashboardReminderViewModel(item.Id, item.Text, item.EventDate, item.EventDate.DayNumber - reminderToday.DayNumber))
-        .ToListAsync();
-    var reminderCount = reminderAlerts.Count;
-    var reminderPreview = reminderAlerts.Take(reminderPreviewLimit).ToList();
+    var reminderCount = 0;
+    var reminderPreview = new List<DashboardReminderViewModel>();
+    if (!string.IsNullOrWhiteSpace(reminderUserId))
+    {
+        var activeAlerts = ReminderDb.ActiveAlerts(reminderUserId, reminderToday);
+        reminderCount = await activeAlerts.CountAsync(Context.RequestAborted);
+        reminderPreview = await activeAlerts
+            .OrderBy(item => item.EventDate)
+            .Take(reminderPreviewLimit)
+            .Select(item => new DashboardReminderViewModel(item.Id, item.Text, item.EventDate, item.EventDate.DayNumber - reminderToday.DayNumber))
+            .ToListAsync(Context.RequestAborted);
+    }
     var reminderHiddenCount = reminderCount - reminderPreview.Count;
 }
 <details class="reminder-menu top-with-tooltip">
