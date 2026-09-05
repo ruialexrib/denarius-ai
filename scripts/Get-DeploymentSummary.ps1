@@ -123,10 +123,7 @@ function Get-GitHubProvenance {
     }
 
     try {
-        $pullRequests = Invoke-GitHubRequest \
-            -Uri "https://api.github.com/repos/$Repository/commits/$Commit/pulls" \
-            -Headers $headers
-
+        $pullRequests = Invoke-GitHubRequest -Uri "https://api.github.com/repos/$Repository/commits/$Commit/pulls" -Headers $headers
         $pullRequest = $pullRequests |
             Where-Object { $null -ne $_.merged_at } |
             Sort-Object merged_at -Descending |
@@ -145,10 +142,7 @@ function Get-GitHubProvenance {
         $issues = @()
         foreach ($issueNumber in $issueNumbers) {
             try {
-                $issue = Invoke-GitHubRequest \
-                    -Uri "https://api.github.com/repos/$Repository/issues/$issueNumber" \
-                    -Headers $headers
-
+                $issue = Invoke-GitHubRequest -Uri "https://api.github.com/repos/$Repository/issues/$issueNumber" -Headers $headers
                 if ($null -eq $issue.pull_request) {
                     $issues += "#$issueNumber - $($issue.title)"
                 }
