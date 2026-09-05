@@ -32,6 +32,7 @@ These instructions apply to every task in this repository.
 
 ## Repository workflows
 
-- Use the project skills under `.agents/skills/` for coding standards, financial-domain changes, AI workflows, data lifecycle, quality checks, Git commits, UI work, Docker operations, screenshots/README work, and releases.
+- Use the project skills under `.agents/skills/` for coding standards, financial-domain changes, AI workflows, data lifecycle, quality checks, Git commits, GitHub issue authoring, UI work, Docker operations, screenshots/README work, and releases.
+- Follow `denarius-issues` whenever creating, rewriting, splitting, or materially refining a GitHub issue. Base issue content on the current repository state, make acceptance criteria objectively verifiable, and do not infer implementation or Codex delegation beyond the user's request.
 - A request to commit or push does not implicitly authorize creating a release; create a release only when explicitly requested.
 - Before committing, summarize the intended files and exclude unrelated user changes where possible.
