@@ -16,6 +16,7 @@ public sealed class PersistenceAndServiceTests
     {
         await using var context = CreateContext();
         await context.Database.EnsureCreatedAsync();
+        await new DemonstrationDataService(context).LoadAsync();
         var service = new AnalyticsService(new AnalyticsRepository(context));
 
         var analytics = await service.GetAsync(new AnalyticsFilterDto(new DateOnly(2026, 7, 1), new DateOnly(2026, 7, 31)));
@@ -33,10 +34,8 @@ public sealed class PersistenceAndServiceTests
     {
         await using var context = CreateContext();
         await context.Database.EnsureCreatedAsync();
-        var expenseCategory = await context.Categories.FirstAsync(item => item.FinancialGroup.Kind == FinancialGroupKind.Expense);
-        var budget = new Budget { Year = 2026, Month = 7 };
-        budget.Lines.Add(new BudgetLine { CategoryId = expenseCategory.Id, Amount = 100m });
-        context.Budgets.Add(budget);
+        await new DemonstrationDataService(context).LoadAsync();
+        var budget = await context.Budgets.FirstAsync(item => item.Year == 2026 && item.Month == 7);
         await context.SaveChangesAsync();
         var julyEntries = await context.JournalEntries.Include(item => item.Lines).Where(item => item.Date.Year == 2026 && item.Date.Month == 7).ToListAsync();
         foreach (var entry in julyEntries) entry.AssignBudget(budget.Id);

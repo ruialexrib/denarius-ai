@@ -18,6 +18,39 @@ public sealed class DemonstrationDataService(DenariusDbContext dbContext, UserMa
     private const string DemonstrationPdfBase64 = "JVBERi0xLjQKMSAwIG9iago8PCAvVHlwZSAvQ2F0YWxvZyAvUGFnZXMgMiAwIFIgPj4KZW5kb2JqCjIgMCBvYmoKPDwgL1R5cGUgL1BhZ2VzIC9LaWRzIFszIDAgUl0gL0NvdW50IDEgPj4KZW5kb2JqCjMgMCBvYmoKPDwgL1R5cGUgL1BhZ2UgL1BhcmVudCAyIDAgUiAvTWVkaWFCb3ggWzAgMCA2MTIgNzkyXSAvQ29udGVudHMgNCAwIFIgPj4KZW5kb2JqCjQgMCBvYmoKPDwgL0xlbmd0aCAwID4+CnN0cmVhbQoKZW5kc3RyZWFtCmVuZG9iagp0cmFpbGVyCjw8IC9Sb290IDEgMCBSIC9TaXplIDUgPj4KJSVFT0YK";
 
     /// <summary>
+    /// The application settings key used to persist that the first-installation demonstration scenario
+    /// has already been evaluated, independently of whether financial records still exist.
+    /// </summary>
+    private const string InitializationStateKey = "System.InitialDemonstrationDataSeededAt";
+
+    /// <summary>
+    /// Ensures the demonstration scenario is loaded exactly once for a brand-new installation.
+    /// </summary>
+    /// <remarks>
+    /// Detection relies on an explicit, persisted marker in <see cref="DenariusDbContext.ApplicationSettings"/>
+    /// rather than on the presence of financial records (such as <see cref="DenariusDbContext.Accounts"/> or
+    /// <see cref="DenariusDbContext.JournalEntries"/>), so that ordinary restarts never reload or duplicate
+    /// demonstration data even after the user deletes or resets their financial records.
+    /// </remarks>
+    /// <param name="cancellationToken">Cancellation token to cancel the operation.</param>
+    /// <returns>The result of the load operation, or an unloaded result when initialization already occurred.</returns>
+    public async Task<DemonstrationDataLoadResult> EnsureInitialDemonstrationDataAsync(CancellationToken cancellationToken = default)
+    {
+        if (await dbContext.ApplicationSettings.AnyAsync(setting => setting.Key == InitializationStateKey, cancellationToken))
+            return new(false, 0, 0, 0);
+
+        var result = await LoadAsync(cancellationToken);
+        dbContext.ApplicationSettings.Add(new ApplicationSetting
+        {
+            Key = InitializationStateKey,
+            Value = DateTimeOffset.UtcNow.ToString("O"),
+            CreatedBy = "system-init"
+        });
+        await dbContext.SaveChangesAsync(cancellationToken);
+        return result;
+    }
+
+    /// <summary>
     /// Loads demonstration data into the database if no data exists.
     /// </summary>
     /// <param name="cancellationToken">Cancellation token to cancel the operation.</param>
@@ -32,15 +65,17 @@ public sealed class DemonstrationDataService(DenariusDbContext dbContext, UserMa
             return new(false, 0, 0, 0);
         }
 
-        var accounts = StructuralSeed.Accounts;
+        var accounts = CreateAccounts();
         var entries = CreateEntries();
-        var budgets = StructuralSeed.Budgets;
+        var budgets = CreateBudgets();
 
         dbContext.Accounts.AddRange(accounts);
         dbContext.JournalEntries.AddRange(entries);
         dbContext.Budgets.AddRange(budgets);
-        dbContext.BudgetLines.AddRange(StructuralSeed.BudgetLines);
-        dbContext.Reconciliations.AddRange(StructuralSeed.Reconciliations);
+        dbContext.BudgetLines.AddRange(CreateBudgetLines());
+        dbContext.Reconciliations.AddRange(CreateReconciliations());
+        if (!await dbContext.Reminders.AnyAsync(cancellationToken))
+            dbContext.Reminders.AddRange(CreateReminders());
         var savingsCertificates = CreateSavingsCertificates();
         dbContext.SavingsCertificates.AddRange(savingsCertificates);
         await AddCompleteScenarioAsync(cancellationToken);
@@ -60,6 +95,108 @@ public sealed class DemonstrationDataService(DenariusDbContext dbContext, UserMa
 
         return new(true, accounts.Length, entries.Length, budgets.Length);
     }
+
+    /// <summary>Creates the demonstration accounts (bank account, savings, cash, income and expense counterparts).</summary>
+    /// <returns>The five demonstration accounts.</returns>
+    private static Account[] CreateAccounts() =>
+    [
+        new()
+        {
+            Id = Id("30000000", 1),
+            Name = "Conta à Ordem — Demonstração",
+            Description = "Conta bancária principal do cenário de demonstração.",
+            AccountType = AccountType.BankAccount,
+            InitialBalance = 1850m,
+            Currency = "EUR",
+            CategoryId = Id("20000000", 1),
+            CreatedAt = SeedDate()
+        },
+        DemoAccount(2, "Conta Poupança — Demonstração", "Poupança familiar do cenário de demonstração.", AccountType.Savings, 4200m, 2),
+        DemoAccount(3, "Dinheiro — Demonstração", "Carteira de numerário do cenário de demonstração.", AccountType.Cash, 120m, 4),
+        DemoAccount(4, "Rendimentos — Demonstração", "Contrapartida contabilística dos rendimentos.", AccountType.Income, 0m, 10),
+        DemoAccount(5, "Despesas — Demonstração", "Contrapartida contabilística das despesas.", AccountType.Expense, 0m, 33)
+    ];
+
+    /// <summary>Creates one deterministic demonstration account.</summary>
+    /// <param name="id">Account identifier suffix.</param>
+    /// <param name="name">Account name.</param>
+    /// <param name="description">Account description.</param>
+    /// <param name="type">Account type.</param>
+    /// <param name="balance">Initial balance.</param>
+    /// <param name="categoryCode">Category code.</param>
+    /// <returns>A configured account.</returns>
+    private static Account DemoAccount(int id, string name, string description, AccountType type, decimal balance, int categoryCode) => new()
+    {
+        Id = Id("30000000", id), Name = name, Description = description, AccountType = type, InitialBalance = balance,
+        Currency = "EUR", CategoryId = Id("20000000", categoryCode), CreatedAt = SeedDate()
+    };
+
+    /// <summary>Creates the demonstration budgets for 8 months of the current demonstration year.</summary>
+    /// <returns>The demonstration budgets.</returns>
+    private static Budget[] CreateBudgets() => Enumerable.Range(1, 8)
+        .Select(month => new Budget { Id = Id("60000000", month), Year = 2026, Month = month, CreatedAt = SeedDate(), CreatedBy = "demo-seed" })
+        .ToArray();
+
+    /// <summary>Creates the demonstration budget lines for all demonstration budgets.</summary>
+    /// <returns>The demonstration budget lines.</returns>
+    private static BudgetLine[] CreateBudgetLines() => Enumerable.Range(1, 8).SelectMany(month => new[]
+    {
+        BudgetLine(month, 1, 30, 780m), BudgetLine(month, 2, 31, 40m), BudgetLine(month, 3, 32, 85m),
+        BudgetLine(month, 4, 33, 320m), BudgetLine(month, 5, 34, 140m), BudgetLine(month, 6, 35, 90m),
+        BudgetLine(month, 7, 37, 110m), BudgetLine(month, 8, 38, 120m), BudgetLine(month, 9, 39, 35m)
+    }).ToArray();
+
+    /// <summary>Creates one deterministic demonstration budget line.</summary>
+    /// <param name="month">The month number.</param>
+    /// <param name="slot">The line slot within the budget.</param>
+    /// <param name="categoryCode">The category code.</param>
+    /// <param name="amount">The budgeted amount.</param>
+    /// <returns>A configured budget line.</returns>
+    private static BudgetLine BudgetLine(int month, int slot, int categoryCode, decimal amount) => new()
+    {
+        Id = Id("70000000", ((month - 1) * 9) + slot), BudgetId = Id("60000000", month), CategoryId = Id("20000000", categoryCode),
+        Amount = amount, CreatedAt = SeedDate(), CreatedBy = "demo-seed"
+    };
+
+    /// <summary>Creates the demonstration reconciliations for the first six journal entries of every month.</summary>
+    /// <returns>The demonstration reconciliations.</returns>
+    private static Reconciliation[] CreateReconciliations() => Enumerable.Range(1, 8)
+        .SelectMany(month => Enumerable.Range(1, 6).Select(slot => DemoReconciliation(((month - 1) * 6) + slot, EntryId(month, slot))))
+        .ToArray();
+
+    /// <summary>Creates one deterministic demonstration reconciliation.</summary>
+    /// <param name="id">The reconciliation identifier suffix.</param>
+    /// <param name="entryId">The reconciled journal entry identifier.</param>
+    /// <returns>A configured, reconciled record.</returns>
+    private static Reconciliation DemoReconciliation(int id, Guid entryId) => new()
+    {
+        Id = Id("80000000", id), JournalEntryId = entryId, Status = ReconciliationStatus.Reconciled,
+        ReconciledAt = SeedDate().AddDays(id), ReconciledBy = "demo-seed", CreatedAt = SeedDate(), CreatedBy = "demo-seed"
+    };
+
+    /// <summary>Creates the demonstration reminders shown on the dashboard for a brand-new installation.</summary>
+    /// <returns>The demonstration reminders.</returns>
+    private static Reminder[] CreateReminders() =>
+    [
+        DemoReminder(1, "Confirmar a próxima capitalização dos Certificados de Aforro", new DateOnly(2026, 8, 28), 7),
+        DemoReminder(2, "Rever e renovar o seguro automóvel", new DateOnly(2026, 9, 15), 15),
+        DemoReminder(3, "Preparar o orçamento familiar do próximo ano", new DateOnly(2026, 12, 15), 30)
+    ];
+
+    /// <summary>Creates one deterministic demonstration reminder.</summary>
+    /// <param name="id">Reminder identifier suffix.</param>
+    /// <param name="text">Reminder text.</param>
+    /// <param name="eventDate">Date of the reminded event.</param>
+    /// <param name="noticeDays">Number of days before the event to send notice.</param>
+    /// <returns>A configured reminder.</returns>
+    private static Reminder DemoReminder(int id, string text, DateOnly eventDate, int noticeDays) =>
+        new(text, eventDate, noticeDays) { Id = Id("90000000", id), CreatedAt = SeedDate(), CreatedBy = "demo-seed" };
+
+    /// <summary>Generates a journal entry identifier based on month and slot, matching <see cref="Entry"/>.</summary>
+    /// <param name="month">The month number.</param>
+    /// <param name="slot">The entry slot within the month.</param>
+    /// <returns>A unique identifier for the journal entry.</returns>
+    private static Guid EntryId(int month, int slot) => Id("40000000", ((month - 1) * 9) + slot);
 
     /// <summary>Adds demonstration records for every user-facing non-core application area when that area is empty.</summary>
     /// <param name="cancellationToken">Cancellation token to cancel database checks.</param>

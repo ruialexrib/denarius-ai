@@ -85,7 +85,6 @@ internal sealed class AccountConfiguration : IEntityTypeConfiguration<Account>
         builder.HasIndex(entity => entity.Name);
         builder.HasIndex(entity => entity.CategoryId);
         builder.HasOne(entity => entity.Category).WithMany(category => category.Accounts).HasForeignKey(entity => entity.CategoryId).OnDelete(DeleteBehavior.Restrict);
-        builder.HasData(StructuralSeed.Accounts);
     }
 }
 
@@ -113,7 +112,6 @@ internal sealed class JournalEntryConfiguration : IEntityTypeConfiguration<Journ
         builder.HasOne(entity => entity.Budget).WithMany(budget => budget.JournalEntries).HasForeignKey(entity => entity.BudgetId).OnDelete(DeleteBehavior.SetNull);
         builder.HasIndex(entity => entity.BudgetId);
         builder.Navigation(entity => entity.Lines).UsePropertyAccessMode(PropertyAccessMode.Field);
-        builder.HasData(StructuralSeed.JournalEntries);
     }
 }
 
@@ -137,7 +135,6 @@ internal sealed class JournalEntryLineConfiguration : IEntityTypeConfiguration<J
         builder.HasIndex(entity => entity.CategoryId);
         builder.HasOne(entity => entity.Account).WithMany(account => account.JournalEntryLines).HasForeignKey(entity => entity.AccountId).OnDelete(DeleteBehavior.Restrict);
         builder.HasOne(entity => entity.Category).WithMany(category => category.JournalEntryLines).HasForeignKey(entity => entity.CategoryId).OnDelete(DeleteBehavior.Restrict);
-        builder.HasData(StructuralSeed.JournalEntryLines);
     }
 }
 
@@ -193,6 +190,5 @@ internal sealed class ReconciliationConfiguration : IEntityTypeConfiguration<Rec
         builder.HasIndex(entity => entity.JournalEntryId).IsUnique();
         builder.HasIndex(entity => entity.Status);
         builder.HasOne(entity => entity.JournalEntry).WithOne(entry => entry.Reconciliation).HasForeignKey<Reconciliation>(entity => entity.JournalEntryId).OnDelete(DeleteBehavior.Restrict);
-        builder.HasData(StructuralSeed.Reconciliations);
     }
 }
