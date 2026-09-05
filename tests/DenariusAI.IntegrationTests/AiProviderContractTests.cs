@@ -48,11 +48,14 @@ public sealed class AiProviderContractTests
     {
         await using var dbContext = CreateDbContext();
         var provider = new StubProvider("Mistral");
-        var service = new ConfigurableLLMService([provider], new StubSettings("Mistral"), dbContext);
+        var service = new ConfigurableLLMService([provider], new StubSettings("Mistral", observeCancellation: false), dbContext);
         using var cancellation = new CancellationTokenSource();
         cancellation.Cancel();
 
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() => service.CompleteAsync([new LlmMessageDto("user", "teste")], cancellation.Token));
+
+        Assert.Equal(1, provider.Calls);
+        Assert.True(provider.CancellationObserved);
     }
 
     /// <summary>Verifies that malformed structured model output is rejected safely and uses the configured prompt.</summary>
@@ -90,12 +93,31 @@ public sealed class AiProviderContractTests
     }
 
     /// <summary>Provides deterministic application settings to provider and prompt tests.</summary>
-    private sealed class StubSettings(string provider, string insurancePrompt = "Prompt de seguros") : IApplicationSettingsService
+    private sealed class StubSettings : IApplicationSettingsService
     {
+        private readonly string provider;
+        private readonly string insurancePrompt;
+        private readonly bool observeCancellation;
+
+        /// <summary>Initializes deterministic settings for an AI provider contract test.</summary>
+        /// <param name="provider">The provider identifier returned by the settings service.</param>
+        /// <param name="insurancePrompt">The insurance extraction prompt returned by the settings service.</param>
+        /// <param name="observeCancellation">Whether the settings boundary should honour cancellation before returning settings.</param>
+        public StubSettings(string provider, string insurancePrompt = "Prompt de seguros", bool observeCancellation = true)
+        {
+            this.provider = provider;
+            this.insurancePrompt = insurancePrompt;
+            this.observeCancellation = observeCancellation;
+        }
+
         /// <inheritdoc />
         public Task<ApplicationSettingsDto> GetAsync(CancellationToken cancellationToken = default)
         {
-            cancellationToken.ThrowIfCancellationRequested();
+            if (observeCancellation)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+            }
+
             return Task.FromResult(new ApplicationSettingsDto(
                 "mistral-test", "https://example.invalid/", 1024, 0.2, "assistant", 12, 200, 10,
                 "journal", 10, "extract", "classify", InsuranceClipboardPrompt: insurancePrompt, AiProvider: provider));
@@ -106,10 +128,17 @@ public sealed class AiProviderContractTests
     }
 
     /// <summary>Captures provider-neutral routing without performing network I/O.</summary>
-    private sealed class StubProvider(string id) : ILLMProvider
+    private sealed class StubProvider : ILLMProvider
     {
+        /// <summary>Initializes a deterministic provider adapter.</summary>
+        /// <param name="id">The provider identifier exposed through the adapter.</param>
+        public StubProvider(string id)
+        {
+            Id = id;
+        }
+
         /// <inheritdoc />
-        public string Id { get; } = id;
+        public string Id { get; }
 
         /// <summary>Gets the number of completion calls received.</summary>
         public int Calls { get; private set; }
@@ -117,22 +146,35 @@ public sealed class AiProviderContractTests
         /// <summary>Gets the most recent output-token limit.</summary>
         public int LastMaxTokens { get; private set; }
 
+        /// <summary>Gets a value indicating whether the most recent completion call received a cancelled token.</summary>
+        public bool CancellationObserved { get; private set; }
+
         /// <inheritdoc />
         public LlmProviderStatus GetStatus(IReadOnlyDictionary<string, string> settings) => new(Id, "test", true);
 
         /// <inheritdoc />
         public Task<LlmCompletionDto> CompleteAsync(IReadOnlyCollection<LlmMessageDto> messages, int maxTokens, CancellationToken cancellationToken = default)
         {
-            cancellationToken.ThrowIfCancellationRequested();
             Calls++;
+            CancellationObserved = cancellationToken.IsCancellationRequested;
+            cancellationToken.ThrowIfCancellationRequested();
             LastMaxTokens = maxTokens;
             return Task.FromResult(new LlmCompletionDto("ok-" + Id, "test", null, null));
         }
     }
 
     /// <summary>Returns deterministic structured output without external provider access.</summary>
-    private sealed class StubLlm(string response) : ILLMService
+    private sealed class StubLlm : ILLMService
     {
+        private readonly string response;
+
+        /// <summary>Initializes a deterministic language-model response.</summary>
+        /// <param name="response">The exact completion content returned by the stub.</param>
+        public StubLlm(string response)
+        {
+            this.response = response;
+        }
+
         /// <inheritdoc />
         public string Provider => "Test";
 
