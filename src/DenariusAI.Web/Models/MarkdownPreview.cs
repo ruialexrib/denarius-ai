@@ -4,8 +4,16 @@ using System.Text.RegularExpressions;
 
 namespace DenariusAI.Web.Models;
 
+/// <summary>
+/// Normalizes and renders the constrained Markdown subset used by Denarius AI previews and release notes.
+/// </summary>
 public static class MarkdownPreview
 {
+    /// <summary>
+    /// Removes surrounding whitespace and an optional outer Markdown code fence from supplied content.
+    /// </summary>
+    /// <param name="markdown">The Markdown content to normalize.</param>
+    /// <returns>The normalized Markdown, or an empty string when no content is supplied.</returns>
     public static string Normalize(string? markdown)
     {
         if (string.IsNullOrWhiteSpace(markdown)) return string.Empty;
@@ -20,6 +28,11 @@ public static class MarkdownPreview
         return string.Join('\n', lines).Trim();
     }
 
+    /// <summary>
+    /// Renders the supported Markdown subset as HTML while encoding source text before inline formatting is applied.
+    /// </summary>
+    /// <param name="markdown">The Markdown content to render.</param>
+    /// <returns>HTML suitable for the application preview surface.</returns>
     public static string Render(string? markdown)
     {
         markdown = Normalize(markdown);
@@ -76,6 +89,11 @@ public static class MarkdownPreview
         return html.ToString();
     }
 
+    /// <summary>
+    /// Ensures release-note content has Markdown structure, converting plain non-empty lines to a bullet list when required.
+    /// </summary>
+    /// <param name="markdown">The release-note content to normalize.</param>
+    /// <returns>Structured Markdown suitable for the release-note view.</returns>
     public static string NormalizeReleaseNotes(string? markdown)
     {
         markdown = Normalize(markdown);
@@ -92,16 +110,36 @@ public static class MarkdownPreview
         return "## Novidades\n\n" + string.Join('\n', lines.Select(line => $"- {line.TrimEnd()}"));
     }
 
+    /// <summary>
+    /// Determines whether a line contains the pipe-delimited shape used for a Markdown table row.
+    /// </summary>
+    /// <param name="value">The line to inspect.</param>
+    /// <returns><see langword="true"/> when the line has a table-row shape; otherwise <see langword="false"/>.</returns>
     private static bool IsTableRow(string value) => value.Trim().Trim('|').Contains('|');
 
+    /// <summary>
+    /// Determines whether a line is a valid Markdown table separator.
+    /// </summary>
+    /// <param name="value">The separator line to inspect.</param>
+    /// <returns><see langword="true"/> when all cells are separator markers; otherwise <see langword="false"/>.</returns>
     private static bool IsTableSeparator(string value)
     {
         var cells = TableCells(value);
         return cells.Length > 0 && cells.All(cell => Regex.IsMatch(cell, @"^:?-{3,}:?$"));
     }
 
+    /// <summary>
+    /// Splits a pipe-delimited Markdown table row into trimmed cells.
+    /// </summary>
+    /// <param name="value">The table row to split.</param>
+    /// <returns>The trimmed table cells.</returns>
     private static string[] TableCells(string value) => value.Trim().Trim('|').Split('|').Select(cell => cell.Trim()).ToArray();
 
+    /// <summary>
+    /// Encodes inline text and applies the supported strong, emphasis and code formatting markers.
+    /// </summary>
+    /// <param name="value">The inline Markdown text to encode and format.</param>
+    /// <returns>The encoded inline HTML.</returns>
     private static string Inline(string value)
     {
         var encoded = WebUtility.HtmlEncode(value);
