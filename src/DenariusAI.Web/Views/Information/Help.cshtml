@@ -28,7 +28,7 @@
         @foreach (var topic in group)
         {
             var classes = $"help-card{(topic.Featured ? " featured" : string.Empty)}{(topic.AiTopic ? " ai" : string.Empty)}";
-            var searchText = $"{topic.Title} {topic.Subtitle} {string.Join(' ', topic.Sections.SelectMany(section => section.Items))}";
+            var searchText = $"{topic.Title} {topic.Subtitle} {string.Join(" ", topic.Sections.SelectMany(section => section.Items))}";
             <a class="@classes" asp-action="HelpDetail" asp-route-id="@topic.Id" data-help-topic data-help-search="@searchText">
                 <span class="help-icon">@topic.Icon</span>
                 <span class="help-card-category">@topic.Category</span>
