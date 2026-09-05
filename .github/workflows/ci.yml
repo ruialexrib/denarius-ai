@@ -14,8 +14,101 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  hygiene:
+    name: Repository hygiene
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+
+      - name: Verify .NET formatting for changed C# files
+        shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          PUSH_BASE_SHA: ${{ github.event.before }}
+        run: |
+          set -euo pipefail
+
+          if [[ "$EVENT_NAME" == "pull_request" ]]; then
+            base_sha="$PR_BASE_SHA"
+          else
+            base_sha="$PUSH_BASE_SHA"
+          fi
+
+          if [[ -z "$base_sha" || "$base_sha" =~ ^0+$ ]]; then
+            base_sha="$(git rev-parse HEAD^)"
+          fi
+
+          mapfile -t changed_cs < <(git diff --diff-filter=ACMRT --name-only "$base_sha"...HEAD -- '*.cs')
+
+          if (( ${#changed_cs[@]} == 0 )); then
+            echo 'No changed C# files require formatting validation.'
+            exit 0
+          fi
+
+          echo 'Checking formatting for changed C# files:'
+          printf ' - %s\n' "${changed_cs[@]}"
+          dotnet format DenariusAI.slnx whitespace --verify-no-changes --include "${changed_cs[@]}"
+
+      - name: Check for unresolved merge-conflict markers
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if git grep -n -E '^(<<<<<<< |>>>>>>> )' -- \
+            '*.cs' '*.csproj' '*.props' '*.targets' '*.json' '*.yml' '*.yaml' \
+            '*.xml' '*.cshtml' '*.js' '*.css' '*.sh' '*.bat' '*.ps1'; then
+            echo 'Unresolved merge-conflict markers were found in tracked source or configuration files.' >&2
+            exit 1
+          fi
+
+          echo 'No unresolved merge-conflict markers found.'
+
+      - name: Check for prohibited tracked files
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          prohibited=()
+          while IFS= read -r path; do
+            normalized_path="${path,,}"
+
+            if [[ "$normalized_path" =~ (^|/)\.env($|\.) ]] && [[ ! "$normalized_path" =~ (^|/)\.env\.example$ ]]; then
+              prohibited+=("$path")
+              continue
+            fi
+
+            if [[ "$normalized_path" =~ (^|/)(secrets\.json|appsettings\.local\.json)$ ]]; then
+              prohibited+=("$path")
+              continue
+            fi
+
+            if [[ "$normalized_path" =~ \.(bak|bacpac|mdf|ldf|db|db3|sqlite|sqlite3)$ ]]; then
+              prohibited+=("$path")
+            fi
+          done < <(git ls-files)
+
+          if (( ${#prohibited[@]} > 0 )); then
+            echo 'Prohibited tracked files were found:' >&2
+            printf ' - %s\n' "${prohibited[@]}" >&2
+            exit 1
+          fi
+
+          echo 'No prohibited tracked files found.'
+
   dotnet:
     name: Build and test .NET
+    needs: hygiene
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
@@ -54,6 +147,7 @@ jobs:
 
   docker:
     name: Build Docker (${{ matrix.component }})
+    needs: hygiene
     runs-on: ubuntu-latest
     timeout-minutes: 25
     strategy:
@@ -81,4 +175,3 @@ jobs:
           push: false
           cache-from: type=gha,scope=${{ matrix.component }}
           cache-to: type=gha,mode=max,scope=${{ matrix.component }}
-
