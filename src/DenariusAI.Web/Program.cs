@@ -45,7 +45,7 @@ var app = builder.Build();
 
 await ApplyDatabaseMigrationsAsync(app);
 await SeedAdministratorAsync(app);
-await SeedDemonstrationUsersAsync(app);
+await EnsureInitialDemonstrationDataAsync(app);
 
 if (!app.Environment.IsDevelopment())
 {
@@ -127,13 +127,17 @@ static async Task SeedAdministratorAsync(WebApplication application)
     logger.LogInformation("Initial administrator created for {Email}.", email);
 }
 
-static async Task SeedDemonstrationUsersAsync(WebApplication application)
+static async Task EnsureInitialDemonstrationDataAsync(WebApplication application)
 {
     await using var scope = application.Services.CreateAsyncScope();
-    var dbContext = scope.ServiceProvider.GetRequiredService<DenariusDbContext>();
-    if (!await dbContext.JournalEntries.AnyAsync(entry => entry.CreatedBy == "demo-seed")) return;
-
+    var logger = scope.ServiceProvider.GetRequiredService<ILoggerFactory>()
+        .CreateLogger("DemonstrationDataSeed");
     var service = scope.ServiceProvider.GetRequiredService<DenariusAI.Application.Abstractions.Services.IDemonstrationDataService>();
+
+    var result = await service.EnsureInitialDemonstrationDataAsync();
+    if (result.Loaded)
+        logger.LogInformation("Demonstration data automatically loaded on first initialization: {Accounts} accounts, {JournalEntries} journal entries, {Budgets} budgets.", result.Accounts, result.JournalEntries, result.Budgets);
+
     await service.EnsureUsersAsync();
 }
 

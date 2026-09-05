@@ -23,4 +23,13 @@ public interface IDemonstrationDataService
 
     /// <summary>Ensures the two non-privileged users used by the demonstration scenario exist.</summary>
     Task EnsureUsersAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Ensures the demonstration scenario is loaded exactly once for a brand-new installation, using an
+    /// explicit persisted initialization marker rather than the presence of financial records to detect
+    /// whether the automatic first-installation seeding has already occurred.
+    /// </summary>
+    /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
+    /// <returns>A task that represents the asynchronous operation, containing the result of the load operation.</returns>
+    Task<DemonstrationDataLoadResult> EnsureInitialDemonstrationDataAsync(CancellationToken cancellationToken = default);
 }

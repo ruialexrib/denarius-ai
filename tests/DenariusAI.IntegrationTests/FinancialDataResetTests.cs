@@ -18,6 +18,7 @@ public sealed class FinancialDataResetTests
         await using var context = new DenariusDbContext(new DbContextOptionsBuilder<DenariusDbContext>()
             .UseInMemoryDatabase(Guid.NewGuid().ToString()).Options);
         await context.Database.EnsureCreatedAsync();
+        await new DemonstrationDataService(context).LoadAsync();
         var category = await context.Categories.FirstAsync();
         var budget = new Budget { Year = 2027, Month = 1 };
         budget.Lines.Add(new BudgetLine { CategoryId = category.Id, Amount = 10m });
@@ -69,6 +70,7 @@ public sealed class FinancialDataResetTests
         Assert.Equal(3, await context.StockPositions.CountAsync());
         Assert.Equal(24, await context.StockPrices.CountAsync());
         Assert.Equal(2, await context.Warranties.CountAsync());
+        Assert.Equal(5, await context.Reminders.CountAsync());
         Assert.Equal(2, await context.Reminders.CountAsync(reminder => reminder.WarrantyId != null));
         Assert.Equal(2, await context.Correspondence.CountAsync());
         Assert.Equal(4, await context.CorrespondenceMetadata.CountAsync());
