@@ -1,0 +1,53 @@
+name: Dependency Audit
+
+on:
+  schedule:
+    - cron: '41 5 * * 3'
+  workflow_dispatch:
+  workflow_call:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: dependency-audit-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  nuget-audit:
+    name: NuGet vulnerability audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+
+      - name: Restore dependency graph
+        run: dotnet restore DenariusAI.slnx
+
+      - name: Audit direct and transitive vulnerabilities
+        run: dotnet list DenariusAI.slnx package --vulnerable --include-transitive --format json > nuget-vulnerabilities.json
+
+      - name: Enforce high and critical vulnerability policy
+        run: python3 eng/ci/check_nuget_vulnerabilities.py nuget-vulnerabilities.json
+
+      - name: Report outdated packages without blocking
+        continue-on-error: true
+        run: dotnet list DenariusAI.slnx package --outdated --include-transitive --format json > nuget-outdated.json
+
+      - name: Upload dependency audit reports
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: nuget-dependency-audit
+          path: |
+            nuget-vulnerabilities.json
+            nuget-outdated.json
+          if-no-files-found: warn
+          retention-days: 30
