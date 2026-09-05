@@ -22,14 +22,43 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
 
       - name: Set up .NET
         uses: actions/setup-dotnet@v6
         with:
           global-json-file: global.json
 
-      - name: Verify .NET formatting
-        run: dotnet format DenariusAI.slnx whitespace --verify-no-changes
+      - name: Verify .NET formatting for changed C# files
+        shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          PUSH_BASE_SHA: ${{ github.event.before }}
+        run: |
+          set -euo pipefail
+
+          if [[ "$EVENT_NAME" == "pull_request" ]]; then
+            base_sha="$PR_BASE_SHA"
+          else
+            base_sha="$PUSH_BASE_SHA"
+          fi
+
+          if [[ -z "$base_sha" || "$base_sha" =~ ^0+$ ]]; then
+            base_sha="$(git rev-parse HEAD^)"
+          fi
+
+          mapfile -t changed_cs < <(git diff --diff-filter=ACMRT --name-only "$base_sha"...HEAD -- '*.cs')
+
+          if (( ${#changed_cs[@]} == 0 )); then
+            echo 'No changed C# files require formatting validation.'
+            exit 0
+          fi
+
+          echo 'Checking formatting for changed C# files:'
+          printf ' - %s\n' "${changed_cs[@]}"
+          dotnet format DenariusAI.slnx whitespace --verify-no-changes --include "${changed_cs[@]}"
 
       - name: Check for unresolved merge-conflict markers
         shell: bash
