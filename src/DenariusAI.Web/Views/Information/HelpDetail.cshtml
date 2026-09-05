@@ -16,9 +16,9 @@
     <aside class="panel help-toc" aria-label="Nesta página">
         <p class="eyebrow">Nesta página</p>
         <nav>
-        @foreach (var section in Model.Sections)
+        @foreach (var helpSection in Model.Sections)
         {
-            <a href="#@section.Id">@section.Title</a>
+            <a href="#@helpSection.Id">@helpSection.Title</a>
         }
         </nav>
         <a class="help-toc-back" asp-action="Help">Ver todas as áreas</a>
