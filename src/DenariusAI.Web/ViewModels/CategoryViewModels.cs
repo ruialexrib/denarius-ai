@@ -23,7 +23,15 @@ public sealed class CategoryFormViewModel
     public IReadOnlyList<SelectListItem> Groups { get; set; } = [];
 }
 
-public sealed record CategoryListItemViewModel(CategoryDto Category, string GroupName, DenariusAI.Domain.Enums.FinancialGroupKind Kind);
+/// <summary>
+/// Represents a category row together with its financial-group presentation and movement usage state.
+/// </summary>
+/// <param name="Category">Category data.</param>
+/// <param name="GroupName">Display name of the financial group.</param>
+/// <param name="Kind">Financial group kind used for the category icon.</param>
+/// <param name="HasMovementUsage">Whether the category has ever been referenced by a journal movement line.</param>
+public sealed record CategoryListItemViewModel(CategoryDto Category, string GroupName, DenariusAI.Domain.Enums.FinancialGroupKind Kind, bool HasMovementUsage);
+
 public sealed record CategoryIndexViewModel(
     IReadOnlyList<CategoryListItemViewModel> Items,
     IReadOnlyList<SelectListItem> Groups,
