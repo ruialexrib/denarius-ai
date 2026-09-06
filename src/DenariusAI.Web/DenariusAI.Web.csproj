@@ -1,7 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
   <PropertyGroup>
     <UserSecretsId>DenariusAI-Web-Development</UserSecretsId>
-    <Version>0.25.0-dev.4</Version>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../DenariusAI.Application/DenariusAI.Application.csproj" />
