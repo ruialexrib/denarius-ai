@@ -29,7 +29,7 @@ public static class BudgetReportPdf
         var culture = CultureInfo.GetCultureInfo("pt-PT");
         var period = UpperFirst(new DateTime(year, month, 1).ToString("MMMM 'de' yyyy", culture));
         var included = items.Where(item => item.Budgeted != 0m || item.Actual != 0m).ToList();
-        var ordered = included.OrderBy(item => item.FinancialGroupName).ThenBy(item => item.CategoryName).ToList();
+        var ordered = BudgetExecutionOrdering.ApplyReportOrder(included);
         var pages = Paginate(ordered, 20, 24);
         var budgeted = included.Sum(item => item.Budgeted);
         var actual = included.Sum(item => item.Actual);
