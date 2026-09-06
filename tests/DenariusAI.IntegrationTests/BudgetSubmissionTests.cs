@@ -238,8 +238,12 @@ public sealed class BudgetSubmissionTests
     {
         var fields = new Dictionary<string, StringValues>
         {
-            ["Year"] = "2026", ["Month"] = "9", ["BudgetedOnly"] = "false", ["Sort"] = "category",
-            ["Lines[0].CategoryId"] = categoryId.ToString(), ["Lines[0].CategoryName"] = "Teste"
+            ["Year"] = "2026",
+            ["Month"] = "9",
+            ["BudgetedOnly"] = "false",
+            ["Sort"] = "category",
+            ["Lines[0].CategoryId"] = categoryId.ToString(),
+            ["Lines[0].CategoryName"] = "Teste"
         };
         if (amount is not null) fields["Lines[0].Amount"] = amount;
         return fields;
