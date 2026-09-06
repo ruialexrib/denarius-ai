@@ -134,9 +134,17 @@
         if (event.target.matches('.searchable-category')) updateSummary(event.target);
     });
 
-    const observer = new MutationObserver(() => {
-        form.querySelectorAll('.searchable-category').forEach(ensureSummary);
-        updateAll();
+    const observer = new MutationObserver(mutations => {
+        const addedCategories = new Set();
+        mutations.forEach(mutation => mutation.addedNodes.forEach(node => {
+            if (!(node instanceof Element)) return;
+            if (node.matches('.searchable-category')) addedCategories.add(node);
+            node.querySelectorAll('.searchable-category').forEach(select => addedCategories.add(select));
+        }));
+        addedCategories.forEach(select => {
+            ensureSummary(select);
+            updateSummary(select);
+        });
     });
     observer.observe(form, { childList: true, subtree: true });
 
