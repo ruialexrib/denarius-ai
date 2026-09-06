@@ -42,7 +42,7 @@ public sealed class AnalyticsController(IAnalyticsService analyticsService, IFin
         var filter = new AnalyticsFilterDto(selectedFrom, selectedTo, groupId, categoryId, accountId);
         var analytics = await analyticsService.GetAsync(filter, cancellationToken);
         var groups = await groupService.ListAsync(true, cancellationToken);
-        var categories = await categoryService.ListAsync(activeOnly: true, cancellationToken: cancellationToken);
+        var categories = CategoryDisplayOrdering.Order(await categoryService.ListAsync(activeOnly: true, cancellationToken: cancellationToken), groups);
         var accounts = await accountService.ListAsync(true, cancellationToken);
         var annual = await dashboardService.GetAsync(DateTime.Today.Year, DateTime.Today.Month, cancellationToken);
         return View(new AnalyticsViewModel(filter, analytics,
