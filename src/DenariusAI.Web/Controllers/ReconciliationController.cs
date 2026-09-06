@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using DenariusAI.Application.Abstractions.Persistence;
 using DenariusAI.Application.Abstractions.Services;
 using DenariusAI.Domain.Enums;
 using DenariusAI.Web.ViewModels;
@@ -25,8 +26,9 @@ namespace DenariusAI.Web.Controllers;
 /// <param name="dbContext">The database context.</param>
 /// <param name="llmService">The LLM service for AI-powered suggestions.</param>
 /// <param name="settingsService">The application settings service.</param>
+/// <param name="budgetRepository">The shared persisted budget execution reader.</param>
 [Authorize]
-public sealed class ReconciliationController(IReconciliationService service, IAccountService accountService, ILogger<ReconciliationController> logger, DenariusDbContext dbContext, ILLMService llmService, IApplicationSettingsService settingsService) : Controller
+public sealed class ReconciliationController(IReconciliationService service, IAccountService accountService, ILogger<ReconciliationController> logger, DenariusDbContext dbContext, ILLMService llmService, IApplicationSettingsService settingsService, IBudgetRepository budgetRepository) : Controller
 {
     /// <summary>
     /// Session key for storing import conversation data.
@@ -256,8 +258,13 @@ public sealed class ReconciliationController(IReconciliationService service, IAc
         try { var settings = await settingsService.GetAsync(cancellationToken); var completion = await llmService.CompleteAsync([new("system", settings.ReconciliationClassificationPrompt), new("user", JsonSerializer.Serialize(payload))], cancellationToken); var json = completion.Content.Replace("```json", "").Replace("```", "").Trim(); var suggestions = JsonSerializer.Deserialize<List<ImportSuggestion>>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? []; foreach (var suggestion in suggestions) { var row = rows.FirstOrDefault(x => x.RowNumber == suggestion.RowNumber); if (row is not null && categories.Any(x => x.Id == suggestion.CategoryId) && accounts.Any(x => x.Id == suggestion.CounterAccountId)) { row.CategoryId = suggestion.CategoryId; row.CounterAccountId = suggestion.CounterAccountId; row.SuggestionReason = suggestion.Reason; row.SuggestionConfidence = string.Equals(suggestion.Confidence, "high", StringComparison.OrdinalIgnoreCase) ? "high" : "low"; } } } catch (Exception exception) when (exception is JsonException or HttpRequestException or InvalidOperationException) { logger.LogWarning(exception, "AI import classification failed; manual review remains available."); }
     }
 
+    /// <summary>Reloads authoritative selectors and a single budget execution snapshot after initial review or validation errors.</summary>
+    /// <param name="model">The review being displayed.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>A task completing when display data is loaded.</returns>
     private async Task PopulateReviewOptionsAsync(ReconciliationImportReviewViewModel model, CancellationToken cancellationToken)
     {
+        model.CategoryExecution = (await budgetRepository.GetCategoryExecutionAsync(model.BudgetId, cancellationToken)).ToDictionary(item => item.CategoryId);
         model.Categories = await dbContext.Categories.AsNoTracking().Where(x => x.IsActive).OrderBy(x => x.FinancialGroup.SortOrder).ThenBy(x => x.Name).Select(x => new SelectListItem(x.FinancialGroup.Name + " · " + x.Name, x.Id.ToString())).ToListAsync(cancellationToken);
         model.CounterAccounts = await dbContext.Accounts.AsNoTracking().Where(x => x.IsActive && (x.AccountType == AccountType.Income || x.AccountType == AccountType.Expense)).OrderBy(x => x.Name).Select(x => new SelectListItem(x.Name, x.Id.ToString())).ToListAsync(cancellationToken);
     }

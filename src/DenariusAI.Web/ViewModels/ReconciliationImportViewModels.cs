@@ -26,18 +26,33 @@ public sealed class ReconciliationImportRowViewModel
     public string? EligibilityMessage { get; set; }
 }
 
+/// <summary>Holds review selections and server-supplied display data before import confirmation.</summary>
 public sealed class ReconciliationImportReviewViewModel
 {
+    /// <summary>Gets or sets persisted totals keyed by category for the selected budget.</summary>
+    [Microsoft.AspNetCore.Mvc.ModelBinding.BindNever]
+    [System.Text.Json.Serialization.JsonIgnore]
+    public IReadOnlyDictionary<Guid, DenariusAI.Application.DTOs.BudgetExecutionItemDto> CategoryExecution { get; set; } = new Dictionary<Guid, DenariusAI.Application.DTOs.BudgetExecutionItemDto>();
+    /// <summary>Gets or sets the review BankAccountId value.</summary>
     public Guid BankAccountId { get; set; }
+    /// <summary>Gets or sets the review BankAccountName value.</summary>
     public string BankAccountName { get; set; } = string.Empty;
+    /// <summary>Gets or sets the review BudgetId value.</summary>
     public Guid BudgetId { get; set; }
+    /// <summary>Gets or sets the review BudgetName value.</summary>
     public string BudgetName { get; set; } = string.Empty;
+    /// <summary>Gets or sets the review BudgetYear value.</summary>
     public int BudgetYear { get; set; }
+    /// <summary>Gets or sets the review BudgetMonth value.</summary>
     public int BudgetMonth { get; set; }
+    /// <summary>Gets or sets the review Rows value.</summary>
     public List<ReconciliationImportRowViewModel> Rows { get; set; } = [];
+    /// <summary>Gets or sets the review Categories value.</summary>
     public IReadOnlyList<SelectListItem> Categories { get; set; } = [];
+    /// <summary>Gets or sets the review CounterAccounts value.</summary>
     public IReadOnlyList<SelectListItem> CounterAccounts { get; set; } = [];
 }
+
 
 public sealed class ReconciliationPasteViewModel
 {

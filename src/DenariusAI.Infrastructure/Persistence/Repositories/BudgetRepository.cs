@@ -35,17 +35,35 @@ public sealed class BudgetRepository(DenariusDbContext dbContext) : Repository<B
     {
         var budgetId = await Set.AsNoTracking().Where(budget => budget.Year == year && budget.Month == month)
             .Select(budget => (Guid?)budget.Id).SingleOrDefaultAsync(cancellationToken);
-        return await DbContext.Categories.AsNoTracking()
-            .Where(category => category.IsActive && category.FinancialGroup.Kind == FinancialGroupKind.Expense)
+        return await ExecutionQuery(budgetId, false).ToListAsync(cancellationToken);
+    }
+
+    /// <summary>Gets an import snapshot of actual income and expenses without counting pending rows.</summary>
+    /// <param name="budgetId">The explicitly selected budget.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>Category totals for an existing budget, otherwise an empty list.</returns>
+    public async Task<IReadOnlyList<BudgetExecutionItemDto>> GetCategoryExecutionAsync(Guid budgetId, CancellationToken cancellationToken = default)
+    {
+        if (!await Set.AsNoTracking().AnyAsync(budget => budget.Id == budgetId, cancellationToken)) return [];
+        return await ExecutionQuery(budgetId, true).ToListAsync(cancellationToken);
+    }
+
+    /// <summary>Builds the shared execution query using explicit budget association and active entries.</summary>
+    /// <param name="budgetId">The budget identifier, or null for an unplanned period.</param>
+    /// <param name="includeIncome">Whether income categories should also be returned.</param>
+    /// <returns>A deterministic query with positive ordinary income and expense amounts.</returns>
+    private IQueryable<BudgetExecutionItemDto> ExecutionQuery(Guid? budgetId, bool includeIncome) =>
+        DbContext.Categories.AsNoTracking()
+            .Where(category => category.IsActive && (category.FinancialGroup.Kind == FinancialGroupKind.Expense ||
+                (includeIncome && category.FinancialGroup.Kind == FinancialGroupKind.Income)))
             .OrderBy(category => category.FinancialGroup.SortOrder).ThenBy(category => category.SortOrder)
             .Select(category => new BudgetExecutionItemDto(
                 category.Id,
                 category.Name,
-                DbContext.BudgetLines.Where(line => line.Budget.Year == year && line.Budget.Month == month && line.CategoryId == category.Id).Sum(line => (decimal?)line.Amount) ?? 0m,
-                DbContext.JournalEntryLines.Where(line => budgetId.HasValue && line.JournalEntry.Status == JournalEntryStatus.Active && line.JournalEntry.BudgetId == budgetId &&
-                    (line.CategoryId == category.Id || (line.CategoryId == null && line.Account.CategoryId == category.Id))).Sum(line => (decimal?)(line.Debit - line.Credit)) ?? 0m,
+                DbContext.BudgetLines.Where(line => budgetId.HasValue && line.BudgetId == budgetId && line.CategoryId == category.Id).Sum(line => (decimal?)line.Amount) ?? 0m,
+                (DbContext.JournalEntryLines.Where(line => budgetId.HasValue && line.JournalEntry.Status == JournalEntryStatus.Active && line.JournalEntry.BudgetId == budgetId &&
+                    (line.CategoryId == category.Id || (line.CategoryId == null && line.Account.CategoryId == category.Id))).Sum(line => (decimal?)(line.Debit - line.Credit)) ?? 0m) *
+                    (category.FinancialGroup.Kind == FinancialGroupKind.Income ? -1m : 1m),
                 category.FinancialGroupId,
-                category.FinancialGroup.Name))
-            .ToListAsync(cancellationToken);
-    }
+                category.FinancialGroup.Name));
 }

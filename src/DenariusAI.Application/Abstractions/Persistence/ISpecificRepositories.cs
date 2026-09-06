@@ -114,6 +114,13 @@ public interface IBudgetRepository : IRepository<Budget>
     /// <param name="cancellationToken">Cancellation token for async operation.</param>
     /// <returns>A read-only list of budget execution items.</returns>
     Task<IReadOnlyList<BudgetExecutionItemDto>> GetExecutionAsync(int year, int month, CancellationToken cancellationToken = default);
+
+    /// <summary>Gets persisted income and expense execution for the explicitly selected import budget.</summary>
+    /// <param name="budgetId">The selected budget identifier.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>Active category totals, or an empty list if the budget does not exist.</returns>
+    Task<IReadOnlyList<BudgetExecutionItemDto>> GetCategoryExecutionAsync(Guid budgetId, CancellationToken cancellationToken = default);
+
 }
 
 /// <summary>
