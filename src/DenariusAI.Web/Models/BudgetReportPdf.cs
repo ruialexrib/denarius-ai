@@ -21,7 +21,7 @@ public static class BudgetReportPdf
     /// </summary>
     /// <param name="year">The budget year.</param>
     /// <param name="month">The budget month.</param>
-    /// <param name="items">The budget execution items to render in their configured display order.</param>
+    /// <param name="items">The budget execution items to render.</param>
     /// <returns>The generated PDF document bytes.</returns>
     public static byte[] Generate(int year, int month, IReadOnlyList<BudgetExecutionItemDto> items)
     {
@@ -29,7 +29,8 @@ public static class BudgetReportPdf
         var culture = CultureInfo.GetCultureInfo("pt-PT");
         var period = UpperFirst(new DateTime(year, month, 1).ToString("MMMM 'de' yyyy", culture));
         var included = items.Where(item => item.Budgeted != 0m || item.Actual != 0m).ToList();
-        var pages = Paginate(included, 20, 24);
+        var ordered = BudgetExecutionOrdering.ApplyReportOrder(included);
+        var pages = Paginate(ordered, 20, 24);
         var budgeted = included.Sum(item => item.Budgeted);
         var actual = included.Sum(item => item.Actual);
         var variance = actual - budgeted;

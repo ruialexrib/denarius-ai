@@ -39,13 +39,13 @@ public sealed class BudgetController(IBudgetService service, DenariusDbContext d
     /// <param name="month">The month to display the budget for. Defaults to current month.</param>
     /// <param name="groupId">Optional financial group filter.</param>
     /// <param name="search">Optional search term to filter categories by name.</param>
-    /// <param name="sort">Sort order for the results. Default is "group".</param>
+    /// <param name="sort">Sort order for the results. Defaults to the canonical report order.</param>
     /// <param name="page">Current page number for pagination. Default is 1.</param>
     /// <param name="pageSize">Number of items per page. Default is 10.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The budget index view with execution data.</returns>
     [HttpGet]
-    public async Task<IActionResult> Index(int? year, int? month, Guid? groupId, string? search, string sort = "group", int page = 1, int pageSize = 10, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> Index(int? year, int? month, Guid? groupId, string? search, string sort = "report", int page = 1, int pageSize = 10, CancellationToken cancellationToken = default)
     {
         var selectedYear = year ?? DateTime.Today.Year;
         var selectedMonth = month ?? DateTime.Today.Month;
@@ -57,11 +57,12 @@ public sealed class BudgetController(IBudgetService service, DenariusDbContext d
         if (!string.IsNullOrWhiteSpace(search)) execution = execution.Where(item => item.CategoryName.Contains(search.Trim(), StringComparison.CurrentCultureIgnoreCase)).ToList();
         execution = sort switch
         {
+            "group" => execution.OrderBy(item => item.FinancialGroupName).ThenBy(item => item.CategoryName).ToList(),
             "category" => execution.OrderBy(item => item.CategoryName).ToList(),
             "budgetDesc" => execution.OrderByDescending(item => item.Budgeted).ThenBy(item => item.CategoryName).ToList(),
             "actualDesc" => execution.OrderByDescending(item => item.Actual).ThenBy(item => item.CategoryName).ToList(),
             "varianceDesc" => execution.OrderByDescending(item => item.Variance).ThenBy(item => item.CategoryName).ToList(),
-            _ => execution.OrderBy(item => item.FinancialGroupName).ThenBy(item => item.CategoryName).ToList()
+            _ => BudgetExecutionOrdering.ApplyReportOrder(execution)
         };
         var totalBudgeted = execution.Sum(item => item.Budgeted);
         var totalActual = execution.Sum(item => item.Actual);
@@ -205,7 +206,7 @@ public sealed class BudgetController(IBudgetService service, DenariusDbContext d
     /// </summary>
     /// <param name="selected">The currently selected sort option.</param>
     /// <returns>A list of select items for sort options.</returns>
-    private static IReadOnlyList<SelectListItem> SortItems(string selected) => [new("Grupo e categoria", "group", selected == "group"), new("Categoria", "category", selected == "category"), new("Maior orçamento", "budgetDesc", selected == "budgetDesc"), new("Maior realizado", "actualDesc", selected == "actualDesc"), new("Maior desvio", "varianceDesc", selected == "varianceDesc")];
+    private static IReadOnlyList<SelectListItem> SortItems(string selected) => [new("Ordem do relatório", "report", selected == "report"), new("Grupo e categoria", "group", selected == "group"), new("Categoria", "category", selected == "category"), new("Maior orçamento", "budgetDesc", selected == "budgetDesc"), new("Maior realizado", "actualDesc", selected == "actualDesc"), new("Maior desvio", "varianceDesc", selected == "varianceDesc")];
 
     /// <summary>
     /// Retrieves the current user's identifier from the claims.
