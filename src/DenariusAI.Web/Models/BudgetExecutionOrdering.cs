@@ -8,17 +8,14 @@ namespace DenariusAI.Web.Models;
 public static class BudgetExecutionOrdering
 {
     /// <summary>
-    /// Orders budget execution items using the canonical report sequence.
+    /// Preserves the configured financial-group and category sequence supplied by the budget repository.
     /// </summary>
-    /// <param name="items">The budget execution items to order.</param>
-    /// <returns>The ordered budget execution items.</returns>
+    /// <param name="items">The budget execution items already ordered by group and category sort order.</param>
+    /// <returns>The budget execution items in their configured report sequence.</returns>
     public static IReadOnlyList<BudgetExecutionItemDto> ApplyReportOrder(IEnumerable<BudgetExecutionItemDto> items)
     {
         ArgumentNullException.ThrowIfNull(items);
 
-        return items
-            .OrderBy(item => item.FinancialGroupName)
-            .ThenBy(item => item.CategoryName)
-            .ToList();
+        return items.ToList();
     }
 }
