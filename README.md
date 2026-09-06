@@ -182,6 +182,14 @@ Application AI workflows remain independent of the selected vendor. They consume
 
 Regardless of provider, AI output remains advisory: DenariusAI performs deterministic financial calculations itself and the user confirms changes to financial records.
 
+#### Provider compatibility
+
+`AI.Provider` selects a registered provider explicitly; unknown values fail rather than silently falling back to Mistral. Shared generation settings use `AI.MaxTokens` and `AI.Temperature`, with legacy Mistral keys retained only as compatibility fallbacks. Adding another provider normally requires only its adapter, dependency-injection registration and configuration support.
+
+#### Assistant context limits
+
+Assistant and movement-suggestion requests are bounded by `AI.MaxInputBytes` (default 12,000; configurable from 4,000 to 64,000 bytes) and an output cap of 1,024 tokens. Financial context uses deterministic totals, capped samples and limited history; movement IDs are validated against the catalog sent to the model. Oversized requests may retry once with reduced context, and financial records remain unchanged until user confirmation.
+
 ### Stock market data
 
 Stock price history, portfolio updates and watchlist market data use the Alpha Vantage service. Create a free API key at [Alpha Vantage](https://www.alphavantage.co/support/#api-key) and add it to your `.env` file:
@@ -214,19 +222,3 @@ When either value is absent, the Google button is not displayed and local authen
 ## License
 
 Distributed under the [MIT License](LICENSE). Copyright © 2026 [Rui Ribeiro](https://github.com/ruialexrib).
-
-### AI provider boundary and configuration compatibility
-
-Application workflows depend on `ILLMService`. Infrastructure currently registers Mistral AI, Ollama and GroqCloud `ILLMProvider` adapters through ASP.NET Core dependency injection, and `ConfigurableLLMService` selects the adapter named by `AI.Provider` (case-insensitive). Unknown providers fail explicitly; they never silently route to Mistral. A future provider normally requires an adapter, DI registration and provider configuration UI/validation, without changes to financial workflows.
-
-Shared generation settings are `AI.MaxTokens` and `AI.Temperature`. Existing installations continue to read `Mistral.MaxTokens` and `Mistral.Temperature` when the corresponding neutral key is absent or invalid, then fall back to the existing Mistral installation options. Saving settings writes the neutral keys. Legacy keys are retained for compatibility, but neutral keys take precedence. Provider-specific models, endpoints and credentials keep their existing keys; Mistral, Ollama and GroqCloud defaults remain unchanged. This key-value compatibility change requires no database schema migration.
-
-### Bounded assistant and movement context
-
-The assistant and movement suggestion workflows use `AI.MaxInputBytes` (default 12,000; administrator range 4,000-64,000). This measures serialized chat messages, including prompts, context, history and the current question. It is a conservative byte budget, not an exact provider token count or a guarantee against provider-specific quotas. Both workflows cap output at the lower of the configured output limit and 1,024 tokens.
-
-Standalone greetings load no financial data and omit previous financial history. Financial questions include deterministic current-month summary values, with additional account, budget, transaction, yearly analytics, reconciliation or certificate data selected by question/history terms. Each sample reports available/included counts and whether it is partial. Samples contain at most 12 rows per collection and shrink to fit; totals continue to come from existing financial DTOs. Data outside the supplied periods is not implied to be available.
-
-Movement suggestions rank active catalogs against the conversation, send at most 20 accounts, 24 categories and six budget periods, and load no more than three similar active movement examples. The payload avoids redundant IDs, names and metadata. Returned IDs are validated against the catalog actually sent, including after a retry; omitted IDs cannot be accepted merely because they exist in the database. A missing catalog match requires clarification.
-
-Both workflows keep at most four history messages, bound each to 1,000 characters, and remove oldest history before reducing context. System prompts and the current question are never truncated. `Prompts.ContextGuidance` is editable alongside the byte limit in administrative settings and instructs the model to treat samples as incomplete, use pre-calculated totals and request clarification. If mandatory content cannot fit, the application returns actionable feedback without calling the provider. An HTTP 413 allows at most one smaller retry with no history and half the input budget; identical requests are never retried. Other provider failures and cancellation are not retried by this logic. Financial records remain unchanged until user confirmation.
