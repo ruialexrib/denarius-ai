@@ -225,14 +225,14 @@ public sealed class JournalEntriesController(IJournalEntryService service, IAcco
             .OrderBy(item => item.Name).Select(item => new SelectListItem($"{item.Name} · {item.Currency}", item.Id.ToString())).Prepend(new SelectListItem("Selecionar conta", string.Empty)).ToList();
         model.ExpenseAccountId = accounts.FirstOrDefault(item => item.AccountType == AccountType.Expense)?.Id;
         model.IncomeAccountId = accounts.FirstOrDefault(item => item.AccountType == AccountType.Income)?.Id;
-        var categories = await categoryService.ListAsync(activeOnly: true, cancellationToken: cancellationToken);
         var groups = await groupService.ListAsync(true, cancellationToken);
+        var categories = CategoryDisplayOrdering.Order(await categoryService.ListAsync(activeOnly: true, cancellationToken: cancellationToken), groups);
         var groupNames = groups.ToDictionary(item => item.Id, item => item.Name); var groupKinds = groups.ToDictionary(item => item.Id, item => item.Kind);
-        model.Categories = categories.OrderBy(item => groupNames.GetValueOrDefault(item.FinancialGroupId)).ThenBy(item => item.SortOrder)
+        model.Categories = categories
             .Select(item => new SelectListItem($"{(groupKinds.GetValueOrDefault(item.FinancialGroupId) == FinancialGroupKind.Income ? "↓" : groupKinds.GetValueOrDefault(item.FinancialGroupId) == FinancialGroupKind.Expense ? "↑" : "◆")} {groupNames.GetValueOrDefault(item.FinancialGroupId, "—")} — {item.Name}", item.Id.ToString())).Prepend(new SelectListItem("Sem categoria", string.Empty)).ToList();
-        model.ExpenseCategories = categories.Where(item => groupKinds.GetValueOrDefault(item.FinancialGroupId) == FinancialGroupKind.Expense).OrderBy(item => groupNames.GetValueOrDefault(item.FinancialGroupId)).ThenBy(item => item.SortOrder)
+        model.ExpenseCategories = categories.Where(item => groupKinds.GetValueOrDefault(item.FinancialGroupId) == FinancialGroupKind.Expense)
             .Select(item => new SelectListItem($"{groupNames.GetValueOrDefault(item.FinancialGroupId, "—")} — {item.Name}", item.Id.ToString())).Prepend(new SelectListItem("Selecionar categoria", string.Empty)).ToList();
-        model.IncomeCategories = categories.Where(item => groupKinds.GetValueOrDefault(item.FinancialGroupId) == FinancialGroupKind.Income).OrderBy(item => groupNames.GetValueOrDefault(item.FinancialGroupId)).ThenBy(item => item.SortOrder)
+        model.IncomeCategories = categories.Where(item => groupKinds.GetValueOrDefault(item.FinancialGroupId) == FinancialGroupKind.Income)
             .Select(item => new SelectListItem($"{groupNames.GetValueOrDefault(item.FinancialGroupId, "—")} — {item.Name}", item.Id.ToString())).Prepend(new SelectListItem("Selecionar categoria", string.Empty)).ToList();
         var budgets = await budgetService.ListPeriodsAsync(cancellationToken);
         if (!model.BudgetId.HasValue)

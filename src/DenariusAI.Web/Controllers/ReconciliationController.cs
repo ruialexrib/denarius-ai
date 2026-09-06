@@ -265,7 +265,7 @@ public sealed class ReconciliationController(IReconciliationService service, IAc
     private async Task PopulateReviewOptionsAsync(ReconciliationImportReviewViewModel model, CancellationToken cancellationToken)
     {
         model.CategoryExecution = (await budgetRepository.GetCategoryExecutionAsync(model.BudgetId, cancellationToken)).ToDictionary(item => item.CategoryId);
-        model.Categories = await dbContext.Categories.AsNoTracking().Where(x => x.IsActive).OrderBy(x => x.FinancialGroup.SortOrder).ThenBy(x => x.Name).Select(x => new SelectListItem(x.FinancialGroup.Name + " · " + x.Name, x.Id.ToString())).ToListAsync(cancellationToken);
+        model.Categories = await dbContext.Categories.AsNoTracking().Where(x => x.IsActive).OrderBy(x => x.FinancialGroup.SortOrder).ThenBy(x => x.SortOrder).ThenBy(x => x.Name).Select(x => new SelectListItem(x.FinancialGroup.Name + " · " + x.Name, x.Id.ToString())).ToListAsync(cancellationToken);
         model.CounterAccounts = await dbContext.Accounts.AsNoTracking().Where(x => x.IsActive && (x.AccountType == AccountType.Income || x.AccountType == AccountType.Expense)).OrderBy(x => x.Name).Select(x => new SelectListItem(x.Name, x.Id.ToString())).ToListAsync(cancellationToken);
     }
 
