@@ -277,6 +277,16 @@ public static class HelpCatalog
     /// <summary>
     /// Creates a standard Help Center page.
     /// </summary>
+    /// <param name="id">Stable route identifier for the page.</param>
+    /// <param name="category">Functional category displayed in the Help Center.</param>
+    /// <param name="icon">Icon displayed for the topic.</param>
+    /// <param name="title">Topic title.</param>
+    /// <param name="subtitle">Short functional description of the topic.</param>
+    /// <param name="controller">MVC controller used by the related action link.</param>
+    /// <param name="action">MVC action used by the related action link.</param>
+    /// <param name="actionLabel">Label displayed for the related action link.</param>
+    /// <param name="sections">Documentation sections that compose the page.</param>
+    /// <returns>A standard Help Center page definition.</returns>
     private static HelpDetailViewModel Page(string id, string category, string icon, string title, string subtitle,
         string controller, string action, string actionLabel, params HelpSectionViewModel[] sections) =>
         new(id, category, icon, title, subtitle, controller, action, actionLabel, false, false, false, sections);
@@ -284,6 +294,16 @@ public static class HelpCatalog
     /// <summary>
     /// Creates the featured Help Center page.
     /// </summary>
+    /// <param name="id">Stable route identifier for the page.</param>
+    /// <param name="category">Functional category displayed in the Help Center.</param>
+    /// <param name="icon">Icon displayed for the topic.</param>
+    /// <param name="title">Topic title.</param>
+    /// <param name="subtitle">Short functional description of the topic.</param>
+    /// <param name="controller">MVC controller used by the related action link.</param>
+    /// <param name="action">MVC action used by the related action link.</param>
+    /// <param name="actionLabel">Label displayed for the related action link.</param>
+    /// <param name="sections">Documentation sections that compose the page.</param>
+    /// <returns>A featured Help Center page definition.</returns>
     private static HelpDetailViewModel FeaturedPage(string id, string category, string icon, string title, string subtitle,
         string controller, string action, string actionLabel, params HelpSectionViewModel[] sections) =>
         new(id, category, icon, title, subtitle, controller, action, actionLabel, false, true, false, sections);
@@ -291,6 +311,16 @@ public static class HelpCatalog
     /// <summary>
     /// Creates an AI-focused Help Center page.
     /// </summary>
+    /// <param name="id">Stable route identifier for the page.</param>
+    /// <param name="category">Functional category displayed in the Help Center.</param>
+    /// <param name="icon">Icon displayed for the topic.</param>
+    /// <param name="title">Topic title.</param>
+    /// <param name="subtitle">Short functional description of the topic.</param>
+    /// <param name="controller">MVC controller used by the related action link.</param>
+    /// <param name="action">MVC action used by the related action link.</param>
+    /// <param name="actionLabel">Label displayed for the related action link.</param>
+    /// <param name="sections">Documentation sections that compose the page.</param>
+    /// <returns>An AI-focused Help Center page definition.</returns>
     private static HelpDetailViewModel AiPage(string id, string category, string icon, string title, string subtitle,
         string controller, string action, string actionLabel, params HelpSectionViewModel[] sections) =>
         new(id, category, icon, title, subtitle, controller, action, actionLabel, false, false, true, sections);
@@ -298,6 +328,16 @@ public static class HelpCatalog
     /// <summary>
     /// Creates an administrator-only Help Center page.
     /// </summary>
+    /// <param name="id">Stable route identifier for the page.</param>
+    /// <param name="category">Functional category displayed in the Help Center.</param>
+    /// <param name="icon">Icon displayed for the topic.</param>
+    /// <param name="title">Topic title.</param>
+    /// <param name="subtitle">Short functional description of the topic.</param>
+    /// <param name="controller">MVC controller used by the related action link.</param>
+    /// <param name="action">MVC action used by the related action link.</param>
+    /// <param name="actionLabel">Label displayed for the related action link.</param>
+    /// <param name="sections">Documentation sections that compose the page.</param>
+    /// <returns>An administrator-only Help Center page definition.</returns>
     private static HelpDetailViewModel AdminPage(string id, string category, string icon, string title, string subtitle,
         string controller, string action, string actionLabel, params HelpSectionViewModel[] sections) =>
         new(id, category, icon, title, subtitle, controller, action, actionLabel, true, false, false, sections);
@@ -305,6 +345,11 @@ public static class HelpCatalog
     /// <summary>
     /// Creates one documentation section.
     /// </summary>
+    /// <param name="id">Stable anchor identifier for the section.</param>
+    /// <param name="title">Section title.</param>
+    /// <param name="description">Short description of the section purpose.</param>
+    /// <param name="items">Documentation items displayed in the section.</param>
+    /// <returns>A Help Center documentation section.</returns>
     private static HelpSectionViewModel Section(string id, string title, string description, params string[] items) =>
         new(id, title, description, items);
 }
