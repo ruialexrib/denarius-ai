@@ -65,8 +65,8 @@ public sealed class AccountsController(IAccountService service, ICategoryService
     /// Displays a paginated account statement with optional filtering by date range and search term.
     /// </summary>
     /// <param name="id">Account identifier.</param>
-    /// <param name="from">Optional start date filter.</param>
-    /// <param name="to">Optional end date filter.</param>
+    /// <param name="from">Optional start date for filtering transactions.</param>
+    /// <param name="to">Optional end date for filtering transactions.</param>
     /// <param name="search">Optional search term for transaction descriptions, references, or categories.</param>
     /// <param name="page">Current page number for pagination.</param>
     /// <param name="pageSize">Number of items per page.</param>
@@ -274,7 +274,7 @@ public sealed class AccountsController(IAccountService service, ICategoryService
     /// <returns>User identifier.</returns>
     /// <exception cref="InvalidOperationException">Thrown when user is not identified.</exception>
     private string UserId() => User.FindFirstValue(ClaimTypes.NameIdentifier) ?? throw new InvalidOperationException("Utilizador não identificado.");
-    
+
     /// <summary>
     /// Converts the account form view model to a DTO for persistence.
     /// </summary>
