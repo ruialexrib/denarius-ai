@@ -63,18 +63,18 @@
 }
 else
 {
-    <div class="dashboard-line-chart" data-dashboard-chart="budget" role="img" aria-label="Gráfico do orçamento e valor realizado por categoria">
+    <div class="dashboard-line-chart dashboard-bar-chart" data-dashboard-chart="budget" role="img" aria-label="Gráfico de barras do orçamento e valor realizado por categoria">
         <div class="dashboard-chart-stage">
             <svg viewBox="0 0 900 280" preserveAspectRatio="none" aria-hidden="true">
                 <line class="dashboard-chart-grid-line" x1="28" y1="30" x2="872" y2="30"></line>
                 <line class="dashboard-chart-grid-line" x1="28" y1="133" x2="872" y2="133"></line>
                 <line class="dashboard-chart-grid-line" x1="28" y1="236" x2="872" y2="236"></line>
-                <polyline class="dashboard-chart-series budgeted-series" data-chart-series="budgeted" points=""></polyline>
-                <polyline class="dashboard-chart-series actual-series" data-chart-series="actual" points=""></polyline>
+                <g data-chart-bars="budgeted"></g>
+                <g data-chart-bars="actual"></g>
             </svg>
         </div>
         <div class="dashboard-chart-axis" data-chart-axis></div>
-        <div class="chart-legend dashboard-line-legend"><span class="budgeted">Orçamentado</span><span class="actual">Realizado</span></div>
+        <div class="chart-legend dashboard-line-legend dashboard-bar-legend"><span class="budgeted">Orçamentado</span><span class="actual">Realizado</span></div>
     </div>
 }
 </article>
@@ -83,9 +83,15 @@ else
 <div class="dashboard-line-chart" data-dashboard-chart="annual" role="img" aria-label="Gráfico anual de rendimentos e despesas">
     <div class="dashboard-chart-stage">
         <svg viewBox="0 0 900 280" preserveAspectRatio="none" aria-hidden="true">
+            <defs>
+                <linearGradient id="dashboardIncomeArea" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#159a70" stop-opacity=".22"></stop><stop offset="1" stop-color="#159a70" stop-opacity=".02"></stop></linearGradient>
+                <linearGradient id="dashboardExpensesArea" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d7675b" stop-opacity=".18"></stop><stop offset="1" stop-color="#d7675b" stop-opacity=".02"></stop></linearGradient>
+            </defs>
             <line class="dashboard-chart-grid-line" x1="28" y1="30" x2="872" y2="30"></line>
             <line class="dashboard-chart-grid-line" x1="28" y1="133" x2="872" y2="133"></line>
             <line class="dashboard-chart-grid-line" x1="28" y1="236" x2="872" y2="236"></line>
+            <polygon class="dashboard-chart-area income-area" data-chart-area="income" points=""></polygon>
+            <polygon class="dashboard-chart-area expenses-area" data-chart-area="expenses" points=""></polygon>
             <polyline class="dashboard-chart-series income-series" data-chart-series="income" points=""></polyline>
             <polyline class="dashboard-chart-series expenses-series" data-chart-series="expenses" points=""></polyline>
         </svg>
