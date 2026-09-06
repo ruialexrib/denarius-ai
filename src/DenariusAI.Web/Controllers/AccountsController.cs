@@ -41,7 +41,7 @@ public sealed class AccountsController(IAccountService service, ICategoryService
         var items = accounts.Skip((pagination.Page - 1) * pagination.PageSize).Take(pagination.PageSize)
             .Select(item => new AccountListItemViewModel(item, item.CategoryId.HasValue ? categoryNames.GetValueOrDefault(item.CategoryId.Value, "—") : "—")).ToList();
 
-        return View(new AccountIndexViewModel(items, AccountTypeItems(true, accountType), CategoryItems(categories, groupNames, true, categoryId), accountType, categoryId, search, showInactive, pagination));
+        return View(new AccountIndexViewModel(items, AccountTypeItems(true, accountType), CategoryItems(categories, groups, true, categoryId), accountType, categoryId, search, showInactive, pagination));
     }
 
     /// <summary>
@@ -217,7 +217,7 @@ public sealed class AccountsController(IAccountService service, ICategoryService
         var categories = await categoryService.ListAsync(activeOnly: false, cancellationToken: cancellationToken);
         var groups = await groupService.ListAsync(false, cancellationToken);
         model.AccountTypes = AccountTypeItems(false, model.AccountType);
-        model.Categories = CategoryItems(categories, groups.ToDictionary(item => item.Id, item => item.Name), true, model.CategoryId);
+        model.Categories = CategoryItems(categories, groups, true, model.CategoryId);
     }
 
     /// <summary>
@@ -237,13 +237,14 @@ public sealed class AccountsController(IAccountService service, ICategoryService
     /// Creates a list of select items for categories grouped by financial group.
     /// </summary>
     /// <param name="categories">List of categories.</param>
-    /// <param name="groupNames">Dictionary mapping group IDs to group names.</param>
+    /// <param name="groups">Financial groups that define the parent display order and names.</param>
     /// <param name="includeNone">Indicates whether to include a "No category" option.</param>
     /// <param name="selected">The currently selected category identifier.</param>
     /// <returns>List of select items for categories.</returns>
-    private static IReadOnlyList<SelectListItem> CategoryItems(IReadOnlyList<CategoryDto> categories, IReadOnlyDictionary<Guid, string> groupNames, bool includeNone, Guid? selected)
+    private static IReadOnlyList<SelectListItem> CategoryItems(IReadOnlyList<CategoryDto> categories, IReadOnlyList<FinancialGroupDto> groups, bool includeNone, Guid? selected)
     {
-        var items = categories.OrderBy(item => groupNames.GetValueOrDefault(item.FinancialGroupId)).ThenBy(item => item.SortOrder)
+        var groupNames = groups.ToDictionary(item => item.Id, item => item.Name);
+        var items = CategoryDisplayOrdering.Order(categories, groups)
             .Select(item => new SelectListItem($"{groupNames.GetValueOrDefault(item.FinancialGroupId, "—")} — {item.Name}{(item.IsActive ? "" : " (inativa)")}", item.Id.ToString(), item.Id == selected, !item.IsActive)).ToList();
         if (includeNone) items.Insert(0, new SelectListItem("Sem categoria", string.Empty, selected is null));
         return items;
