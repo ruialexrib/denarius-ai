@@ -19,6 +19,28 @@ public sealed class BudgetLineFormViewModel
 }
 
 /// <summary>
+/// Captures one editable budget line submitted by budget actions.
+/// </summary>
+public sealed class BudgetSaveLineViewModel
+{
+    /// <summary>
+    /// Gets or sets the category identifier.
+    /// </summary>
+    public Guid CategoryId { get; set; }
+
+    /// <summary>
+    /// Gets or sets the category name used for action feedback.
+    /// </summary>
+    public string? CategoryName { get; set; }
+
+    /// <summary>
+    /// Gets or sets the budgeted amount.
+    /// </summary>
+    [Range(0, double.MaxValue, ErrorMessage = "O valor orçamentado não pode ser negativo.")]
+    public decimal Amount { get; set; }
+}
+
+/// <summary>
 /// Captures the editable budget page state submitted by budget actions.
 /// </summary>
 public sealed class BudgetSaveViewModel
@@ -66,7 +88,7 @@ public sealed class BudgetSaveViewModel
     /// <summary>
     /// Gets or sets the budget lines submitted from the current page.
     /// </summary>
-    public List<BudgetLineFormViewModel> Lines { get; set; } = [];
+    public List<BudgetSaveLineViewModel> Lines { get; set; } = [];
 }
 
 /// <summary>
