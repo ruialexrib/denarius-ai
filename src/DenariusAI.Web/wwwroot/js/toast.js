@@ -20,7 +20,32 @@
             }, 260);
         };
 
-        toast.querySelector('[data-toast-close]')?.addEventListener('click', close);
+        const closeButton = toast.querySelector('[data-toast-close]');
+        closeButton?.addEventListener('click', async event => {
+            const acknowledgementForm = closeButton.closest('form');
+
+            if (toast.dataset.toastPersistent === 'true' && acknowledgementForm) {
+                event.preventDefault();
+
+                try {
+                    const response = await fetch(acknowledgementForm.action, {
+                        method: acknowledgementForm.method || 'POST',
+                        body: new FormData(acknowledgementForm),
+                        credentials: 'same-origin'
+                    });
+
+                    if (response.ok) {
+                        close();
+                    }
+                } catch {
+                    return;
+                }
+
+                return;
+            }
+
+            close();
+        });
 
         if (toast.dataset.toastPersistent !== 'true') {
             window.setTimeout(close, 5000 + (index * 250));
