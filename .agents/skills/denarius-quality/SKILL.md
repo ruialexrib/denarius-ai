@@ -37,6 +37,12 @@ For containers, build both `final` and `mcp-final` before a release when shared 
 - Verify user-facing Portuguese, date/number formatting, authorization, and toast behavior.
 - Inspect a narrow viewport when the affected layout is responsive.
 
+## Help documentation synchronisation
+
+- For every addition, removal, rename, or material change to user-visible functionality, inspect the relevant **Ajuda** content and keep it aligned in the same change set.
+- Update Help documentation when affected fields, actions, workflows, validation rules, limitations, permissions, or configuration options change. Document new behaviour and correct or remove obsolete instructions.
+- For internal refactors or technical changes with no user-facing documentation impact, do not make unnecessary Help edits; explicitly state during verification why no Help update is required.
+
 ## Financial and data checks
 
 - Test debit/credit balance, cancelled-record exclusion, period boundaries, current-budget defaults, and decimal rounding when those areas are touched.
@@ -50,4 +56,3 @@ For containers, build both `final` and `mcp-final` before a release when shared 
 - Distinguish passed checks, skipped checks, and checks blocked by environment or credentials.
 - Do not claim CI, security, Docker health, browser appearance, PDF layout, or deployment success without directly verifying it.
 - A failed check is not complete merely because the implementation compiles; diagnose or clearly hand off the remaining failure.
-
