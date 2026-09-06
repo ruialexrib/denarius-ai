@@ -7,8 +7,15 @@
     color: #8a5a00;
 }
 
-.app-toast.cloud-ai-warning strong {
+.app-toast.cloud-ai-warning > div > strong {
     color: #5f4300;
+}
+
+.app-toast.cloud-ai-warning p strong {
+    display: inline;
+    margin: 0;
+    color: inherit;
+    font-size: inherit;
 }
 
 .app-toast.cloud-ai-warning:after {
