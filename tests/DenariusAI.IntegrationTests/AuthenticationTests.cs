@@ -10,16 +10,24 @@ namespace DenariusAI.IntegrationTests;
 
 public sealed class AuthenticationTests
 {
+    /// <summary>
+    /// Verifies whether the cloud AI privacy warning follows the configured provider and current session acknowledgement state.
+    /// </summary>
+    /// <param name="provider">The configured AI provider.</param>
+    /// <param name="sessionValue">The current privacy-warning session value.</param>
+    /// <param name="expected">The expected visibility state for the warning.</param>
     [Theory]
     [InlineData("GroqCloud", "True", true)]
     [InlineData("groqcloud", "True", true)]
     [InlineData("GroqCloud", null, false)]
     [InlineData("Mistral", "True", true)]
     [InlineData("mistral", "True", true)]
+    [InlineData("OpenAI", "True", true)]
     [InlineData("Ollama", "True", false)]
     [InlineData("OLLAMA", "True", false)]
+    [InlineData("Ollama", null, false)]
     [InlineData("Mistral", null, false)]
-    public void CloudAiPrivacyNoticeFollowsProviderAndSessionState(string provider, string? sessionValue, bool expected)
+    public void CloudAiPrivacyWarningFollowsProviderAndSessionState(string provider, string? sessionValue, bool expected)
     {
         Assert.Equal(expected, CloudAiPrivacyNoticePolicy.ShouldShow(provider, sessionValue));
     }
