@@ -22,7 +22,7 @@
     var reminderHiddenCount = reminderCount - reminderPreview.Count;
 }
 <details class="reminder-menu top-with-tooltip">
-<summary class="alert-button @(reminderCount > 0 ? "has-alerts" : null)" aria-label="Lembretes: @reminderCount alertas ativos"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 2.8 20h18.4L12 3Z" /><path d="M12 8v6M12 17.2v.1" /></svg>@if (reminderCount > 0)
+<summary class="alert-button @(reminderCount > 0 ? "has-alerts" : null)" aria-label="Lembretes: @reminderCount alertas ativos"><svg viewBox="0 0 24 24" aria-hidden="true" style="fill:none"><path d="M18 8a6 6 0 0 0-12 0c0 6.5-2.5 7.5-3 9h18c-.5-1.5-3-2.5-3-9Z" /><path d="M9.8 20a2.5 2.5 0 0 0 4.4 0" /></svg>@if (reminderCount > 0)
 {
 <span class="alert-count">@(reminderCount > 99 ? "99+" : reminderCount)</span>
 }<span class="top-tooltip" role="tooltip"><strong>Lembretes</strong><small>@reminderCount @(reminderCount == 1 ? "aviso ativo" : "avisos ativos") para consultar</small></span></summary>
