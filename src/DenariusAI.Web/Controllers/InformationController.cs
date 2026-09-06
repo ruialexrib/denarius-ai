@@ -1,5 +1,6 @@
 using System.Runtime.InteropServices;
 using System.Text.Json;
+using DenariusAI.Infrastructure.Identity;
 using DenariusAI.Web.Models;
 using DenariusAI.Web.ViewModels;
 using Microsoft.AspNetCore.Authorization;
@@ -17,21 +18,27 @@ public sealed class InformationController(ApplicationInfo appInfo, IHttpClientFa
     private const string RepositoryUrl = "https://github.com/ruialexrib/denarius-ai";
 
     /// <summary>
-    /// Displays the main help page with an overview of available topics.
+    /// Displays the Help Center with the documentation topics available to the current user.
     /// </summary>
-    /// <returns>The help view.</returns>
-    [HttpGet] public IActionResult Help() => View();
+    /// <returns>The help index view.</returns>
+    [HttpGet]
+    public IActionResult Help()
+    {
+        var isAdministrator = User.IsInRole(ApplicationRoles.Administrator);
+        return View(new HelpIndexViewModel(HelpCatalog.VisiblePages(isAdministrator)));
+    }
 
     /// <summary>
-    /// Displays detailed help content for a specific topic identified by its ID.
+    /// Displays detailed functional documentation for a specific Help Center topic.
     /// </summary>
     /// <param name="id">The unique identifier of the help topic.</param>
-    /// <returns>The help detail view if the topic exists; otherwise, a 404 Not Found result.</returns>
+    /// <returns>The help detail view, a forbidden result for restricted topics, or a not found result.</returns>
     [HttpGet]
     public IActionResult HelpDetail(string id)
     {
-        var pages = HelpPages();
-        return pages.TryGetValue(id ?? string.Empty, out var page) ? View(page) : NotFound();
+        if (!HelpCatalog.Pages.TryGetValue(id ?? string.Empty, out var page)) return NotFound();
+        if (page.AdministratorOnly && !User.IsInRole(ApplicationRoles.Administrator)) return Forbid();
+        return View(page);
     }
 
     /// <summary>
@@ -76,22 +83,25 @@ public sealed class InformationController(ApplicationInfo appInfo, IHttpClientFa
             cache.Set("github-latest-releases", releases, TimeSpan.FromMinutes(15));
             return releases;
         }
-        catch (Exception exception) when (exception is HttpRequestException or JsonException or TaskCanceledException) { return []; }
+        catch (Exception exception) when (exception is HttpRequestException or JsonException or TaskCanceledException)
+        {
+            return [];
+        }
     }
 
     /// <summary>
     /// Determines whether the release version is newer than the current application version.
     /// </summary>
     /// <param name="releaseVersion">The release version string to compare.</param>
-    /// <param name="currentVersion">The current application version string.</param>
-    /// <returns>True if the release version is newer; otherwise, false.</returns>
+    /// <param name="currentVersion">The current version string to compare.</param>
+    /// <returns><see langword="true"/> when the release version is newer; otherwise, <see langword="false"/>.</returns>
     private static bool IsNewerVersion(string releaseVersion, string currentVersion) =>
         Version.TryParse(releaseVersion.TrimStart('v', 'V').Split('-', '+')[0], out var latest)
         && Version.TryParse(currentVersion.Split('-', '+')[0], out var current)
         && latest > current;
 
     /// <summary>
-    /// Generates a fallback list of release notes when GitHub API is unavailable.
+    /// Generates a fallback list of release notes when the GitHub API is unavailable.
     /// </summary>
     /// <param name="version">The current application version.</param>
     /// <returns>A read-only list containing a single local release note.</returns>
@@ -100,71 +110,4 @@ public sealed class InformationController(ApplicationInfo appInfo, IHttpClientFa
         new($"v{version}", DateTime.Today.ToString("yyyy-MM-dd"), RepositoryUrl,
             "## Português\n\n### Novas funcionalidades\n\n- Consulte as funcionalidades mais recentes do DenariusAI.\n\n### Correções\n\n- Melhorias de estabilidade e apresentação.\n\n## English\n\n### New features\n\n- Explore the latest DenariusAI features.\n\n### Fixes\n\n- Stability and presentation improvements.")
     ];
-
-    /// <summary>
-    /// Provides a dictionary of all available help pages with their detailed content.
-    /// </summary>
-    /// <returns>A read-only dictionary mapping help page IDs to their corresponding view models.</returns>
-    private static IReadOnlyDictionary<string, HelpDetailViewModel> HelpPages() =>
-        new Dictionary<string, HelpDetailViewModel>(StringComparer.OrdinalIgnoreCase)
-        {
-            ["dashboard"] = Page("dashboard", "Dashboard", "Leia os indicadores e acompanhe a evolução financeira.", "Home", "Index", "Abrir Dashboard",
-                ("Selecionar o período", ["Escolha Ano e Mês e clique em Aplicar; os cartões e a execução são recalculados.", "O gráfico anual apresenta janeiro a dezembro do ano selecionado.", "Passe o cursor pelos pontos para consultar valores exatos."]),
-                ("Interpretar", ["Saldo disponível soma contas bancárias e dinheiro; património inclui ativos e certificados.", "Resultado é Rendimentos menos Despesas; Por reconciliar conta movimentos ainda não confirmados.", "Apenas movimentos ativos afetam os valores e as projeções não são garantias."])),
-            ["movimentos"] = Page("movimentos", "Movimentos", "Crie, consulte, edite e anule operações por partidas dobradas.", "JournalEntries", "Index", "Consultar movimentos",
-                ("Criar e campos", ["Clique em Novo movimento e preencha Data, Descrição e Orçamento; Referência e Notas são opcionais.", "Adicione duas ou mais linhas com Conta, Categoria, Descrição e apenas Débito ou Crédito.", "Débitos e créditos têm de ser iguais e devem existir duas contas diferentes.", "A IA apenas sugere; confirme e grave manualmente."]),
-                ("Classificar", ["Numa despesa, debite a conta de despesa e credite a conta de pagamento.", "Num rendimento, credite a conta de rendimento e debite a conta que recebe.", "A categoria tem de ser compatível com o tipo da conta."]),
-                ("Editar e anular", ["Consultar permite abrir os extratos das contas.", "Só pode editar movimentos ativos não reconciliados.", "Anular preserva a auditoria e retira o movimento dos cálculos; não pode ser revertido."])),
-            ["assistant"] = Page("assistant", "Assistência por IA", "Use linguagem natural para consultar dados e preparar movimentos.", "Assistant", "Index", "Abrir Assistente",
-                ("Interagir", ["Indique período, conta ou categoria na pergunta.", "Para movimentos inclua valor, data, origem, destino e finalidade.", "Responda às perguntas ou complete campos manualmente."]),
-                ("Regras", ["A IA nunca grava automaticamente.", "Não introduza palavras-passe ou chaves.", "Confirme cálculos e classificações; não substitui aconselhamento profissional."])),
-            ["statements"] = Page("statements", "Extratos", "Consulte o histórico e acompanhe o saldo de contas, categorias e grupos.", "Accounts", "Index", "Abrir Contas",
-                ("Onde abrir", ["Na lista de Contas, Grupos ou Categorias, selecione Extrato na linha pretendida.", "Nos detalhes de um movimento, use o link da conta para abrir diretamente o respetivo extrato.", "O cabeçalho identifica sempre o elemento consultado e o tipo de extrato."]),
-                ("Filtrar", ["Indique primeiro as datas De e Até, e depois os restantes critérios disponíveis.", "Clique em Aplicar; mudar um campo sem aplicar não atualiza os resultados.", "Limpar repõe os filtros e volta a apresentar o histórico completo.", "Escolha o número de registos por página; a opção mantém-se ao navegar entre páginas."]),
-                ("Ler as linhas", ["Débito e Crédito mostram o efeito de cada partida sobre o elemento consultado.", "O saldo é calculado linha a linha, começando pelo saldo inicial quando existe.", "Os movimentos mais recentes aparecem primeiro; o saldo continua a representar a sequência cronológica correta.", "Descrição, referência e orçamento ajudam a localizar a origem da operação."]),
-                ("Diferenças", ["O extrato de conta apresenta apenas partidas em que essa conta foi utilizada.", "O extrato de categoria agrega partidas classificadas nessa categoria.", "O extrato de grupo reúne as partidas das categorias pertencentes ao grupo.", "Um extrato não cria, edita nem reconcilia movimentos; serve para consulta e auditoria."]),
-                ("Resolver problemas", ["Se faltar uma operação, confirme as datas e limpe os restantes filtros.", "Se o saldo parecer invertido, verifique o tipo da conta e o lado — débito ou crédito — usado no movimento.", "Se uma categoria não aparecer, confirme se foi atribuída à linha correta e se é compatível com a conta."])),
-            ["reconciliation"] = Page("reconciliation", "Reconciliação", "Compare movimentos com operações reais do banco.", "Reconciliation", "Index", "Abrir Reconciliação",
-                ("Reconciliar", ["Filtre por conta, datas, estado ou descrição e clique em Aplicar.", "Confirme data, referência e valor antes de Reconciliar.", "Desfazer retira a confirmação sem alterar valores."]),
-                ("Colar movimentos", ["Escolha a conta do extrato e cole os movimentos na conversa.", "Inclua data, descrição, referência e valor; entradas são positivas e saídas negativas.", "A IA remove correspondências já registadas e sugere categoria e contrapartida.", "Na revisão confirme ou altere cada classificação antes de criar os movimentos."]),
-                ("Regras", ["Só contas bancárias podem ser reconciliadas.", "Movimentos reconciliados não podem ser editados.", "Confirme duplicados pela data, referência, descrição e valor."])),
-            ["budget"] = Page("budget", "Orçamento", "Planeie limites por categoria e período.", "Budget", "Index", "Gerir Orçamentos",
-                ("Criar e editar", ["Selecione Ano e Mês, introduza montantes não negativos e clique em Gravar.", "Valor zero remove o planeamento efetivo.", "Use Grupo, pesquisa e ordenação."]),
-                ("Execução", ["Associe explicitamente o orçamento ao movimento.", "O realizado não depende apenas da data; o orçamento recente é sugerido.", "Disponível é Orçamentado menos Realizado; acima de 100% indica excesso."])),
-            ["certificates"] = Page("certificates", "Certificados de Aforro", "Gira subscrições e projeções.", "SavingsCertificates", "Index", "Gerir Certificados",
-                ("Criar e campos", ["Preencha Data, Série/Número, Descrição, Investimento, Taxa, Valor atual e Próxima capitalização.", "Valores e taxa não podem ser negativos.", "Antiguidade, rendimento, diferença, juro e valor futuro são calculados."]),
-                ("Editar e eliminar", ["Editar atualiza valor, taxa ou capitalização; não reutilize para outra subscrição.", "Eliminar remove definitivamente após confirmação.", "A eliminação não apaga movimentos contabilísticos."]),
-                ("Cálculos", ["Rendimento é Valor atual menos Investimento.", "Juro líquido futuro aplica retenção de 28% e capitalização trimestral.", "Valor futuro soma o juro ao valor atual."])),
-            ["analytics"] = Page("analytics", "Análise Financeira", "Explore comparações e relatórios.", "Analytics", "Index", "Abrir Análise",
-                ("Filtros", ["Defina De e Até e, opcionalmente, Grupo, Categoria ou Conta.", "Clique em Aplicar para recalcular tudo.", "Use dados classificados e intervalos comparáveis."]),
-                ("Relatório inteligente", ["Gerar relatório envia um resumo ao modelo.", "O preview é formatado; Ver Markdown mostra a fonte em monospace.", "Pode exportar .md; reveja as conclusões."])),
-            ["tables"] = Page("tables", "Tabelas", "Configure grupos, categorias e contas.", "Accounts", "Index", "Gerir Contas",
-                ("Grupos", ["Crie Nome, Descrição, Tipo e Ordem.", "Não pode mudar o tipo quando existem categorias.", "Desative primeiro categorias ativas; itens usados não são eliminados.", "Extrato mostra partidas das categorias do grupo."]),
-                ("Categorias", ["Escolha Grupo, Nome, Descrição e Ordem.", "A categoria herda o tipo do grupo.", "Não pode mudar o grupo depois de usada; pode desativar.", "Extrato inclui classificações diretas e herdadas."]),
-                ("Contas", ["Preencha Nome, Descrição, Tipo, Saldo inicial, Moeda de três letras e Categoria opcional.", "Rendimento, Despesa e Património exigem categorias compatíveis.", "Com movimentos não pode alterar tipo, moeda ou categoria.", "Use Consultar, Extrato, Editar e Desativar; desativar preserva histórico."]),
-                ("Regras", ["Siga Grupo → Categoria → Conta → Orçamento → Movimento.", "Nomes claros melhoram filtros e IA.", "Tabelas estruturais usadas não são apagadas."])),
-            ["preferences"] = Page("preferences", "Preferências e segurança", "Atualize perfil e credenciais.", "Account", "Profile", "Abrir Preferências",
-                ("Perfil", ["Altere o Nome e guarde.", "O email pode exigir intervenção do administrador.", "Preferências não alteram definições globais."]),
-                ("Palavra-passe", ["Introduza atual, nova e confirmação.", "A nova deve cumprir regras e coincidir.", "Termine a sessão em equipamentos partilhados."])),
-            ["administration"] = Page("administration", "Administração", "Gira utilizadores, IA e dados.", "Settings", "Index", "Abrir Definições",
-                ("Utilizadores", ["Crie Nome, Email, Palavra-passe e função.", "Editar permite mudar dados, função e redefinir palavra-passe.", "Eliminar remove o acesso; preserve o último administrador."]),
-                ("Definições", ["Configure URL, chave, modelo, temperatura, tokens e prompts.", "Grave e use Testar ligação.", "São globais e exclusivas de administradores."]),
-                ("Dados", ["Carregar demonstração adiciona exemplos.", "Reiniciar dados é destrutivo e exige confirmação.", "Faça cópia de segurança antes."]))
-        };
-
-    /// <summary>
-    /// Creates a help detail view model with the specified properties and sections.
-    /// </summary>
-    /// <param name="id">The unique identifier of the help page.</param>
-    /// <param name="title">The title of the help page.</param>
-    /// <param name="subtitle">The subtitle or brief description of the help page.</param>
-    /// <param name="controller">The name of the controller for the action link.</param>
-    /// <param name="action">The name of the action for the action link.</param>
-    /// <param name="actionLabel">The label text for the action button.</param>
-    /// <param name="sections">A collection of sections with titles and content items.</param>
-    /// <returns>A configured <see cref="HelpDetailViewModel"/> instance.</returns>
-    private static HelpDetailViewModel Page(string id, string title, string subtitle, string controller, string action,
-        string actionLabel, params (string Title, string[] Items)[] sections) =>
-        new(id, title, subtitle, controller, action, actionLabel,
-            sections.Select(section => new HelpSectionViewModel(section.Title, section.Items)).ToList());
 }
