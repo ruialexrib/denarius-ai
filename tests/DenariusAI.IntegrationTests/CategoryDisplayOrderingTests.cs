@@ -25,7 +25,7 @@ public sealed class CategoryDisplayOrderingTests
             [thirdCategory, secondCategory, firstCategory],
             [secondGroup, firstGroup]);
 
-        Assert.Equal([firstCategory.Id, secondCategory.Id, thirdCategory.Id], ordered.Select(item => item.Id));
+        Assert.Equal(new[] { firstCategory.Id, secondCategory.Id, thirdCategory.Id }, ordered.Select(item => item.Id));
     }
 
     /// <summary>
@@ -40,6 +40,6 @@ public sealed class CategoryDisplayOrderingTests
 
         var ordered = CategoryDisplayOrdering.Order([zulu, alpha], [group]);
 
-        Assert.Equal([alpha.Id, zulu.Id], ordered.Select(item => item.Id));
+        Assert.Equal(new[] { alpha.Id, zulu.Id }, ordered.Select(item => item.Id));
     }
 }
