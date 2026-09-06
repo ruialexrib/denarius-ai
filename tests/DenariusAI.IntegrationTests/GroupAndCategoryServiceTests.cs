@@ -58,6 +58,35 @@ public sealed class GroupAndCategoryServiceTests
         await Assert.ThrowsAsync<InvalidOperationException>(() => categoryService.UpdateAsync(categoryId, new(secondGroup, "Água", null, 1), "user-id"));
     }
 
+    /// <summary>
+    /// Verifies that movement usage is based only on journal entry lines and not account default categories.
+    /// </summary>
+    [Fact]
+    public async Task CategoryUsageReportsOnlyJournalMovementReferences()
+    {
+        await using var context = CreateContext(); var unit = CreateUnit(context); var groupService = new FinancialGroupService(unit); var categoryService = new CategoryService(unit);
+        var groupId = await groupService.CreateAsync(new("Despesas", null, FinancialGroupKind.Expense, 1), "user-id");
+        var usedCategoryId = await categoryService.CreateAsync(new(groupId, "Supermercado", null, 1), "user-id");
+        var unusedCategoryId = await categoryService.CreateAsync(new(groupId, "Cinema", null, 2), "user-id");
+        var accountDefaultOnlyCategoryId = await categoryService.CreateAsync(new(groupId, "Combustível", null, 3), "user-id");
+
+        var bankAccount = new Account { Name = "Banco", AccountType = AccountType.Asset, Currency = "EUR" };
+        var expenseAccount = new Account { Name = "Compras", AccountType = AccountType.Expense, Currency = "EUR" };
+        var defaultCategoryAccount = new Account { Name = "Combustível", AccountType = AccountType.Expense, Currency = "EUR", CategoryId = accountDefaultOnlyCategoryId };
+        context.Accounts.AddRange(bankAccount, expenseAccount, defaultCategoryAccount); await context.SaveChangesAsync();
+
+        var entry = new JournalEntry(new DateOnly(2026, 9, 6), "Compra");
+        entry.AddLine(expenseAccount.Id, 25m, 0m, categoryId: usedCategoryId);
+        entry.AddLine(bankAccount.Id, 0m, 25m);
+        context.JournalEntries.Add(entry); await context.SaveChangesAsync();
+
+        var usedCategoryIds = await new CategoryUsageService(unit).GetUsedInJournalMovementsAsync([usedCategoryId, unusedCategoryId, accountDefaultOnlyCategoryId]);
+
+        Assert.Contains(usedCategoryId, usedCategoryIds);
+        Assert.DoesNotContain(unusedCategoryId, usedCategoryIds);
+        Assert.DoesNotContain(accountDefaultOnlyCategoryId, usedCategoryIds);
+    }
+
     [Fact]
     public async Task CategoryCannotBeReactivatedUnderInactiveGroup()
     {
