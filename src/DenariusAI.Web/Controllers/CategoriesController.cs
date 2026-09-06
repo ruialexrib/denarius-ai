@@ -164,7 +164,7 @@ public sealed class CategoriesController(ICategoryService service, IFinancialGro
     /// <param name="model">The category form view model to populate.</param>
     /// <param name="cancellationToken">Cancellation token for the async operation.</param>
     private async Task PopulateGroupsAsync(CategoryFormViewModel model, CancellationToken cancellationToken) => model.Groups = ToSelectList(await groupService.ListAsync(true, cancellationToken), false, model.FinancialGroupId);
-    
+
     /// <summary>
     /// Converts a list of financial groups to a select list for dropdown rendering.
     /// </summary>
@@ -179,14 +179,14 @@ public sealed class CategoriesController(ICategoryService service, IFinancialGro
             .Select(item => new SelectListItem(item.Name, item.Id.ToString(), item.Id.ToString() == selectedValue)).ToList();
         if (includeAll) items.Insert(0, new SelectListItem("Todos os grupos", string.Empty, selectedGroupId is null)); return items;
     }
-    
+
     /// <summary>
     /// Retrieves the current user's identifier from the claims principal.
     /// </summary>
     /// <returns>The user identifier as a string.</returns>
     /// <exception cref="InvalidOperationException">Thrown when the user is not identified.</exception>
     private string UserId() => User.FindFirstValue(ClaimTypes.NameIdentifier) ?? throw new InvalidOperationException("Utilizador não identificado.");
-    
+
     /// <summary>
     /// Converts a category form view model to a save category DTO.
     /// </summary>
