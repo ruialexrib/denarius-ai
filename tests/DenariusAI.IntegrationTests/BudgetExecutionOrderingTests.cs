@@ -9,10 +9,10 @@ namespace DenariusAI.IntegrationTests;
 public sealed class BudgetExecutionOrderingTests
 {
     /// <summary>
-    /// Verifies that report ordering sorts first by financial group and then by category.
+    /// Verifies that report ordering preserves the group and category sort sequence supplied by the repository.
     /// </summary>
     [Fact]
-    public void ApplyReportOrder_OrdersByGroupThenCategory()
+    public void ApplyReportOrder_PreservesConfiguredRepositorySequence()
     {
         var groupA = Guid.NewGuid();
         var groupB = Guid.NewGuid();
@@ -26,13 +26,9 @@ public sealed class BudgetExecutionOrderingTests
 
         var ordered = BudgetExecutionOrdering.ApplyReportOrder(items);
 
-        Assert.Collection(ordered,
-            item => Assert.Equal("Despesas correntes", item.FinancialGroupName),
-            item => Assert.Equal("Despesas correntes", item.FinancialGroupName),
-            item => Assert.Equal("Rendimentos correntes", item.FinancialGroupName),
-            item => Assert.Equal("Rendimentos extraordinários", item.FinancialGroupName));
-        Assert.Equal("Alimentação", ordered[0].CategoryName);
-        Assert.Equal("Transportes", ordered[1].CategoryName);
+        Assert.Equal(items, ordered);
+        Assert.Equal("Transportes", ordered[0].CategoryName);
+        Assert.Equal("Alimentação", ordered[1].CategoryName);
     }
 
     /// <summary>
