@@ -6,3 +6,9 @@
 .area-summary.reconciliation-summary-row{grid-template-columns:repeat(5,minmax(0,1fr))}
 @media(max-width:1150px){.area-summary.reconciliation-summary-row{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:800px){.area-summary.reconciliation-summary-row{grid-template-columns:1fr}}
+
+.import-category-budget { margin-top: 10px; color: var(--muted); font-size: .75rem; }
+.import-category-budget dl { display: flex; flex-wrap: wrap; gap: 8px 20px; margin: 0; }
+.import-category-budget dl[hidden], .import-category-budget [hidden] { display: none; }
+.import-category-budget dt { font-size: .7rem; }
+.import-category-budget dd { margin: 3px 0 0; color: var(--ink); font-weight: 700; font-variant-numeric: tabular-nums; }

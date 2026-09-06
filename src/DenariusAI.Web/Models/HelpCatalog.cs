@@ -74,6 +74,10 @@ public static class HelpCatalog
                     "O extrato de conta mostra as partidas da conta; o de categoria agrega a classificação; o de grupo reúne as categorias do grupo.")),
 
             Page("reconciliation", "Contabilidade", "✓", "Reconciliação", "Compare movimentos contabilísticos com as operações reais da conta bancária.", "Reconciliation", "Index", "Abrir Reconciliação",
+                Section("orcamento-importacao", "Orçamento na revisão da importação", "Consulte o orçamento antes de confirmar os novos movimentos.",
+                    "Por baixo da classificação da IA, Orçamentado e Executado mostram os valores da categoria no orçamento escolhido para a importação.",
+                    "Ao mudar a categoria, os valores atualizam-se automaticamente. O executado inclui apenas movimentos já gravados e ativos; não inclui os movimentos desta importação.",
+                    "Sem categoria selecionada, escolha uma categoria para consultar os valores. Nada é gravado até confirmar a criação dos movimentos."),
                 Section("manual", "Reconciliação manual", "A reconciliação confirma a correspondência entre contabilidade e banco.",
                     "Filtre por conta, datas, estado ou descrição e aplique os critérios.",
                     "Confirme data, referência, descrição e valor antes de reconciliar.",
