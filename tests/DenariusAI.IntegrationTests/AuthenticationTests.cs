@@ -16,10 +16,12 @@ public sealed class AuthenticationTests
     [InlineData("GroqCloud", null, false)]
     [InlineData("Mistral", "True", true)]
     [InlineData("mistral", "True", true)]
+    [InlineData("OpenAI", "True", true)]
     [InlineData("Ollama", "True", false)]
     [InlineData("OLLAMA", "True", false)]
+    [InlineData("Ollama", null, false)]
     [InlineData("Mistral", null, false)]
-    public void CloudAiPrivacyNoticeFollowsProviderAndSessionState(string provider, string? sessionValue, bool expected)
+    public void CloudAiPrivacyWarningFollowsProviderAndSessionState(string provider, string? sessionValue, bool expected)
     {
         Assert.Equal(expected, CloudAiPrivacyNoticePolicy.ShouldShow(provider, sessionValue));
     }
