@@ -1,15 +1,72 @@
+@model HelpIndexViewModel
 @{ ViewData["Title"] = "Ajuda"; }
 <link rel="stylesheet" href="~/css/help-details.css" asp-append-version="true" />
-<div class="page-header"><div><p class="eyebrow">Suporte</p><h1>Centro de ajuda</h1><p class="page-subtitle">Escolha uma área para consultar instruções, conceitos e aspetos importantes antes de realizar as operações.</p></div></div>
-<section class="help-grid">
-<a class="help-card featured" asp-action="HelpDetail" asp-route-id="dashboard"><span class="help-icon">⌂</span><h2>Dashboard</h2><p>Indicadores, períodos, orçamento, gráficos e Certificados de Aforro.</p><strong>Consultar detalhes →</strong></a>
-<a class="help-card" asp-action="HelpDetail" asp-route-id="movimentos"><span class="help-icon">↔</span><h2>Movimentos</h2><p>Partidas dobradas, contas, categorias, orçamentos e estados.</p><strong>Consultar detalhes →</strong></a>
-<a class="help-card ai" asp-action="HelpDetail" asp-route-id="assistant"><span class="help-icon">✦</span><h2>Assistência por IA</h2><p>Preenchimento em linguagem natural e conversação sobre os seus dados.</p><strong>Consultar detalhes →</strong></a>
-<a class="help-card" asp-action="HelpDetail" asp-route-id="reconciliation"><span class="help-icon">✓</span><h2>Reconciliação</h2><p>Confirmação manual, colagem conversacional de extratos e classificação assistida.</p><strong>Consultar detalhes →</strong></a>
-<a class="help-card" asp-action="HelpDetail" asp-route-id="budget"><span class="help-icon">▦</span><h2>Orçamento</h2><p>Planeamento mensal, execução e associação explícita aos movimentos.</p><strong>Consultar detalhes →</strong></a>
-<a class="help-card" asp-action="HelpDetail" asp-route-id="certificates"><span class="help-icon">◆</span><h2>Certificados de Aforro</h2><p>Carteira, rendimentos, capitalizações e valores projetados.</p><strong>Consultar detalhes →</strong></a>
-<a class="help-card" asp-action="HelpDetail" asp-route-id="analytics"><span class="help-icon">⌁</span><h2>Análise Financeira</h2><p>Comparações, filtros, tendências e relatórios inteligentes.</p><strong>Consultar detalhes →</strong></a>
-<a class="help-card" asp-action="HelpDetail" asp-route-id="tables"><span class="help-icon">☷</span><h2>Tabelas</h2><p>Grupos, categorias e contas que estruturam a informação financeira.</p><strong>Consultar detalhes →</strong></a>
-<a class="help-card" asp-action="HelpDetail" asp-route-id="preferences"><span class="help-icon">◎</span><h2>Preferências e segurança</h2><p>Perfil, palavra-passe, permissões e administração.</p><strong>Consultar detalhes →</strong></a>
-<a class="help-card" asp-action="HelpDetail" asp-route-id="administration"><span class="help-icon">⚙</span><h2>Administração</h2><p>Utilizadores, definições da IA, dados de demonstração e reinicialização.</p><strong>Consultar detalhes →</strong></a>
+<div class="page-header help-header">
+    <div>
+        <p class="eyebrow">Suporte</p>
+        <h1>Centro de ajuda</h1>
+        <p class="page-subtitle">Documentação funcional do Denarius AI: áreas, campos, regras, cálculos e respostas para as dúvidas mais frequentes.</p>
+    </div>
+</div>
+<section class="panel help-search-panel" aria-label="Pesquisar documentação">
+    <label for="helpSearch">Pesquisar na ajuda</label>
+    <div class="help-search-control">
+        <span aria-hidden="true">⌕</span>
+        <input id="helpSearch" type="search" placeholder="Ex.: reconciliar, orçamento, apólice, ticker, cópia de segurança..." autocomplete="off" />
+    </div>
+    <p>Pesquise pelo nome da área ou por conceitos incluídos na documentação.</p>
 </section>
+<div id="helpTopics">
+@foreach (var group in Model.Topics.GroupBy(topic => topic.Category))
+{
+    <section class="help-category" data-help-category>
+        <div class="help-category-heading">
+            <h2>@group.Key</h2>
+            <span>@group.Count() @(group.Count() == 1 ? "área" : "áreas")</span>
+        </div>
+        <div class="help-grid">
+        @foreach (var topic in group)
+        {
+            var classes = $"help-card{(topic.Featured ? " featured" : string.Empty)}{(topic.AiTopic ? " ai" : string.Empty)}";
+            var searchText = $"{topic.Category} {topic.Title} {topic.Subtitle} {string.Join(" ", topic.Sections.Select(section => $"{section.Title} {section.Description} {string.Join(" ", section.Items)}"))}";
+            <a class="@classes" asp-action="HelpDetail" asp-route-id="@topic.Id" data-help-topic data-help-search="@searchText">
+                <span class="help-icon">@topic.Icon</span>
+                <span class="help-card-category">@topic.Category</span>
+                <h3>@topic.Title</h3>
+                <p>@topic.Subtitle</p>
+                <strong>Consultar documentação →</strong>
+            </a>
+        }
+        </div>
+    </section>
+}
+</div>
+<section id="helpNoResults" class="panel help-empty" hidden>
+    <strong>Não foram encontrados resultados.</strong>
+    <p>Tente outro termo ou procure pela área funcional onde realiza a operação.</p>
+</section>
+@section Scripts {
+<script>
+(() => {
+    const input = document.getElementById('helpSearch');
+    const topics = [...document.querySelectorAll('[data-help-topic]')];
+    const categories = [...document.querySelectorAll('[data-help-category]')];
+    const empty = document.getElementById('helpNoResults');
+    if (!input) return;
+    input.addEventListener('input', () => {
+        const term = input.value.trim().toLocaleLowerCase('pt-PT');
+        let visibleCount = 0;
+        topics.forEach(topic => {
+            const haystack = (topic.dataset.helpSearch || '').toLocaleLowerCase('pt-PT');
+            const visible = term.length === 0 || haystack.includes(term);
+            topic.hidden = !visible;
+            if (visible) visibleCount++;
+        });
+        categories.forEach(category => {
+            category.hidden = !category.querySelector('[data-help-topic]:not([hidden])');
+        });
+        if (empty) empty.hidden = visibleCount !== 0;
+    });
+})();
+</script>
+}
