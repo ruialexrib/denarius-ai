@@ -70,7 +70,7 @@ public sealed class GroupAndCategoryServiceTests
         var unusedCategoryId = await categoryService.CreateAsync(new(groupId, "Cinema", null, 2), "user-id");
         var accountDefaultOnlyCategoryId = await categoryService.CreateAsync(new(groupId, "Combustível", null, 3), "user-id");
 
-        var bankAccount = new Account { Name = "Banco", AccountType = AccountType.Asset, Currency = "EUR" };
+        var bankAccount = new Account { Name = "Banco", AccountType = AccountType.BankAccount, Currency = "EUR" };
         var expenseAccount = new Account { Name = "Compras", AccountType = AccountType.Expense, Currency = "EUR" };
         var defaultCategoryAccount = new Account { Name = "Combustível", AccountType = AccountType.Expense, Currency = "EUR", CategoryId = accountDefaultOnlyCategoryId };
         context.Accounts.AddRange(bankAccount, expenseAccount, defaultCategoryAccount); await context.SaveChangesAsync();
