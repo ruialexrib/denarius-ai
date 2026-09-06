@@ -56,7 +56,7 @@ public sealed class BudgetRepository(DenariusDbContext dbContext) : Repository<B
         DbContext.Categories.AsNoTracking()
             .Where(category => category.IsActive && (category.FinancialGroup.Kind == FinancialGroupKind.Expense ||
                 (includeIncome && category.FinancialGroup.Kind == FinancialGroupKind.Income)))
-            .OrderBy(category => category.FinancialGroup.SortOrder).ThenBy(category => category.SortOrder)
+            .OrderBy(category => category.FinancialGroup.SortOrder).ThenBy(category => category.SortOrder).ThenBy(category => category.Name)
             .Select(category => new BudgetExecutionItemDto(
                 category.Id,
                 category.Name,

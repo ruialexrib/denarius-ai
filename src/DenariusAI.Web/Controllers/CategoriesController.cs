@@ -32,6 +32,7 @@ public sealed class CategoriesController(ICategoryService service, IFinancialGro
     {
         var groups = await groupService.ListAsync(false, cancellationToken); var categories = await service.ListAsync(groupId, !showInactive, cancellationToken);
         if (!string.IsNullOrWhiteSpace(search)) categories = categories.Where(item => item.Name.Contains(search.Trim(), StringComparison.CurrentCultureIgnoreCase)).ToList();
+        categories = CategoryDisplayOrdering.Order(categories, groups);
         var names = groups.ToDictionary(item => item.Id, item => item.Name); var kinds = groups.ToDictionary(item => item.Id, item => item.Kind);
         var pagination = PaginationViewModel.Create(categories.Count, page, pageSize);
         var pageCategories = categories.Skip((pagination.Page - 1) * pagination.PageSize).Take(pagination.PageSize).ToList();
