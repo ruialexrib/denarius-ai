@@ -138,6 +138,7 @@ public sealed class BudgetController(IBudgetService service, DenariusDbContext d
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> CopyLineForward(BudgetSaveViewModel model, Guid categoryId, CancellationToken cancellationToken)
     {
+        if (!ModelState.IsValid) { TempData["ErrorMessage"] = "Corrija os valores do orçamento."; return RedirectToIndex(model); }
         var line = model.Lines.SingleOrDefault(item => item.CategoryId == categoryId);
         if (line is null || line.Amount < 0m) { TempData["ErrorMessage"] = "Não foi possível identificar a linha a copiar."; return RedirectToIndex(model); }
         try
@@ -159,6 +160,7 @@ public sealed class BudgetController(IBudgetService service, DenariusDbContext d
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> CopyToNextMonth(BudgetSaveViewModel model, CancellationToken cancellationToken)
     {
+        if (!ModelState.IsValid) { TempData["ErrorMessage"] = "Corrija os valores do orçamento."; return RedirectToIndex(model); }
         try
         {
             if (model.Lines.Count > 0)

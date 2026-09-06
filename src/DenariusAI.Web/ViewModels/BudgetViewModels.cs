@@ -1,6 +1,8 @@
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using DenariusAI.Domain.Enums;
+using DenariusAI.Web.ModelBinding;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 
 namespace DenariusAI.Web.ViewModels;
 
@@ -16,6 +18,25 @@ public sealed class BudgetLineFormViewModel
     public decimal Actual { get; set; }
     public decimal Variance => Actual - Amount;
     public decimal? ExecutionPercentage => Amount == 0m ? null : decimal.Round(Actual / Amount * 100m, 2);
+}
+
+/// <summary>
+/// Captures only editable line data submitted by budget actions.
+/// </summary>
+public sealed class BudgetSaveLineViewModel
+{
+    /// <summary>Gets or sets the category whose budget is edited.</summary>
+    [BindRequired]
+    public Guid CategoryId { get; set; }
+
+    /// <summary>Gets or sets the optional category label used in action feedback.</summary>
+    public string? CategoryName { get; set; }
+
+    /// <summary>Gets or sets the non-negative amount submitted by an HTML number input.</summary>
+    [BindRequired]
+    [HtmlNumber]
+    [Range(0, double.MaxValue, ErrorMessage = "O valor orçamentado não pode ser negativo.")]
+    public decimal Amount { get; set; }
 }
 
 /// <summary>
@@ -66,7 +87,7 @@ public sealed class BudgetSaveViewModel
     /// <summary>
     /// Gets or sets the budget lines submitted from the current page.
     /// </summary>
-    public List<BudgetLineFormViewModel> Lines { get; set; } = [];
+    public List<BudgetSaveLineViewModel> Lines { get; set; } = [];
 }
 
 /// <summary>
