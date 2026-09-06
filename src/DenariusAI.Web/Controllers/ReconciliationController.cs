@@ -34,7 +34,7 @@ public sealed class ReconciliationController(IReconciliationService service, IAc
     /// Session key for storing import conversation data.
     /// </summary>
     private const string ImportSessionKey = "Reconciliation.ConversationImport";
-    
+
     /// <summary>
     /// Account types that represent banking accounts.
     /// </summary>
