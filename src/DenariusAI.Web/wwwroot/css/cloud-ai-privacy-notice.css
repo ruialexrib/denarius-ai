@@ -1,45 +1,25 @@
-.cloud-ai-notice-backdrop {
-    position: fixed;
-    z-index: 1200;
-    inset: 0;
-    display: grid;
-    place-items: center;
-    padding: 24px;
-    background: rgba(15, 28, 46, .72);
-    backdrop-filter: blur(5px);
+.app-toast.cloud-ai-warning {
+    border-color: #f2d292;
 }
 
-.cloud-ai-notice {
-    display: grid;
-    grid-template-columns: auto minmax(0, 1fr);
-    width: min(620px, 100%);
-    gap: 20px;
-    padding: 28px;
-    border: 1px solid #f2d292;
-    border-radius: 18px;
-    background: #fff;
-    box-shadow: 0 28px 80px rgba(15, 28, 46, .34);
-}
-
-.cloud-ai-notice-icon {
-    display: grid;
-    width: 46px;
-    height: 46px;
-    place-items: center;
-    border-radius: 50%;
+.app-toast.cloud-ai-warning .toast-icon {
     background: #fff4d6;
     color: #8a5a00;
-    font-size: 1.35rem;
-    font-weight: 800;
 }
 
-.cloud-ai-notice .eyebrow { margin: 0 0 6px; color: #8a5a00; }
-.cloud-ai-notice h2 { margin: 0; color: var(--ink); font-size: 1.45rem; }
-.cloud-ai-notice p:not(.eyebrow) { margin: 12px 0 20px; color: var(--muted); line-height: 1.65; }
-.cloud-ai-notice form { display: flex; justify-content: flex-end; }
+.app-toast.cloud-ai-warning strong {
+    color: #5f4300;
+}
 
-@media (max-width: 600px) {
-    .cloud-ai-notice-backdrop { padding: 16px; }
-    .cloud-ai-notice { grid-template-columns: 1fr; gap: 14px; padding: 22px; }
-    .cloud-ai-notice form, .cloud-ai-notice .button { width: 100%; }
+.app-toast.cloud-ai-warning:after {
+    background: #d39a22;
+}
+
+.app-toast[data-toast-persistent="true"]:after {
+    animation: none;
+    transform: none;
+}
+
+.app-toast.cloud-ai-warning form {
+    margin: 0;
 }
