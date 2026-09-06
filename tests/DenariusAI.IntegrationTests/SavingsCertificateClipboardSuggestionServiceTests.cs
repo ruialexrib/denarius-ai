@@ -72,6 +72,7 @@ public sealed class SavingsCertificateClipboardSuggestionServiceTests
     }
 
     /// <summary>Verifies malformed and empty model output is reported as a deterministic extraction error.</summary>
+    /// <param name="response">The model response to validate.</param>
     [Theory]
     [InlineData("")]
     [InlineData("não é json")]
@@ -96,6 +97,8 @@ public sealed class SavingsCertificateClipboardSuggestionServiceTests
     }
 
     /// <summary>Provides deterministic language-model responses and captures the request contract.</summary>
+    /// <param name="response">The deterministic model response returned by the stub.</param>
+    /// <param name="isConfigured">Whether the stub reports that the model provider is configured.</param>
     private sealed class StubLlm(string response, bool isConfigured = true) : ILLMService
     {
         /// <inheritdoc />
