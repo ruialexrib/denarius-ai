@@ -39,13 +39,14 @@ public sealed class BudgetController(IBudgetService service, DenariusDbContext d
     /// <param name="month">The month to display the budget for. Defaults to current month.</param>
     /// <param name="groupId">Optional financial group filter.</param>
     /// <param name="search">Optional search term to filter categories by name.</param>
+    /// <param name="budgetedOnly">Whether to show only categories with a positive budgeted amount.</param>
     /// <param name="sort">Sort order for the results. Defaults to the canonical report order.</param>
     /// <param name="page">Current page number for pagination. Default is 1.</param>
     /// <param name="pageSize">Number of items per page. Default is 10.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The budget index view with execution data.</returns>
     [HttpGet]
-    public async Task<IActionResult> Index(int? year, int? month, Guid? groupId, string? search, string sort = "report", int page = 1, int pageSize = 10, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> Index(int? year, int? month, Guid? groupId, string? search, bool budgetedOnly = false, string sort = "report", int page = 1, int pageSize = 10, CancellationToken cancellationToken = default)
     {
         var selectedYear = year ?? DateTime.Today.Year;
         var selectedMonth = month ?? DateTime.Today.Month;
@@ -55,6 +56,7 @@ public sealed class BudgetController(IBudgetService service, DenariusDbContext d
         var groups = execution.GroupBy(item => new { item.FinancialGroupId, item.FinancialGroupName }).OrderBy(group => group.Key.FinancialGroupName).ToList();
         if (groupId.HasValue) execution = execution.Where(item => item.FinancialGroupId == groupId).ToList();
         if (!string.IsNullOrWhiteSpace(search)) execution = execution.Where(item => item.CategoryName.Contains(search.Trim(), StringComparison.CurrentCultureIgnoreCase)).ToList();
+        if (budgetedOnly) execution = execution.Where(item => item.Budgeted > 0m).ToList();
         execution = sort switch
         {
             "group" => execution.OrderBy(item => item.FinancialGroupName).ThenBy(item => item.CategoryName).ToList(),
@@ -72,7 +74,7 @@ public sealed class BudgetController(IBudgetService service, DenariusDbContext d
             .ToDictionaryAsync(line => line.CategoryId, line => line.Id, cancellationToken);
         var lines = execution.Skip((pagination.Page - 1) * pagination.PageSize).Take(pagination.PageSize)
             .Select(item => new BudgetLineFormViewModel { AuditId = auditIds.GetValueOrDefault(item.CategoryId), CategoryId = item.CategoryId, CategoryName = item.CategoryName, FinancialGroupName = item.FinancialGroupName, Kind = FinancialGroupKind.Expense, Amount = item.Budgeted, Actual = item.Actual }).ToList();
-        return View(new BudgetIndexViewModel(selectedYear, selectedMonth, groupId, search, sort, lines, YearItems(selectedYear), MonthItems(selectedMonth),
+        return View(new BudgetIndexViewModel(selectedYear, selectedMonth, groupId, search, budgetedOnly, sort, lines, YearItems(selectedYear), MonthItems(selectedMonth),
             groups.Select(group => new SelectListItem(group.Key.FinancialGroupName, group.Key.FinancialGroupId.ToString(), group.Key.FinancialGroupId == groupId)).Prepend(new SelectListItem("Todos os grupos", string.Empty, groupId is null)).ToList(), SortItems(sort), totalBudgeted, totalActual, pagination));
     }
 
@@ -178,7 +180,7 @@ public sealed class BudgetController(IBudgetService service, DenariusDbContext d
     /// </summary>
     /// <param name="model">The budget save view model containing the navigation state.</param>
     /// <returns>A redirect result to the index action.</returns>
-    private IActionResult RedirectToIndex(BudgetSaveViewModel model) => RedirectToAction(nameof(Index), new { year = model.Year, month = model.Month, groupId = model.GroupId, search = model.Search, sort = model.Sort, page = model.Page, pageSize = model.PageSize });
+    private IActionResult RedirectToIndex(BudgetSaveViewModel model) => RedirectToAction(nameof(Index), new { year = model.Year, month = model.Month, groupId = model.GroupId, search = model.Search, budgetedOnly = model.BudgetedOnly, sort = model.Sort, page = model.Page, pageSize = model.PageSize });
 
     /// <summary>
     /// Generates a list of year select items for the dropdown, centered around the current year.
@@ -205,7 +207,7 @@ public sealed class BudgetController(IBudgetService service, DenariusDbContext d
     /// Generates a list of sort option select items for the dropdown.
     /// </summary>
     /// <param name="selected">The currently selected sort option.</param>
-    /// <returns>A list of select items for sort options.</returns>
+    /// <returns>A list of sort option select items.</returns>
     private static IReadOnlyList<SelectListItem> SortItems(string selected) => [new("Ordem do relatório", "report", selected == "report"), new("Grupo e categoria", "group", selected == "group"), new("Categoria", "category", selected == "category"), new("Maior orçamento", "budgetDesc", selected == "budgetDesc"), new("Maior realizado", "actualDesc", selected == "actualDesc"), new("Maior desvio", "varianceDesc", selected == "varianceDesc")];
 
     /// <summary>
