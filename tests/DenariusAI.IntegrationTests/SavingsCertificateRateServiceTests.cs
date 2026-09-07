@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace DenariusAI.IntegrationTests;
 
-/// <summary>Verifies deterministic IGCP rate parsing, persistence, filtering, and failure preservation.</summary>
+/// <summary>Verifies deterministic IGCP rate parsing, persistence, filtering, configuration, and failure preservation.</summary>
 public sealed class SavingsCertificateRateServiceTests
 {
     /// <summary>Confirms a refresh persists twelve monthly observations and remains idempotent.</summary>
@@ -30,6 +30,27 @@ public sealed class SavingsCertificateRateServiceTests
         Assert.NotNull(history.UpdatedAt);
         Assert.Single(context.ApplicationSettings.Where(item => item.Key == "SavingsCertificates.ReferenceRateHistory"));
         Assert.Contains(handler.RequestedUrls, url => url.Contains("-em-marco-de-", StringComparison.Ordinal));
+    }
+
+    /// <summary>Confirms administrator-configured source and publication URLs are used without restarting the service.</summary>
+    /// <returns>A task completing after the assertions.</returns>
+    [Fact]
+    public async Task ConfiguredUrlsAreUsedForRefreshAndSourceMetadata()
+    {
+        await using var context = CreateContext();
+        context.ApplicationSettings.AddRange(
+            new() { Key = "SavingsCertificates.IgcpSourceUrl", Value = "https://example.test/certificados" },
+            new() { Key = "SavingsCertificates.IgcpPublicationUrlTemplate", Value = "https://example.test/taxas/{year}/{month}" });
+        await context.SaveChangesAsync();
+        var handler = new IgcpHandler(valid: true);
+        var service = new IgcpSavingsCertificateRateService(new HttpClient(handler), context);
+
+        await service.RefreshAsync("test-user");
+        var history = await service.GetHistoryAsync(12);
+
+        Assert.Equal("https://example.test/certificados", history.SourceUrl);
+        Assert.All(handler.RequestedUrls, url => Assert.StartsWith("https://example.test/taxas/", url, StringComparison.Ordinal));
+        Assert.Contains(handler.RequestedUrls, url => url.Contains("/marco", StringComparison.Ordinal));
     }
 
     /// <summary>Confirms period filtering returns only the requested recent calendar months.</summary>
