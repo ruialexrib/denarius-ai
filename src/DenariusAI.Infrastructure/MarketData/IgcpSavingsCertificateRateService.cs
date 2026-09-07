@@ -18,7 +18,7 @@ public sealed class IgcpSavingsCertificateRateService(HttpClient httpClient, Den
     private const string SourceName = "IGCP";
     private const string SourceUrl = "https://www.igcp.pt/pt/aforristas/produtos-de-aforro/certificados-de-aforro";
     private const string Series = "F";
-    private static readonly string[] MonthNames = ["janeiro", "fevereiro", "março", "abril", "maio", "junho", "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"];
+    private static readonly string[] MonthNames = ["janeiro", "fevereiro", "marco", "abril", "maio", "junho", "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"];
     private static readonly Regex RateRegex = new(@"taxa\s+de\s+juro\s+bruta\s+para\s+novas\s+subscrições\s+de\s+Certificados\s+de\s+Aforro,\s*Série\s+F,.*?foi\s+fixada\s+em\s+(?<rate>\d{1,2}[,.]\d{1,5})%", RegexOptions.IgnoreCase | RegexOptions.Singleline | RegexOptions.CultureInvariant);
 
     /// <inheritdoc />
@@ -100,7 +100,7 @@ public sealed class IgcpSavingsCertificateRateService(HttpClient httpClient, Den
     private async Task<StoredRateObservation?> TryFetchMonthAsync(DateOnly month, CancellationToken cancellationToken)
     {
         var monthName = MonthNames[month.Month - 1];
-        var url = $"https://www.igcp.pt/pt/noticias/taxas-de-juro-dos-certificados-de-aforro-das-series-b-d-e-e-f-em-{Uri.EscapeDataString(monthName)}-de-{month.Year}";
+        var url = $"https://www.igcp.pt/pt/noticias/taxas-de-juro-dos-certificados-de-aforro-das-series-b-d-e-e-f-em-{monthName}-de-{month.Year}";
         using var response = await httpClient.GetAsync(url, cancellationToken);
         if (response.StatusCode == HttpStatusCode.NotFound) return null;
         response.EnsureSuccessStatusCode();
