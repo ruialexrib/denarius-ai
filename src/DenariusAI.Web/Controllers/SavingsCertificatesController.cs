@@ -15,12 +15,14 @@ namespace DenariusAI.Web.Controllers;
 /// <param name="dbContext">The database context for accessing savings certificates data.</param>
 /// <param name="clipboardSuggestionService">The service that proposes certificate fields from copied text.</param>
 /// <param name="rateService">The service that imports and reads official Savings Certificate reference rates.</param>
+/// <param name="rateForecastService">The deterministic service that forecasts the next monthly reference rate.</param>
 /// <param name="logger">The application logger.</param>
 [Authorize]
 public sealed class SavingsCertificatesController(
     DenariusDbContext dbContext,
     ISavingsCertificateClipboardSuggestionService clipboardSuggestionService,
     ISavingsCertificateRateService rateService,
+    ISavingsCertificateRateForecastService rateForecastService,
     ILogger<SavingsCertificatesController> logger) : Controller
 {
     /// <summary>Displays a paginated, filterable, and sortable list of savings certificates.</summary>
@@ -57,7 +59,9 @@ public sealed class SavingsCertificatesController(
     {
         months = months is 3 or 6 or 12 ? months : 12;
         var history = await rateService.GetHistoryAsync(months, cancellationToken);
-        return View(new SavingsCertificateRateHistoryViewModel(months, history.Observations, history.UpdatedAt, history.SourceName, history.SourceUrl));
+        var forecastHistory = months == 12 ? history : await rateService.GetHistoryAsync(12, cancellationToken);
+        var forecast = rateForecastService.Forecast(forecastHistory.Observations);
+        return View(new SavingsCertificateRateHistoryViewModel(months, history.Observations, history.UpdatedAt, history.SourceName, history.SourceUrl, forecast));
     }
 
     /// <summary>Refreshes the official Savings Certificate reference-rate history from IGCP.</summary>
