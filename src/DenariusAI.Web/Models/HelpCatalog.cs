@@ -133,7 +133,7 @@ public static class HelpCatalog
                 Section("duvidas", "Resolver problemas", "Se uma categoria não aparecer, verifique a estrutura financeira.",
                     "Confirme o grupo, o tipo herdado e a conta selecionada antes de procurar um erro no movimento.")),
 
-            Page("certificates", "Poupança e investimento", "◆", "Certificados de Aforro", "Acompanhe subscrições, valor atual, rendimento e capitalizações.", "SavingsCertificates", "Index", "Gerir Certificados",
+            Page("certificates", "Poupança e investimento", "◆", "Certificados de Aforro", "Acompanhe subscrições, valor atual, rendimento, taxas oficiais e capitalizações.", "SavingsCertificates", "Index", "Gerir Certificados",
                 Section("campos", "Campos", "A subscrição guarda os dados necessários ao acompanhamento.",
                     "Data, Série/Número e Descrição identificam a subscrição.",
                     "Investimento representa o capital aplicado; Taxa e Valor atual alimentam os indicadores.",
@@ -141,6 +141,13 @@ public static class HelpCatalog
                 Section("calculos", "Cálculos", "Os valores derivados são calculados pela aplicação.",
                     "Rendimento corresponde à diferença entre Valor atual e Investimento.",
                     "Juros e valores futuros apresentados são projeções baseadas nas regras implementadas e não garantias de retorno."),
+                Section("taxas", "Histórico de taxas", "Consulte a taxa bruta oficial da Série F para novas subscrições sem alterar a carteira.",
+                    "Abra Histórico de taxas e selecione 3, 6 ou 12 meses; passe o cursor sobre o gráfico para consultar o mês e a taxa exata.",
+                    "Atualizar do IGCP recolhe as publicações mensais e mantém o histórico já guardado quando a fonte externa não responde ou devolve dados inválidos.",
+                    "A taxa oficial importada é uma referência separada da Taxa guardada em cada subscrição e nunca atualiza automaticamente os certificados existentes."),
+                Section("previsao", "Previsão do próximo mês", "A previsão é estatística e não corresponde a uma taxa anunciada pelo IGCP.",
+                    "A aplicação calcula uma estimativa ARIMA(0,1,0) com deriva a partir do histórico mensal disponível e apresenta um intervalo de confiança de 95%.",
+                    "A estimativa é apenas indicativa, não constitui recomendação financeira e nunca altera automaticamente a carteira."),
                 Section("ciclo", "Editar e eliminar", "O registo de acompanhamento é independente dos movimentos contabilísticos.",
                     "Editar deve atualizar a mesma subscrição; não reutilize o registo para outro investimento.",
                     "Eliminar remove o registo de acompanhamento após confirmação e não apaga automaticamente movimentos financeiros.")),
@@ -255,7 +262,11 @@ public static class HelpCatalog
                     "Quando existe ligação por registo, abra primeiro o respetivo histórico e depois o evento concreto.",
                     "A auditoria não deve expor palavras-passe, hashes, tokens ou chaves.")),
 
-            AdminPage("settings", "Administração", "⚙", "Definições e operações globais", "Configure IA, cópias de segurança, demonstração e operações destrutivas.", "Settings", "Index", "Abrir Definições",
+            AdminPage("settings", "Administração", "⚙", "Definições e operações globais", "Configure fontes externas, IA, cópias de segurança, demonstração e operações destrutivas.", "Settings", "Index", "Abrir Definições",
+                Section("fontes", "Fontes externas", "Os endpoints externos não sensíveis podem ser mantidos pelo administrador sem alterar código.",
+                    "Em Taxas dos Certificados de Aforro, configure a página oficial do IGCP e o modelo das publicações mensais.",
+                    "O modelo mensal deve usar HTTPS e incluir os marcadores {month} e {year}; as alterações são aplicadas na próxima atualização do histórico.",
+                    "Não introduza credenciais, tokens ou chaves nos URLs configuráveis."),
                 Section("ia", "Configuração de IA", "A configuração determina o fornecedor e o comportamento das funcionalidades assistidas.",
                     "Configure fornecedor, URL quando aplicável, credencial, modelo e parâmetros disponíveis.",
                     "Os prompts operacionais configuráveis afetam extração, classificação e relatórios.",
@@ -271,6 +282,7 @@ public static class HelpCatalog
                     "Não use a reinicialização como mecanismo normal de correção de movimentos."),
                 Section("duvidas", "Resolver problemas", "Separe problemas de configuração externa de problemas de dados.",
                     "Se a IA não responder, teste fornecedor, endpoint e modelo.",
+                    "Se a atualização das taxas falhar, confirme os URLs do IGCP e preserve os marcadores do modelo mensal.",
                     "Se um restauro for recusado, confirme versão e formato do ficheiro em vez de contornar a validação.",
                     "Se uma opção administrativa não estiver visível, confirme a função da conta autenticada."))
         };
