@@ -14,7 +14,8 @@ public sealed class SavingsCertificateRateServiceTests
     public async Task RefreshPersistsTwelveMonthsWithoutDuplicates()
     {
         await using var context = CreateContext();
-        var service = new IgcpSavingsCertificateRateService(new HttpClient(new IgcpHandler(valid: true)), context);
+        var handler = new IgcpHandler(valid: true);
+        var service = new IgcpSavingsCertificateRateService(new HttpClient(handler), context);
 
         var first = await service.RefreshAsync("test-user");
         var second = await service.RefreshAsync("test-user");
@@ -28,6 +29,7 @@ public sealed class SavingsCertificateRateServiceTests
         Assert.Equal("IGCP", history.SourceName);
         Assert.NotNull(history.UpdatedAt);
         Assert.Single(context.ApplicationSettings.Where(item => item.Key == "SavingsCertificates.ReferenceRateHistory"));
+        Assert.Contains(handler.RequestedUrls, url => url.Contains("-em-marco-de-", StringComparison.Ordinal));
     }
 
     /// <summary>Confirms period filtering returns only the requested recent calendar months.</summary>
@@ -70,12 +72,16 @@ public sealed class SavingsCertificateRateServiceTests
     /// <param name="valid">Whether the response contains a parseable official-rate sentence.</param>
     private sealed class IgcpHandler(bool valid) : HttpMessageHandler
     {
+        /// <summary>Gets the requested IGCP publication URLs for URL-format assertions.</summary>
+        public List<string> RequestedUrls { get; } = [];
+
         /// <summary>Returns the configured deterministic provider response.</summary>
         /// <param name="request">Outgoing provider request.</param>
         /// <param name="cancellationToken">Cancellation token.</param>
         /// <returns>An HTTP response containing representative IGCP HTML.</returns>
         protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
+            RequestedUrls.Add(request.RequestUri?.AbsoluteUri ?? string.Empty);
             var body = valid
                 ? "<html><body>A taxa de juro bruta para novas subscrições de Certificados de Aforro, Série F, em setembro de 2026 foi fixada em 2,500%.</body></html>"
                 : "<html><body>Conteúdo inesperado.</body></html>";
