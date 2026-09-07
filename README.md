@@ -39,7 +39,8 @@ AI features assist with transaction entry, classification, financial questions, 
 - AI-assisted bank reconciliation and transaction classification
 - Configurable, provider-neutral AI integration with Mistral AI, GroqCloud and Ollama
 - Dashboards, period comparisons and financial analytics
-- Portuguese Savings Certificates portfolio and projections
+- Portuguese Savings Certificates portfolio, official Série F rate history and indicative next-month ARIMA forecast
+- Configurable IGCP source URLs for Savings Certificate rate collection
 - Stock portfolio and watchlist with market price history, performance tracking and optional ARIMA forecasts
 - Automatic stock market history collection through a configurable market-data provider
 - Insurance portfolio with policy details, premium records, renewal dates and status tracking
@@ -78,7 +79,11 @@ Analytical results are calculated from application data, while AI can be used se
 
 The Savings Certificates portfolio tracks Portuguese savings-certificate subscriptions as part of the household's broader financial position. Registered holdings can be followed over time with their associated values and projections, keeping this form of savings visible alongside cash accounts and other investments.
 
-This dedicated area separates the characteristics of Savings Certificates from listed securities while still integrating them into the same personal-finance workspace.
+A dedicated rate-history screen can collect the official gross Série F rate for new subscriptions from monthly IGCP publications and display 3, 6 or 12 months of observations. The chart supports point inspection on hover, while the imported reference history remains separate from each registered certificate's own rate and never revalues existing holdings automatically.
+
+When enough monthly observations are available, DenariusAI calculates an indicative ARIMA(0,1,0) forecast with drift for the next calendar month, including a 95% confidence interval and rolling validation error. This forecast is explicitly separate from any official IGCP announcement and is never used automatically to change financial records.
+
+The IGCP source page and monthly publication URL template are administrator-editable application settings. Existing installations retain safe defaults; changing these settings affects the next history refresh without requiring an application restart.
 
 ### Stock portfolio
 
@@ -199,6 +204,19 @@ MARKET_DATA_API_KEY=your_api_key
 ```
 
 The API key is required only for stock market data features. Keep it private and never commit it to the repository.
+
+### Savings Certificate rate data
+
+Savings Certificate reference-rate history uses public IGCP pages and does not require an API key. Administrators can change the endpoints from **Definições da aplicação → Taxas dos Certificados de Aforro**.
+
+The effective settings are stored in the application's existing settings store:
+
+```text
+SavingsCertificates.IgcpSourceUrl = https://www.igcp.pt/pt/aforristas/produtos-de-aforro/certificados-de-aforro
+SavingsCertificates.IgcpPublicationUrlTemplate = https://www.igcp.pt/pt/noticias/taxas-de-juro-dos-certificados-de-aforro-das-series-b-d-e-e-f-em-{month}-de-{year}
+```
+
+The publication template must be an HTTPS URL and retain both `{month}` and `{year}` placeholders. These URLs contain no credentials. A failed refresh preserves the previously stored history, and imported reference rates remain separate from rates saved on individual certificate holdings.
 
 ### Optional Google authentication
 
