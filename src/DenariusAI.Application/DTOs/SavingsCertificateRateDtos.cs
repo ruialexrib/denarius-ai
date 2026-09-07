@@ -22,3 +22,23 @@ public sealed record SavingsCertificateRateHistoryDto(
 /// <param name="StoredCount">Total number of distinct observations stored after the refresh.</param>
 /// <param name="UpdatedAt">Timestamp recorded for the successful refresh.</param>
 public sealed record SavingsCertificateRateRefreshResultDto(int ImportedCount, int StoredCount, DateTimeOffset UpdatedAt);
+
+/// <summary>Represents a one-month Savings Certificate reference-rate forecast.</summary>
+/// <param name="Date">First day of the forecast month.</param>
+/// <param name="GrossRate">Forecast gross annual interest rate percentage.</param>
+/// <param name="LowerRate">Lower bound of the 95% confidence interval.</param>
+/// <param name="UpperRate">Upper bound of the 95% confidence interval.</param>
+public sealed record SavingsCertificateRateForecastDto(DateOnly Date, decimal GrossRate, decimal LowerRate, decimal UpperRate);
+
+/// <summary>Contains the deterministic reference-rate forecast result and model metadata.</summary>
+/// <param name="Available">Whether the available history is sufficient to produce a forecast.</param>
+/// <param name="Model">Forecast model display name.</param>
+/// <param name="MeanAbsoluteError">Rolling one-step mean absolute error in percentage points, when available.</param>
+/// <param name="Message">Reason the forecast is unavailable, when applicable.</param>
+/// <param name="Forecast">Next-month forecast when available.</param>
+public sealed record SavingsCertificateRateForecastResultDto(
+    bool Available,
+    string Model,
+    decimal? MeanAbsoluteError,
+    string? Message,
+    SavingsCertificateRateForecastDto? Forecast);
