@@ -31,8 +31,8 @@ public sealed class ApplicationSettingsServiceTests
         Assert.Equal(DenariusAI.Application.Configuration.ApplicationSettingsDefaults.JournalSuggestionPrompt, loaded.JournalSuggestionSystemPrompt);
         Assert.Equal(DenariusAI.Application.Configuration.ApplicationSettingsDefaults.InsuranceClipboardPrompt, loaded.InsuranceClipboardPrompt);
         Assert.Equal("https://www.igcp.pt/pt/aforristas/produtos-de-aforro/certificados-de-aforro", loaded.SavingsCertificateIgcpSourceUrl);
-        Assert.Contains("{month}", loaded.SavingsCertificateIgcpPublicationUrlTemplate, StringComparison.Ordinal);
-        Assert.Contains("{year}", loaded.SavingsCertificateIgcpPublicationUrlTemplate, StringComparison.Ordinal);
+        Assert.Contains("{month}", loaded.SavingsCertificateIgcpPublicationUrlTemplate);
+        Assert.Contains("{year}", loaded.SavingsCertificateIgcpPublicationUrlTemplate);
     }
 
     /// <summary>Verifies settings persist and are immediately effective.</summary>
