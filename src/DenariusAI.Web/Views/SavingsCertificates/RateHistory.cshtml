@@ -1,4 +1,5 @@
 @using System.Globalization
+@using System.Text.Json
 @model SavingsCertificateRateHistoryViewModel
 @{
     ViewData["Title"] = "Histórico de taxas dos Certificados de Aforro";
@@ -8,17 +9,22 @@
     var minimum = points.Length == 0 ? null : points.MinBy(item => item.GrossRate);
     var maximum = points.Length == 0 ? null : points.MaxBy(item => item.GrossRate);
     var variation = first is null || latest is null ? 0m : latest.GrossRate - first.GrossRate;
-    var minimumRate = minimum?.GrossRate ?? 0m;
-    var maximumRate = maximum?.GrossRate ?? 0m;
-    var range = maximumRate - minimumRate;
-    var coordinates = points.Select((point, index) =>
+    var forecast = Model.Forecast.Forecast;
+    var chartData = JsonSerializer.Serialize(new
     {
-        var x = points.Length <= 1 ? 450d : 24d + index * 852d / (points.Length - 1);
-        var y = range == 0 ? 130d : 236d - (double)((point.GrossRate - minimumRate) / range) * 202d;
-        return $"{x.ToString("0.##", CultureInfo.InvariantCulture)},{y.ToString("0.##", CultureInfo.InvariantCulture)}";
-    }).ToArray();
+        history = points.Select(item => new { date = item.Date.ToString("yyyy-MM-dd"), rate = item.GrossRate }),
+        forecast = forecast is null ? null : new
+        {
+            date = forecast.Date.ToString("yyyy-MM-dd"),
+            rate = forecast.GrossRate,
+            lower = forecast.LowerRate,
+            upper = forecast.UpperRate
+        }
+    });
 }
 <link rel="stylesheet" href="~/css/stock-history.css" asp-append-version="true" />
+<script src="~/js/savings-certificate-rate-history.js" asp-append-version="true" defer></script>
+<script id="savings-rate-chart-data" type="application/json">@Html.Raw(chartData)</script>
 
 <div class="page-header stock-history-header">
     <div class="stock-history-identity">
@@ -41,7 +47,7 @@
 
 <section class="panel stock-chart-panel">
     <header>
-        <div><p class="eyebrow">Período</p><h2>Evolução da taxa</h2><p class="panel-description">Selecione o horizonte de consulta. A taxa apresentada é uma referência oficial e não altera automaticamente nenhum certificado da sua carteira.</p></div>
+        <div><p class="eyebrow">Período</p><h2>Evolução da taxa</h2><p class="panel-description">Selecione o horizonte de consulta. Passe o rato sobre o gráfico para consultar o mês e a taxa exata.</p></div>
         <div class="stock-history-actions" aria-label="Período do histórico">
             <a class="button @(Model.Months == 3 ? string.Empty : "secondary")" asp-action="RateHistory" asp-route-months="3" aria-current="@(Model.Months == 3 ? "page" : null)">3 meses</a>
             <a class="button @(Model.Months == 6 ? string.Empty : "secondary")" asp-action="RateHistory" asp-route-months="6" aria-current="@(Model.Months == 6 ? "page" : null)">6 meses</a>
@@ -54,14 +60,38 @@
     }
     else
     {
-        <div class="stock-chart" role="img" aria-label="Gráfico da evolução da taxa bruta dos Certificados de Aforro Série F">
-            <div class="stock-chart-legend"><span class="observed">Taxa bruta Série F</span></div>
+        <div class="stock-chart" data-savings-rate-chart role="img" aria-label="Gráfico da evolução e previsão da taxa bruta dos Certificados de Aforro Série F">
+            <div class="stock-chart-legend"><span class="observed">Taxa bruta Série F</span>@if(forecast is not null){<span class="projected">Previsão ARIMA</span>}</div>
             <svg viewBox="0 0 900 260" preserveAspectRatio="none">
-                <defs><linearGradient id="stockArea" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#159a70" stop-opacity=".28"/><stop offset="1" stop-color="#159a70" stop-opacity=".02"/></linearGradient></defs>
+                <defs><linearGradient id="stockArea" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#159a70" stop-opacity=".28"/><stop offset="1" stop-color="#159a70" stop-opacity=".02"/></linearGradient><linearGradient id="forecastArea" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d48a18" stop-opacity=".24"/><stop offset="1" stop-color="#d48a18" stop-opacity=".03"/></linearGradient></defs>
                 <line x1="24" y1="34" x2="876" y2="34"/><line x1="24" y1="135" x2="876" y2="135"/><line x1="24" y1="236" x2="876" y2="236"/>
-                <polygon class="stock-chart-area" points="24,236 @string.Join(" ", coordinates) 876,236"/><polyline class="stock-chart-line" points="@string.Join(" ", coordinates)"/>
+                <polygon class="stock-chart-area" points=""/><polyline class="stock-chart-line" points=""/><polygon class="stock-forecast-band" points=""/><polyline class="stock-forecast-line" points=""/><circle class="stock-forecast-point" r="5" cx="0" cy="0"/>
             </svg>
-            <div class="stock-chart-axis"><span>@points[0].Date.ToString("MM/yyyy")</span><span>@points[^1].Date.ToString("MM/yyyy")</span></div>
+            <div class="stock-chart-axis"><span>@points[0].Date.ToString("MM/yyyy")</span><span data-chart-end>@(forecast?.Date.ToString("MM/yyyy") ?? points[^1].Date.ToString("MM/yyyy"))</span></div>
+        </div>
+    }
+</section>
+
+<section class="panel stock-forecast-panel">
+    <header>
+        <div><p class="eyebrow">Modelo temporal</p><h2>Previsão para o próximo mês</h2><p class="panel-description">Estimativa determinística baseada no histórico mensal disponível. Não corresponde a uma taxa oficial anunciada pelo IGCP.</p></div>
+        @if(Model.Forecast.MeanAbsoluteError.HasValue){<div class="stock-model-quality"><span>Erro médio</span><strong>@Model.Forecast.MeanAbsoluteError.Value.ToString("N3") p.p.</strong></div>}
+    </header>
+    @if(!Model.Forecast.Available || forecast is null)
+    {
+        <div class="stock-history-empty">@(Model.Forecast.Message ?? "A previsão ainda não está disponível.")</div>
+    }
+    else
+    {
+        <div class="stock-model-strip"><span>@Model.Forecast.Model</span><small>Previsão indicativa; a taxa oficial continua a ser a publicada pelo IGCP.</small></div>
+        <div class="stock-forecast-cards">
+            <div class="stock-rate-forecast-card">
+                <span>Próximo mês</span>
+                <strong>@forecast.GrossRate.ToString("N3")%</strong>
+                <small>@forecast.Date.ToString("MMMM yyyy", new CultureInfo("pt-PT"))</small>
+                <p><b>@forecast.LowerRate.ToString("N3")%</b>–<b>@forecast.UpperRate.ToString("N3")%</b></p>
+                <em>Intervalo de confiança 95%</em>
+            </div>
         </div>
     }
 </section>
