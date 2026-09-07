@@ -49,7 +49,7 @@ public sealed class SavingsCertificateRateServiceTests
         var history = await service.GetHistoryAsync(12);
 
         Assert.Equal("https://example.test/certificados", history.SourceUrl);
-        Assert.All(handler.RequestedUrls, url => Assert.StartsWith("https://example.test/taxas/", url, StringComparison.Ordinal));
+        Assert.All(handler.RequestedUrls, url => Assert.StartsWith("https://example.test/taxas/", url));
         Assert.Contains(handler.RequestedUrls, url => url.Contains("/marco", StringComparison.Ordinal));
     }
 
