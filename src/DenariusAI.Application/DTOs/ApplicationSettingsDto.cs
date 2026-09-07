@@ -29,6 +29,8 @@ namespace DenariusAI.Application.DTOs;
 /// <param name="GroqCloudModel">GroqCloud model identifier.</param>
 /// <param name="GroqCloudBaseUrl">GroqCloud HTTPS API root.</param>
 /// <param name="GroqCloudReasoningEffort">Reasoning effort sent only for GPT-OSS models.</param>
+/// <param name="SavingsCertificateIgcpSourceUrl">Official IGCP Savings Certificates source page.</param>
+/// <param name="SavingsCertificateIgcpPublicationUrlTemplate">Monthly IGCP publication URL template using {month} and {year} placeholders.</param>
 public sealed record ApplicationSettingsDto(
     string MistralModel,
     string MistralBaseUrl,
@@ -57,4 +59,6 @@ public sealed record ApplicationSettingsDto(
     string AiContextGuidancePrompt = Application.Configuration.ApplicationSettingsDefaults.AiContextGuidancePrompt,
     string GroqCloudModel = Application.Configuration.GroqCloudDefaults.Model,
     string GroqCloudBaseUrl = Application.Configuration.GroqCloudDefaults.BaseUrl,
-    string GroqCloudReasoningEffort = Application.Configuration.GroqCloudDefaults.ReasoningEffort);
+    string GroqCloudReasoningEffort = Application.Configuration.GroqCloudDefaults.ReasoningEffort,
+    string SavingsCertificateIgcpSourceUrl = "https://www.igcp.pt/pt/aforristas/produtos-de-aforro/certificados-de-aforro",
+    string SavingsCertificateIgcpPublicationUrlTemplate = "https://www.igcp.pt/pt/noticias/taxas-de-juro-dos-certificados-de-aforro-das-series-b-d-e-e-f-em-{month}-de-{year}");

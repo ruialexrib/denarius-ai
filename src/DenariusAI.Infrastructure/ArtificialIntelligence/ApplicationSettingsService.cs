@@ -15,6 +15,9 @@ namespace DenariusAI.Infrastructure.ArtificialIntelligence;
 public sealed class ApplicationSettingsService(DenariusDbContext dbContext, IOptions<MistralOptions> mistralOptions,
     IOptions<GroqCloudOptions>? groqCloudOptions = null) : IApplicationSettingsService
 {
+    private const string DefaultIgcpSourceUrl = "https://www.igcp.pt/pt/aforristas/produtos-de-aforro/certificados-de-aforro";
+    private const string DefaultIgcpPublicationUrlTemplate = "https://www.igcp.pt/pt/noticias/taxas-de-juro-dos-certificados-de-aforro-das-series-b-d-e-e-f-em-{month}-de-{year}";
+
     /// <summary>Loads effective settings, preferring provider-neutral generation keys.</summary>
     /// <param name="cancellationToken">Token used to cancel the database operation.</param>
     /// <returns>Effective settings including administrator-configured prompts.</returns>
@@ -37,7 +40,9 @@ public sealed class ApplicationSettingsService(DenariusDbContext dbContext, IOpt
             Get(values, "AI.Provider", "Mistral"), Get(values, "Ollama.Model", "llama3.2"), Get(values, "Ollama.BaseUrl", "http://localhost:11434"),
             GetInt(values, "AI.MaxInputBytes", 12000), Get(values, "Prompts.ContextGuidance", ApplicationSettingsDefaults.AiContextGuidancePrompt),
             Get(values, "GroqCloud.Model", groqDefaults.Model), Get(values, "GroqCloud.BaseUrl", groqDefaults.BaseUrl),
-            Get(values, "GroqCloud.ReasoningEffort", groqDefaults.ReasoningEffort));
+            Get(values, "GroqCloud.ReasoningEffort", groqDefaults.ReasoningEffort),
+            Get(values, "SavingsCertificates.IgcpSourceUrl", DefaultIgcpSourceUrl),
+            Get(values, "SavingsCertificates.IgcpPublicationUrlTemplate", DefaultIgcpPublicationUrlTemplate));
     }
 
     /// <summary>Validates and persists settings without changing provider credentials.</summary>
@@ -51,16 +56,36 @@ public sealed class ApplicationSettingsService(DenariusDbContext dbContext, IOpt
         Validate(settings);
         var values = new Dictionary<string, string>
         {
-            ["GroqCloud.Model"] = settings.GroqCloudModel.Trim(), ["GroqCloud.BaseUrl"] = settings.GroqCloudBaseUrl.Trim(),
+            ["GroqCloud.Model"] = settings.GroqCloudModel.Trim(),
+            ["GroqCloud.BaseUrl"] = settings.GroqCloudBaseUrl.Trim(),
             ["GroqCloud.ReasoningEffort"] = settings.GroqCloudReasoningEffort,
             ["AI.MaxInputBytes"] = settings.AiMaxInputBytes.ToString(CultureInfo.InvariantCulture),
             ["Prompts.ContextGuidance"] = settings.AiContextGuidancePrompt.Trim(),
-            ["AI.Provider"] = settings.AiProvider.Trim(), ["Ollama.Model"] = settings.OllamaModel.Trim(), ["Ollama.BaseUrl"] = settings.OllamaBaseUrl.Trim(),
-            ["Mistral.Model"] = settings.MistralModel.Trim(), ["Mistral.BaseUrl"] = settings.MistralBaseUrl.Trim(), ["AI.MaxTokens"] = settings.AiMaxTokens.ToString(CultureInfo.InvariantCulture), ["AI.Temperature"] = settings.AiTemperature.ToString(CultureInfo.InvariantCulture),
-            ["Prompts.Assistant"] = settings.AssistantSystemPrompt.Trim(), ["Assistant.ContextMonths"] = settings.AssistantContextMonths.ToString(CultureInfo.InvariantCulture), ["Assistant.MaxTransactions"] = settings.AssistantMaxTransactions.ToString(CultureInfo.InvariantCulture), ["Assistant.HistoryMessages"] = settings.AssistantHistoryMessages.ToString(CultureInfo.InvariantCulture),
-            ["Prompts.JournalSuggestion"] = settings.JournalSuggestionSystemPrompt.Trim(), ["JournalSuggestion.HistoryMessages"] = settings.JournalSuggestionHistoryMessages.ToString(CultureInfo.InvariantCulture), ["Prompts.ReconciliationExtraction"] = settings.ReconciliationExtractionPrompt.Trim(), ["Prompts.ReconciliationClassification"] = settings.ReconciliationClassificationPrompt.Trim(),
-            ["Prompts.DashboardWelcome"] = settings.DashboardWelcomePrompt.Trim(), ["Prompts.FinancialAnalysis"] = settings.FinancialAnalysisPrompt.Trim(), ["Prompts.ConnectionTest"] = settings.ConnectionTestPrompt.Trim(), ["Prompts.CorrespondenceMetadata"] = settings.CorrespondenceMetadataPrompt.Trim(),
-            ["MarketData.Provider"] = settings.MarketDataProvider.Trim(), ["MarketData.BaseUrl"] = settings.MarketDataBaseUrl.Trim(), ["Prompts.InsuranceClipboard"] = settings.InsuranceClipboardPrompt.Trim(), ["Prompts.SavingsCertificateClipboard"] = settings.SavingsCertificateClipboardPrompt.Trim()
+            ["AI.Provider"] = settings.AiProvider.Trim(),
+            ["Ollama.Model"] = settings.OllamaModel.Trim(),
+            ["Ollama.BaseUrl"] = settings.OllamaBaseUrl.Trim(),
+            ["Mistral.Model"] = settings.MistralModel.Trim(),
+            ["Mistral.BaseUrl"] = settings.MistralBaseUrl.Trim(),
+            ["AI.MaxTokens"] = settings.AiMaxTokens.ToString(CultureInfo.InvariantCulture),
+            ["AI.Temperature"] = settings.AiTemperature.ToString(CultureInfo.InvariantCulture),
+            ["Prompts.Assistant"] = settings.AssistantSystemPrompt.Trim(),
+            ["Assistant.ContextMonths"] = settings.AssistantContextMonths.ToString(CultureInfo.InvariantCulture),
+            ["Assistant.MaxTransactions"] = settings.AssistantMaxTransactions.ToString(CultureInfo.InvariantCulture),
+            ["Assistant.HistoryMessages"] = settings.AssistantHistoryMessages.ToString(CultureInfo.InvariantCulture),
+            ["Prompts.JournalSuggestion"] = settings.JournalSuggestionSystemPrompt.Trim(),
+            ["JournalSuggestion.HistoryMessages"] = settings.JournalSuggestionHistoryMessages.ToString(CultureInfo.InvariantCulture),
+            ["Prompts.ReconciliationExtraction"] = settings.ReconciliationExtractionPrompt.Trim(),
+            ["Prompts.ReconciliationClassification"] = settings.ReconciliationClassificationPrompt.Trim(),
+            ["Prompts.DashboardWelcome"] = settings.DashboardWelcomePrompt.Trim(),
+            ["Prompts.FinancialAnalysis"] = settings.FinancialAnalysisPrompt.Trim(),
+            ["Prompts.ConnectionTest"] = settings.ConnectionTestPrompt.Trim(),
+            ["Prompts.CorrespondenceMetadata"] = settings.CorrespondenceMetadataPrompt.Trim(),
+            ["MarketData.Provider"] = settings.MarketDataProvider.Trim(),
+            ["MarketData.BaseUrl"] = settings.MarketDataBaseUrl.Trim(),
+            ["Prompts.InsuranceClipboard"] = settings.InsuranceClipboardPrompt.Trim(),
+            ["Prompts.SavingsCertificateClipboard"] = settings.SavingsCertificateClipboardPrompt.Trim(),
+            ["SavingsCertificates.IgcpSourceUrl"] = settings.SavingsCertificateIgcpSourceUrl.Trim(),
+            ["SavingsCertificates.IgcpPublicationUrlTemplate"] = settings.SavingsCertificateIgcpPublicationUrlTemplate.Trim()
         };
         var existing = await dbContext.ApplicationSettings.ToDictionaryAsync(item => item.Key, cancellationToken);
         foreach (var pair in values) { if (existing.TryGetValue(pair.Key, out var setting)) { setting.Value = pair.Value; setting.UpdatedBy = userId; } else dbContext.ApplicationSettings.Add(new ApplicationSetting { Key = pair.Key, Value = pair.Value, CreatedBy = userId }); }
@@ -84,6 +109,8 @@ public sealed class ApplicationSettingsService(DenariusDbContext dbContext, IOpt
         if (string.IsNullOrWhiteSpace(value.AssistantSystemPrompt) || string.IsNullOrWhiteSpace(value.JournalSuggestionSystemPrompt) || string.IsNullOrWhiteSpace(value.ReconciliationExtractionPrompt) || string.IsNullOrWhiteSpace(value.ReconciliationClassificationPrompt) || string.IsNullOrWhiteSpace(value.DashboardWelcomePrompt) || string.IsNullOrWhiteSpace(value.FinancialAnalysisPrompt) || string.IsNullOrWhiteSpace(value.ConnectionTestPrompt) || string.IsNullOrWhiteSpace(value.CorrespondenceMetadataPrompt) || string.IsNullOrWhiteSpace(value.InsuranceClipboardPrompt) || string.IsNullOrWhiteSpace(value.SavingsCertificateClipboardPrompt)) throw new ArgumentException("Os prompts são obrigatórios.");
         if (!string.Equals(value.MarketDataProvider, "AlphaVantage", StringComparison.OrdinalIgnoreCase)) throw new ArgumentException("O fornecedor gratuito suportado é Alpha Vantage.");
         if (!Uri.TryCreate(value.MarketDataBaseUrl, UriKind.Absolute, out var marketUri) || marketUri.Scheme != Uri.UriSchemeHttps) throw new ArgumentException("O endereço do fornecedor de cotações deve ser um URL HTTPS válido.");
+        if (!Uri.TryCreate(value.SavingsCertificateIgcpSourceUrl, UriKind.Absolute, out var sourceUri) || sourceUri.Scheme != Uri.UriSchemeHttps) throw new ArgumentException("A página oficial do IGCP deve ser um URL HTTPS válido.");
+        if (!Uri.TryCreate(value.SavingsCertificateIgcpPublicationUrlTemplate.Replace("{month}", "setembro", StringComparison.Ordinal).Replace("{year}", "2026", StringComparison.Ordinal), UriKind.Absolute, out var publicationUri) || publicationUri.Scheme != Uri.UriSchemeHttps || !value.SavingsCertificateIgcpPublicationUrlTemplate.Contains("{month}", StringComparison.Ordinal) || !value.SavingsCertificateIgcpPublicationUrlTemplate.Contains("{year}", StringComparison.Ordinal)) throw new ArgumentException("O modelo de URL do IGCP deve ser HTTPS e incluir {month} e {year}.");
         if (value.AiMaxTokens is < 64 or > 8192 || value.AiTemperature is < 0 or > 1) throw new ArgumentException("Os parâmetros do modelo estão fora dos limites permitidos.");
         if (value.AssistantContextMonths is < 1 or > 60 || value.AssistantMaxTransactions is < 10 or > 1000 || value.AssistantHistoryMessages is < 0 or > 50 || value.JournalSuggestionHistoryMessages is < 0 or > 50) throw new ArgumentException("Os limites da aplicação estão fora dos intervalos permitidos.");
     }

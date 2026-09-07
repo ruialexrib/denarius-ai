@@ -1,0 +1,109 @@
+@using System.Globalization
+@using System.Text.Json
+@model SavingsCertificateRateHistoryViewModel
+@{
+    ViewData["Title"] = "Histórico de taxas dos Certificados de Aforro";
+    var points = Model.Observations.OrderBy(item => item.Date).ToArray();
+    var first = points.FirstOrDefault();
+    var latest = points.LastOrDefault();
+    var minimum = points.Length == 0 ? null : points.MinBy(item => item.GrossRate);
+    var maximum = points.Length == 0 ? null : points.MaxBy(item => item.GrossRate);
+    var variation = first is null || latest is null ? 0m : latest.GrossRate - first.GrossRate;
+    var forecast = Model.Forecast.Forecast;
+    var chartData = JsonSerializer.Serialize(new
+    {
+        history = points.Select(item => new { date = item.Date.ToString("yyyy-MM-dd"), rate = item.GrossRate }),
+        forecast = forecast is null ? null : new
+        {
+            date = forecast.Date.ToString("yyyy-MM-dd"),
+            rate = forecast.GrossRate,
+            lower = forecast.LowerRate,
+            upper = forecast.UpperRate
+        }
+    });
+}
+<link rel="stylesheet" href="~/css/stock-history.css" asp-append-version="true" />
+<link rel="stylesheet" href="~/css/savings-certificate-rate-history.css" asp-append-version="true" />
+<script src="~/js/savings-certificate-rate-history.js" asp-append-version="true" defer></script>
+<script id="savings-rate-chart-data" type="application/json">@Html.Raw(chartData)</script>
+
+<div class="page-header stock-history-header">
+    <div class="stock-history-identity">
+        <p class="eyebrow">Poupanças · Taxas de referência</p>
+        <div class="stock-history-title-row"><h1>Certificados de Aforro</h1><span class="stock-market-badge">Série F</span></div>
+        <p class="page-subtitle">Taxa bruta oficial para novas subscrições, recolhida das publicações mensais do IGCP.</p>
+    </div>
+    <div class="page-header-actions stock-history-actions">
+        <form asp-action="RefreshRateHistory" asp-route-months="@Model.Months" method="post"><button class="button" type="submit">Atualizar do IGCP</button></form>
+        <a class="button secondary" asp-action="Index">Voltar</a>
+    </div>
+</div>
+
+<section class="stock-history-summary" aria-label="Resumo das taxas">
+    <article class="stock-summary-primary"><span>Taxa mais recente</span><strong>@(latest is null ? "—" : $"{latest.GrossRate:N3}%")</strong><small>@(latest is null ? "Sem histórico" : latest.Date.ToString("MMMM yyyy", new CultureInfo("pt-PT")))</small></article>
+    <article><span>Variação no período</span><strong class="@(variation > 0 ? "positive" : variation < 0 ? "negative" : string.Empty)">@(points.Length < 2 ? "—" : $"{variation:+0.000;-0.000;0.000} p.p.")</strong><small>@(points.Length < 2 ? "Sem comparação" : $"Desde {first!.Date:MM/yyyy}")</small></article>
+    <article><span>Mínimo</span><strong>@(minimum is null ? "—" : $"{minimum.GrossRate:N3}%")</strong><small>@(minimum is null ? "Sem histórico" : minimum.Date.ToString("MM/yyyy"))</small></article>
+    <article><span>Máximo</span><strong>@(maximum is null ? "—" : $"{maximum.GrossRate:N3}%")</strong><small>@(maximum is null ? "Sem histórico" : maximum.Date.ToString("MM/yyyy"))</small></article>
+</section>
+
+<section class="panel stock-chart-panel">
+    <header>
+        <div><p class="eyebrow">Período</p><h2>Evolução da taxa</h2><p class="panel-description">Selecione o horizonte de consulta. Passe o rato sobre o gráfico para consultar o mês e a taxa exata.</p></div>
+        <div class="stock-history-actions" aria-label="Período do histórico">
+            <a class="button @(Model.Months == 3 ? string.Empty : "secondary")" asp-action="RateHistory" asp-route-months="3" aria-current="@(Model.Months == 3 ? "page" : null)">3 meses</a>
+            <a class="button @(Model.Months == 6 ? string.Empty : "secondary")" asp-action="RateHistory" asp-route-months="6" aria-current="@(Model.Months == 6 ? "page" : null)">6 meses</a>
+            <a class="button @(Model.Months == 12 ? string.Empty : "secondary")" asp-action="RateHistory" asp-route-months="12" aria-current="@(Model.Months == 12 ? "page" : null)">12 meses</a>
+        </div>
+    </header>
+    @if (points.Length == 0)
+    {
+        <div class="stock-history-empty">Ainda não existem taxas importadas. Utilize <strong>Atualizar do IGCP</strong> para recolher o histórico oficial.</div>
+    }
+    else
+    {
+        <div class="stock-chart" data-savings-rate-chart role="img" aria-label="Gráfico da evolução e previsão da taxa bruta dos Certificados de Aforro Série F">
+            <div class="stock-chart-legend"><span class="observed">Taxa bruta Série F</span>@if(forecast is not null){<span class="projected">Previsão ARIMA</span>}</div>
+            <svg viewBox="0 0 900 260" preserveAspectRatio="none">
+                <defs><linearGradient id="stockArea" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#159a70" stop-opacity=".28"/><stop offset="1" stop-color="#159a70" stop-opacity=".02"/></linearGradient><linearGradient id="forecastArea" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d48a18" stop-opacity=".24"/><stop offset="1" stop-color="#d48a18" stop-opacity=".03"/></linearGradient></defs>
+                <line x1="24" y1="34" x2="876" y2="34"/><line x1="24" y1="135" x2="876" y2="135"/><line x1="24" y1="236" x2="876" y2="236"/>
+                <polygon class="stock-chart-area" points=""/><polyline class="stock-chart-line" points=""/><polygon class="stock-forecast-band" points=""/><polyline class="stock-forecast-line" points=""/><circle class="stock-forecast-point" r="5" cx="0" cy="0"/>
+            </svg>
+            <div class="stock-chart-axis"><span>@points[0].Date.ToString("MM/yyyy")</span><span data-chart-end>@(forecast?.Date.ToString("MM/yyyy") ?? points[^1].Date.ToString("MM/yyyy"))</span></div>
+        </div>
+    }
+</section>
+
+<section class="panel stock-forecast-panel">
+    <header>
+        <div><p class="eyebrow">Modelo temporal</p><h2>Previsão para o próximo mês</h2><p class="panel-description">Estimativa determinística baseada no histórico mensal disponível. Não corresponde a uma taxa oficial anunciada pelo IGCP.</p></div>
+        @if(Model.Forecast.MeanAbsoluteError.HasValue){<div class="stock-model-quality"><span>Erro médio</span><strong>@Model.Forecast.MeanAbsoluteError.Value.ToString("N3") p.p.</strong></div>}
+    </header>
+    @if(!Model.Forecast.Available || forecast is null)
+    {
+        <div class="stock-history-empty">@(Model.Forecast.Message ?? "A previsão ainda não está disponível.")</div>
+    }
+    else
+    {
+        <div class="stock-model-strip"><span>@Model.Forecast.Model</span><small>Previsão indicativa; a taxa oficial continua a ser a publicada pelo IGCP.</small></div>
+        <div class="stock-forecast-cards">
+            <div class="stock-rate-forecast-card">
+                <span>Próximo mês</span>
+                <strong>@forecast.GrossRate.ToString("N3")%</strong>
+                <small>@forecast.Date.ToString("MMMM yyyy", new CultureInfo("pt-PT"))</small>
+                <p><b>@forecast.LowerRate.ToString("N3")%</b>–<b>@forecast.UpperRate.ToString("N3")%</b></p>
+                <em>Intervalo de confiança 95%</em>
+            </div>
+        </div>
+    }
+</section>
+
+<section class="panel stock-history-table">
+    <header>
+        <div><p class="eyebrow">Fonte oficial</p><h2>Taxas importadas</h2><p class="panel-description">Fonte: <a class="text-link" href="@Model.SourceUrl" target="_blank" rel="noopener noreferrer">@Model.SourceName</a>. Última atualização: @(Model.UpdatedAt.HasValue ? Model.UpdatedAt.Value.ToLocalTime().ToString("dd/MM/yyyy HH:mm") : "ainda não efetuada").</p></div>
+        <span class="stock-table-period">@points.Length observações</span>
+    </header>
+    <div class="table-wrap"><table class="entity-table"><thead><tr><th>Período</th><th>Série</th><th class="amount">Taxa bruta</th></tr></thead><tbody>
+        @foreach (var item in points.Reverse()) { <tr><td>@item.Date.ToString("MMMM yyyy", new CultureInfo("pt-PT"))</td><td><strong>Série @item.Series</strong></td><td class="amount"><strong>@item.GrossRate.ToString("N3")%</strong></td></tr> }
+        @if (points.Length == 0) { <tr><td colspan="3" class="empty-row">Sem dados.</td></tr> }
+    </tbody></table></div>
+</section>

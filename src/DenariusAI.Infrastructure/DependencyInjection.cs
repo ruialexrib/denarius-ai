@@ -105,6 +105,8 @@ public static class DependencyInjection
         services.AddScoped<ILLMService, ConfigurableLLMService>();
         services.AddHttpClient<IStockMarketDataService, AlphaVantageStockMarketDataService>(client => client.Timeout = TimeSpan.FromSeconds(60))
             .RemoveAllLoggers();
+        services.AddHttpClient<ISavingsCertificateRateService, IgcpSavingsCertificateRateService>(client => client.Timeout = TimeSpan.FromSeconds(30))
+            .RemoveAllLoggers();
 
         return services;
     }
