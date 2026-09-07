@@ -8,9 +8,11 @@ namespace DenariusAI.Web.ViewModels;
 /// <param name="UpdatedAt">Timestamp of the latest successful provider refresh.</param>
 /// <param name="SourceName">Provider display name.</param>
 /// <param name="SourceUrl">Canonical provider page.</param>
+/// <param name="Forecast">Deterministic next-month ARIMA forecast based on the available stored history.</param>
 public sealed record SavingsCertificateRateHistoryViewModel(
     int Months,
     IReadOnlyList<SavingsCertificateRateObservationDto> Observations,
     DateTimeOffset? UpdatedAt,
     string SourceName,
-    string SourceUrl);
+    string SourceUrl,
+    SavingsCertificateRateForecastResultDto Forecast);
