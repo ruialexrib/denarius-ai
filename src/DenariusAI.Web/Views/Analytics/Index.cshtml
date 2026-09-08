@@ -1,17 +1,114 @@
-@model AnalyticsViewModel
-@using System.Globalization
-@{ ViewData["Title"] = "Análise Financeira"; var data = Model.Analytics; var maxCategory = Math.Max(data.Categories.Select(item => item.Amount).DefaultIfEmpty(0m).Max(), 1m); var maxTrend = Math.Max(data.Trend.Select(item => Math.Max(item.Income, item.Expenses)).DefaultIfEmpty(0m).Max(), 1m); }
+@{
+    ViewData["Title"] = "Análise Financeira";
+}
 <link rel="stylesheet" href="~/css/analytics.css" asp-append-version="true" />
-<link rel="stylesheet" href="~/css/financial-enhancements.css" asp-append-version="true" />
-<link rel="stylesheet" href="~/css/searchable-select.css" asp-append-version="true" />
-<div class="page-header"><div><p class="eyebrow">Análise</p><h1>Análise Financeira</h1><p class="page-subtitle">Explore rendimentos, despesas, poupança e evolução patrimonial.</p></div></div>
-<section class="analytics-kpis" aria-label="Indicadores da análise"><article class="kpi-featured"><span>Poupança</span><strong class="@(data.Savings < 0 ? "negative" : "positive")">@data.Savings.ToString("N2") €</strong><small>Taxa @data.SavingsRate.ToString("N1")% · anterior @data.PreviousSavingsRate.ToString("N1")%</small></article><article class="income-kpi"><span>Rendimentos</span><strong class="positive">@data.Income.ToString("N2") €</strong><small>@(data.IncomeChange.HasValue ? $"{(data.IncomeChange >= 0 ? "+" : "")}{data.IncomeChange:N1}% face ao período anterior" : $"Anterior: {data.PreviousIncome:N2} €")</small></article><article class="expense-kpi"><span>Despesas</span><strong class="negative">@data.Expenses.ToString("N2") €</strong><small>@(data.ExpensesChange.HasValue ? $"{(data.ExpensesChange >= 0 ? "+" : "")}{data.ExpensesChange:N1}% face ao período anterior" : $"Anterior: {data.PreviousExpenses:N2} €")</small></article><article><span>Património</span><strong>@data.NetWorth.ToString("N2") €</strong><small>Inclui Certificados de Aforro</small></article></section>
-<section class="panel analytics-filter-panel"><div class="filter-heading"><span>Período e filtros</span><small>Refine os dados apresentados</small></div><form method="get" class="analytics-filters"><label>De<input type="date" name="from" value="@Model.Filter.From.ToString("yyyy-MM-dd")" /></label><label>Até<input type="date" name="to" value="@Model.Filter.To.ToString("yyyy-MM-dd")" /></label><select name="groupId" asp-items="Model.Groups" aria-label="Grupo"></select><select name="categoryId" asp-items="Model.Categories" aria-label="Categoria" class="searchable-select-control" data-search-placeholder="Pesquisar categoria…" data-search-empty-text="Nenhuma categoria encontrada" data-search-include-empty="true"></select><select name="accountId" asp-items="Model.Accounts" aria-label="Conta"></select><button class="button secondary" type="submit">Aplicar filtros</button></form></section>
-<section class="analytics-ai-cta"><div class="analytics-ai-icon" aria-hidden="true">✦</div><div><span>Relatório inteligente</span><h2>Análise consolidada com IA</h2><p>Analise todas as tabelas financeiras no período selecionado. A IA produz um resumo executivo, identifica tendências, riscos e oportunidades e sugere ações. Pode rever o resultado formatado, consultar o Markdown original e exportar o relatório.</p></div><form asp-action="GenerateIntelligentReport" method="post" data-progress-message="A analisar os seus dados e a gerar o relatório…"><input type="hidden" name="from" value="@Model.Filter.From.ToString("yyyy-MM-dd")" /><input type="hidden" name="to" value="@Model.Filter.To.ToString("yyyy-MM-dd")" /><button class="button" type="submit">✦ Gerar relatório inteligente</button></form></section>
-<partial name="_AnnualLineCharts" model="Model" />
-<section class="analytics-insights"><article class="panel savings-insight"><div><p class="eyebrow">Comparação</p><h2>Evolução da poupança</h2></div><strong class="@(data.SavingsChange < 0 ? "negative" : "positive")">@data.SavingsChange.ToString("+0.00;-0.00;0.00") €</strong><span>face ao período anterior de @data.PreviousSavings.ToString("N2") €</span></article><article class="panel certificates-insight"><div class="panel-title"><div><p class="eyebrow">Poupanças</p><h2>Certificados de Aforro</h2></div><a class="text-link" asp-controller="SavingsCertificates" asp-action="Index">Gerir carteira</a></div><div><span>Valor atual<strong>@data.SavingsCertificatesValue.ToString("N2") €</strong></span><span>Valor futuro<strong>@data.SavingsCertificatesFutureValue.ToString("N2") €</strong></span><span>Juro projetado<strong class="positive">@data.SavingsCertificatesFutureNetInterest.ToString("N2") €</strong></span><span>Peso no património<strong>@(data.NetWorth == 0 ? "—" : $"{data.SavingsCertificatesValue / data.NetWorth * 100m:N1}%")</strong></span></div></article></section>
-<section class="analytics-grid"><article class="panel"><div class="panel-title"><div><p class="eyebrow">Categorias</p><h2>Distribuição das despesas</h2></div></div>@if(data.Categories.Count==0){<p class="analytics-empty">Sem despesas no período.</p>}else{<div class="analytics-bars">@foreach(var item in data.Categories.Take(10)){<div><span><strong><partial name="_CategoryKindIcon" model="DenariusAI.Domain.Enums.FinancialGroupKind.Expense" /> @item.Name</strong><small>@item.Amount.ToString("N2") €</small></span><i><b style="width:@((Math.Max(item.Amount,0)/maxCategory*100).ToString(CultureInfo.InvariantCulture))%"></b></i></div>}</div>}</article>
-<article class="panel"><div class="panel-title"><div><p class="eyebrow">Evolução</p><h2>Rendimentos e despesas</h2></div></div><div class="analytics-trend">@foreach(var item in data.Trend){<div><span><span class="analytics-column"><em>@item.Income.ToString("N0") €</em><i style="height:@((item.Income/maxTrend*100).ToString(CultureInfo.InvariantCulture))%"></i></span><span class="analytics-column"><em>@item.Expenses.ToString("N0") €</em><b style="height:@((item.Expenses/maxTrend*100).ToString(CultureInfo.InvariantCulture))%"></b></span></span><small>@item.Label</small></div>}</div><div class="chart-legend"><span class="income">Rendimentos</span><span class="expenses">Despesas</span></div></article></section>
-<section class="analytics-grid"><article class="panel"><div class="panel-title"><div><p class="eyebrow">Grupos</p><h2>Despesas por grupo</h2></div></div><table><thead><tr><th>Grupo</th><th>Valor</th></tr></thead><tbody>@foreach(var item in data.Groups){<tr><td>@item.Name</td><td class="amount">@item.Amount.ToString("N2") €</td></tr>}@if(data.Groups.Count==0){<tr><td colspan="2" class="empty-row">Sem resultados.</td></tr>}</tbody></table></article><article class="panel"><div class="panel-title"><div><p class="eyebrow">Contas</p><h2>Movimento líquido por conta</h2></div></div><table><thead><tr><th>Conta</th><th>Variação</th></tr></thead><tbody>@foreach(var item in data.Accounts){<tr><td>@item.Name</td><td class="amount @(item.Amount<0?"negative":"positive")">@item.Amount.ToString("N2") €</td></tr>}@if(data.Accounts.Count==0){<tr><td colspan="2" class="empty-row">Sem resultados.</td></tr>}</tbody></table></article></section>
-<section class="panel"><div class="panel-title"><div><p class="eyebrow">Poupanças</p><h2>Carteira de Certificados de Aforro</h2></div><a class="text-link" asp-controller="SavingsCertificates" asp-action="Index">Gerir carteira</a></div><div class="table-wrap"><table><thead><tr><th>Série/Número</th><th>Descrição</th><th>Investimento</th><th>Valor atual</th><th>Rendimento</th><th>Valor futuro</th></tr></thead><tbody>@foreach(var item in data.SavingsCertificates){<tr><td><strong>@item.SeriesNumber</strong></td><td>@item.Description</td><td class="amount">@item.InvestmentValue.ToString("N2") €</td><td class="amount">@item.CurrentValue.ToString("N2") €</td><td class="amount @(item.Yield < 0 ? "negative" : "positive")">@item.Yield.ToString("N2") €</td><td class="amount">@item.FutureValue.ToString("N2") €</td></tr>}@if(data.SavingsCertificates.Count==0){<tr><td colspan="6" class="empty-row">Sem Certificados de Aforro.</td></tr>}</tbody></table></div></section>
-@section Scripts { <script src="~/js/searchable-select.js" asp-append-version="true"></script> }
+
+<section class="analysis-hub-hero">
+    <div>
+        <p class="eyebrow">Análise Financeira</p>
+        <h1>Analise cada dimensão das suas finanças</h1>
+        <p>Escolha uma área para compreender os dados, os indicadores que serão apresentados e o tipo de conclusões que poderá retirar. Cada análise será desenvolvida de forma independente e incluirá interpretação assistida por IA.</p>
+    </div>
+    <div class="analysis-hub-principle" aria-label="Princípio da análise">
+        <span aria-hidden="true">✦</span>
+        <div><small>Princípio</small><strong>Dados calculados pela aplicação. IA para interpretar.</strong></div>
+    </div>
+</section>
+
+<section class="analysis-search-panel" aria-label="Pesquisar áreas de análise">
+    <label for="analysisSearch">Pesquisar análise</label>
+    <div class="analysis-search-box">
+        <span aria-hidden="true">⌕</span>
+        <input id="analysisSearch" type="search" autocomplete="off" placeholder="Pesquisar por orçamento, despesas, poupança, ações, seguros…" aria-describedby="analysisSearchHelp" />
+        <button type="button" data-analysis-search-clear hidden aria-label="Limpar pesquisa">×</button>
+    </div>
+    <div class="analysis-search-meta"><small id="analysisSearchHelp">A pesquisa considera o nome, o âmbito, os indicadores e as conclusões de cada área.</small><strong data-analysis-count>6 áreas</strong></div>
+</section>
+
+<section class="analysis-area-grid" data-analysis-grid aria-live="polite">
+    <article class="analysis-area-card featured" data-analysis-card data-search="visão financeira global situação financeira património saldos evolução síntese alterações tendências riscos oportunidades indicadores executivo resumo ia decisão">
+        <header><span class="analysis-area-icon" aria-hidden="true">◎</span><div><span class="analysis-area-kicker">Visão integrada</span><h2>Visão Financeira Global</h2></div><span class="analysis-area-status">A definir</span></header>
+        <p class="analysis-area-question">“Qual é a minha situação financeira global e como está a evoluir?”</p>
+        <p class="analysis-area-summary">Uma leitura executiva que agrega os indicadores essenciais das restantes áreas sem substituir a análise especializada de cada domínio.</p>
+        <div class="analysis-area-details">
+            <section><h3>O que analisa</h3><p>Posição financeira, evolução global, saldos, capacidade de poupança e alterações relevantes entre períodos.</p></section>
+            <section><h3>O que apresenta</h3><p>Indicadores-chave, comparações temporais, destaques positivos e negativos e uma síntese interpretativa por IA.</p></section>
+            <section><h3>Que conclusões permite</h3><p>Perceber rapidamente se a situação financeira está a melhorar, deteriorar-se ou a exigir atenção numa área específica.</p></section>
+        </div>
+        <footer><span>Visão executiva</span><span>Comparação temporal</span><span>IA interpretativa</span></footer>
+    </article>
+
+    <article class="analysis-area-card" data-analysis-card data-search="rendimentos despesas fluxos movimentos entradas saídas categorias grupos contas consumo gastos padrões anomalias comparação períodos saldo rendimento despesa comportamento financeiro">
+        <header><span class="analysis-area-icon" aria-hidden="true">↔</span><div><span class="analysis-area-kicker">Movimentos</span><h2>Rendimentos, Despesas e Fluxos</h2></div><span class="analysis-area-status">A definir</span></header>
+        <p class="analysis-area-question">“De onde vem o dinheiro, onde é gasto e o que está a mudar?”</p>
+        <p class="analysis-area-summary">Análise dos movimentos registados para compreender a estrutura dos rendimentos, das despesas e dos fluxos entre contas e categorias.</p>
+        <div class="analysis-area-details">
+            <section><h3>O que analisa</h3><p>Rendimentos, despesas, saldo do período, distribuição por grupos/categorias/contas, evolução e padrões de consumo.</p></section>
+            <section><h3>O que apresenta</h3><p>Totais, pesos relativos, variações, principais categorias, tendências e movimentos ou alterações que mereçam destaque.</p></section>
+            <section><h3>Que conclusões permite</h3><p>Identificar onde se concentram as despesas, quais os rendimentos mais relevantes e que hábitos financeiros estão a mudar.</p></section>
+        </div>
+        <footer><span>Fluxos</span><span>Padrões</span><span>Anomalias</span></footer>
+    </article>
+
+    <article class="analysis-area-card" data-analysis-card data-search="orçamento execução orçamental planeamento realizado desvio orçamento categorias excesso abaixo risco ultrapassar cumprimento previsão controlo mensal">
+        <header><span class="analysis-area-icon" aria-hidden="true">▦</span><div><span class="analysis-area-kicker">Planeamento</span><h2>Orçamento e Execução Orçamental</h2></div><span class="analysis-area-status">A definir</span></header>
+        <p class="analysis-area-question">“Estou a cumprir o orçamento e onde estão os principais desvios?”</p>
+        <p class="analysis-area-summary">Compara o planeado com o realizado para avaliar a qualidade do planeamento e antecipar desvios relevantes.</p>
+        <div class="analysis-area-details">
+            <section><h3>O que analisa</h3><p>Valores orçamentados e executados, desvios absolutos e relativos, evolução da execução e categorias em risco.</p></section>
+            <section><h3>O que apresenta</h3><p>Grau de execução, categorias acima/abaixo do orçamento, desvios relevantes e sinais de potencial ultrapassagem.</p></section>
+            <section><h3>Que conclusões permite</h3><p>Perceber onde o orçamento está ajustado à realidade, onde precisa de revisão e onde é necessário corrigir o comportamento financeiro.</p></section>
+        </div>
+        <footer><span>Planeado vs. realizado</span><span>Desvios</span><span>Risco</span></footer>
+    </article>
+
+    <article class="analysis-area-card" data-analysis-card data-search="poupança liquidez capacidade poupar recursos disponíveis disponibilidade financeira reserva saldo acumulação certificados aforro concentração tendência taxa poupança">
+        <header><span class="analysis-area-icon" aria-hidden="true">◇</span><div><span class="analysis-area-kicker">Resiliência financeira</span><h2>Poupança e Liquidez</h2></div><span class="analysis-area-status">A definir</span></header>
+        <p class="analysis-area-question">“Quanto consigo poupar e qual é a minha margem financeira disponível?”</p>
+        <p class="analysis-area-summary">Avalia a capacidade de acumular recursos e a disponibilidade financeira, separando poupança, consumo corrente e investimento.</p>
+        <div class="analysis-area-details">
+            <section><h3>O que analisa</h3><p>Capacidade e taxa de poupança, evolução dos recursos, relação entre rendimentos/despesas e disponibilidade financeira.</p></section>
+            <section><h3>O que apresenta</h3><p>Montantes poupados, tendências, concentração de recursos, evolução da liquidez e contributo de instrumentos de poupança.</p></section>
+            <section><h3>Que conclusões permite</h3><p>Avaliar se existe margem financeira suficiente, se a capacidade de poupança está a melhorar e onde os recursos estão concentrados.</p></section>
+        </div>
+        <footer><span>Taxa de poupança</span><span>Liquidez</span><span>Concentração</span></footer>
+    </article>
+
+    <article class="analysis-area-card" data-analysis-card data-search="investimentos património financeiro ações stocks certificados aforro ativos carteira rentabilidade ganhos perdas posição valor mercado diversificação concentração exposição forecast previsão">
+        <header><span class="analysis-area-icon" aria-hidden="true">▲</span><div><span class="analysis-area-kicker">Património</span><h2>Investimentos e Património Financeiro</h2></div><span class="analysis-area-status">A definir</span></header>
+        <p class="analysis-area-question">“Como estão a evoluir os meus investimentos e onde está concentrado o património?”</p>
+        <p class="analysis-area-summary">Consolida os ativos financeiros acompanhados pelo DenariusAI e avalia valor, desempenho, distribuição e exposição.</p>
+        <div class="analysis-area-details">
+            <section><h3>O que analisa</h3><p>Carteira de ações, Certificados de Aforro e futuros ativos financeiros, incluindo valor, ganhos/perdas, rentabilidade e concentração.</p></section>
+            <section><h3>O que apresenta</h3><p>Valor das posições, evolução, distribuição por ativo, desempenho e informação estatística já calculada nos módulos específicos.</p></section>
+            <section><h3>Que conclusões permite</h3><p>Compreender o desempenho do património financeiro, detetar concentração excessiva e distinguir resultados efetivos de previsões indicativas.</p></section>
+        </div>
+        <footer><span>Rentabilidade</span><span>Diversificação</span><span>Exposição</span></footer>
+    </article>
+
+    <article class="analysis-area-card" data-analysis-card data-search="compromissos financeiros seguros prémios apólices renovação encargos recorrentes custos futuros obrigações alertas orçamento despesa vencimentos proteção">
+        <header><span class="analysis-area-icon" aria-hidden="true">⬡</span><div><span class="analysis-area-kicker">Compromissos</span><h2>Compromissos Financeiros e Seguros</h2></div><span class="analysis-area-status">A definir</span></header>
+        <p class="analysis-area-question">“Que encargos futuros tenho e qual é o seu impacto financeiro?”</p>
+        <p class="analysis-area-summary">Transforma seguros e outros compromissos recorrentes numa leitura financeira agregada, complementar aos lembretes operacionais.</p>
+        <div class="analysis-area-details">
+            <section><h3>O que analisa</h3><p>Prémios de seguros, custos recorrentes, próximas renovações e compromissos financeiros conhecidos com impacto futuro.</p></section>
+            <section><h3>O que apresenta</h3><p>Encargos anuais/periódicos, peso no orçamento ou despesa, calendário financeiro e concentrações de pagamentos.</p></section>
+            <section><h3>Que conclusões permite</h3><p>Antecipar períodos com maior pressão financeira, perceber o peso dos compromissos recorrentes e apoiar decisões de revisão de encargos.</p></section>
+        </div>
+        <footer><span>Encargos</span><span>Renovações</span><span>Impacto futuro</span></footer>
+    </article>
+</section>
+
+<section class="analysis-empty-state" data-analysis-empty hidden>
+    <span aria-hidden="true">⌕</span>
+    <h2>Nenhuma área encontrada</h2>
+    <p>Experimente pesquisar por outro termo, indicador ou tipo de conclusão.</p>
+</section>
+
+<section class="analysis-method-note">
+    <div><span aria-hidden="true">i</span><div><h2>Como serão construídas as análises</h2><p>Cada área terá indicadores determinísticos, períodos e comparações próprios. A IA receberá apenas o contexto necessário para interpretar esses resultados, destacar padrões e apoiar a leitura dos dados. A definição funcional de cada área será tratada numa issue autónoma.</p></div></div>
+</section>
+
+@section Scripts {
+    <script src="~/js/analytics-sections.js" asp-append-version="true"></script>
+}
