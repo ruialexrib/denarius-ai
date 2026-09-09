@@ -9,6 +9,8 @@ namespace DenariusAI.Application.Services;
 /// <summary>Bounds chat payloads while preserving system instructions and the current question.</summary>
 public static class AiContextBudget
 {
+    private const double ApproximateMatchThreshold = 0.85;
+    private static readonly char[] TokenSeparators = [' ', '.', ',', ';', ':', '?', '!', '\n', '\r', '\t', '/', '\\', '-', '_', '(', ')', '[', ']', '{', '}'];
     private static readonly JsonSerializerOptions CompactJson = new(JsonSerializerDefaults.Web) { Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping };
 
     /// <summary>Serializes compact context without unnecessarily escaping Portuguese text.</summary>
@@ -46,15 +48,17 @@ public static class AiContextBudget
     public static string Normalize(string text) => string.Concat(text.Normalize(NormalizationForm.FormD)
         .Where(character => CharUnicodeInfo.GetUnicodeCategory(character) != UnicodeCategory.NonSpacingMark)).ToLowerInvariant();
 
-    /// <summary>Ranks catalog values against meaningful words in the current conversation.</summary>
+    /// <summary>Ranks catalog values against meaningful words in the current conversation, including conservative approximate token matches.</summary>
     /// <param name="text">The candidate name or description.</param>
     /// <param name="query">The conversation used for context selection.</param>
-    /// <returns>The count of matching words with at least four characters.</returns>
+    /// <returns>The count of exact, contained, or highly similar words with at least four characters.</returns>
     public static int Relevance(string? text, string query)
     {
-        var normalized = Normalize(text ?? string.Empty);
-        return Normalize(query).Split([' ', '.', ',', ';', ':', '?', '!', '\n', '\r'], StringSplitOptions.RemoveEmptyEntries)
-            .Where(word => word.Length >= 4).Distinct().Count(word => normalized.Contains(word, StringComparison.Ordinal));
+        var normalizedText = Normalize(text ?? string.Empty);
+        var candidateTokens = Tokenize(normalizedText).Where(word => word.Length >= 4).Distinct().ToArray();
+        return Tokenize(query).Where(word => word.Length >= 4).Distinct().Count(word =>
+            normalizedText.Contains(word, StringComparison.Ordinal)
+            || candidateTokens.Any(candidate => IsApproximateMatch(word, candidate)));
     }
 
     /// <summary>Bounds a descriptive field without cutting a UTF-16 surrogate pair.</summary>
@@ -66,5 +70,58 @@ public static class AiContextBudget
         if (text.Length <= length) return text;
         var end = char.IsHighSurrogate(text[length - 1]) ? length - 1 : length;
         return text[..end];
+    }
+
+    /// <summary>Splits normalized text into deterministic tokens for relevance comparison.</summary>
+    /// <param name="text">The text to tokenize.</param>
+    /// <returns>The normalized non-empty tokens.</returns>
+    private static IEnumerable<string> Tokenize(string text) => Normalize(text).Split(TokenSeparators, StringSplitOptions.RemoveEmptyEntries);
+
+    /// <summary>Determines whether two tokens are sufficiently similar using normalized Levenshtein distance.</summary>
+    /// <param name="left">The first normalized token.</param>
+    /// <param name="right">The second normalized token.</param>
+    /// <returns><see langword="true"/> when similarity is at least the configured threshold; otherwise <see langword="false"/>.</returns>
+    private static bool IsApproximateMatch(string left, string right)
+    {
+        if (string.Equals(left, right, StringComparison.Ordinal)) return true;
+        var maxLength = Math.Max(left.Length, right.Length);
+        if (maxLength == 0) return true;
+        var maximumAllowedDistance = (int)Math.Floor(maxLength * (1 - ApproximateMatchThreshold));
+        if (maximumAllowedDistance == 0 || Math.Abs(left.Length - right.Length) > maximumAllowedDistance) return false;
+        return LevenshteinDistance(left, right, maximumAllowedDistance) <= maximumAllowedDistance;
+    }
+
+    /// <summary>Calculates Levenshtein edit distance and stops early when the configured match distance cannot be met.</summary>
+    /// <param name="left">The first token.</param>
+    /// <param name="right">The second token.</param>
+    /// <param name="maximumDistance">The maximum distance that is useful to the caller.</param>
+    /// <returns>The edit distance, or a value greater than <paramref name="maximumDistance"/> when the threshold is exceeded.</returns>
+    private static int LevenshteinDistance(string left, string right, int maximumDistance)
+    {
+        if (left.Length == 0) return right.Length;
+        if (right.Length == 0) return left.Length;
+
+        var previous = new int[right.Length + 1];
+        var current = new int[right.Length + 1];
+        for (var column = 0; column <= right.Length; column++) previous[column] = column;
+
+        for (var row = 1; row <= left.Length; row++)
+        {
+            current[0] = row;
+            var rowMinimum = current[0];
+            for (var column = 1; column <= right.Length; column++)
+            {
+                var substitutionCost = left[row - 1] == right[column - 1] ? 0 : 1;
+                current[column] = Math.Min(
+                    Math.Min(current[column - 1] + 1, previous[column] + 1),
+                    previous[column - 1] + substitutionCost);
+                rowMinimum = Math.Min(rowMinimum, current[column]);
+            }
+
+            if (rowMinimum > maximumDistance) return maximumDistance + 1;
+            (previous, current) = (current, previous);
+        }
+
+        return previous[right.Length];
     }
 }
