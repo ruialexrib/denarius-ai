@@ -133,7 +133,7 @@ public sealed class ConfigurableLLMService(
             DescribeResponseStructure(completion.Content));
     }
 
-    /// <summary>Describes model output structure while omitting response values.</summary>
+    /// <summary>Describes model output structure while omitting model-controlled names and values.</summary>
     /// <param name="content">Raw model completion text.</param>
     /// <returns>A compact structural description of the completion.</returns>
     private static string DescribeResponseStructure(string content)
@@ -150,15 +150,20 @@ public sealed class ConfigurableLLMService(
         try
         {
             using var document = JsonDocument.Parse(json);
-            return document.RootElement.ValueKind == JsonValueKind.Object
-                ? JsonSerializer.Serialize(new
-                {
-                    validJson = true,
-                    rootKind = "Object",
-                    properties = document.RootElement.EnumerateObject().Select(property => property.Name).ToArray(),
-                    values = "[REDACTED]"
-                })
-                : JsonSerializer.Serialize(new { validJson = true, rootKind = document.RootElement.ValueKind.ToString(), values = "[REDACTED]" });
+            var propertyCount = document.RootElement.ValueKind == JsonValueKind.Object
+                ? document.RootElement.EnumerateObject().Count()
+                : 0;
+            var itemCount = document.RootElement.ValueKind == JsonValueKind.Array
+                ? document.RootElement.GetArrayLength()
+                : 0;
+            return JsonSerializer.Serialize(new
+            {
+                validJson = true,
+                rootKind = document.RootElement.ValueKind.ToString(),
+                propertyCount,
+                itemCount,
+                values = "[REDACTED]"
+            });
         }
         catch (JsonException)
         {
