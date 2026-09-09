@@ -1,23 +1,13 @@
-using System.Net;
-using System.Text;
 using System.Text.Json;
+using System.Net;
 using DenariusAI.Application.Abstractions.Services;
 using DenariusAI.Application.DTOs;
-using Microsoft.Extensions.Logging;
 
 namespace DenariusAI.Application.Services;
 
 /// <summary>
 /// Service responsible for generating journal entry suggestions using AI/LLM integration.
 /// </summary>
-/// <param name="llmService">Provider-neutral LLM service used to generate suggestions.</param>
-/// <param name="accountService">Account catalog service.</param>
-/// <param name="categoryService">Category catalog service.</param>
-/// <param name="groupService">Financial group catalog service.</param>
-/// <param name="budgetService">Budget period service.</param>
-/// <param name="journalEntryService">Journal entry service used to retrieve relevant examples.</param>
-/// <param name="settingsService">Application settings service.</param>
-/// <param name="logger">Optional diagnostic logger for model request and response metadata.</param>
 /// <remarks>
 /// This service processes natural language requests and generates structured journal entry suggestions
 /// by leveraging historical data, account catalogs, and LLM capabilities.
@@ -29,11 +19,10 @@ public sealed class JournalEntrySuggestionService(
     IFinancialGroupService groupService,
     IBudgetService budgetService,
     IJournalEntryService journalEntryService,
-    IApplicationSettingsService settingsService,
-    ILogger<JournalEntrySuggestionService>? logger = null) : IJournalEntrySuggestionService
+    IApplicationSettingsService settingsService) : IJournalEntrySuggestionService
 {
     private static readonly JsonSerializerOptions JsonOptions = new() { PropertyNameCaseInsensitive = true };
-
+    
     /// <summary>
     /// Gets a value indicating whether the LLM service is configured and available.
     /// </summary>
@@ -106,40 +95,19 @@ public sealed class JournalEntrySuggestionService(
                 var accountIds = sentAccounts.Select(item => item.Id).ToHashSet();
                 var categoryIds = sentCategories.Select(item => item.Id).ToHashSet();
                 var examples = recentDetails.Where(entry => entry.Lines.All(line => accountIds.Contains(line.AccountId)
-                    && (!line.CategoryId.HasValue || categoryIds.Contains(line.CategoryId.Value)))).Take(exampleLimit).ToList();
+                    && (!line.CategoryId.HasValue || categoryIds.Contains(line.CategoryId.Value)))).Take(exampleLimit);
                 var catalog = AiContextBudget.Serialize(new
                 {
-                    today,
-                    currency = "EUR",
-                    partial = new
-                    {
-                        accounts = accounts.Count > sentAccounts.Count,
-                        categories = categories.Count > sentCategories.Count,
-                        budgets = budgets.Count > sentBudgets.Count,
-                        examples = true
-                    },
-                    accounts = sentAccounts.Select(item => new
-                    {
-                        item.Id,
-                        name = AiContextBudget.Shorten(item.Name, 100),
-                        type = item.AccountType.ToString(),
-                        categoryId = item.CategoryId.HasValue && categoryIds.Contains(item.CategoryId.Value) ? item.CategoryId : null,
-                        item.Currency
-                    }),
-                    categories = sentCategories.Select(item => new
-                    {
-                        item.Id,
-                        name = AiContextBudget.Shorten(item.Name, 100),
-                        group = AiContextBudget.Shorten(groupNames.GetValueOrDefault(item.FinancialGroupId) ?? "", 80),
-                        type = groupKinds.GetValueOrDefault(item.FinancialGroupId)
-                    }),
+                    today, currency = "EUR",
+                    partial = new { accounts = accounts.Count > sentAccounts.Count, categories = categories.Count > sentCategories.Count,
+                        budgets = budgets.Count > sentBudgets.Count, examples = true },
+                    accounts = sentAccounts.Select(item => new { item.Id, name = AiContextBudget.Shorten(item.Name, 100), type = item.AccountType.ToString(),
+                        categoryId = item.CategoryId.HasValue && categoryIds.Contains(item.CategoryId.Value) ? item.CategoryId : null, item.Currency }),
+                    categories = sentCategories.Select(item => new { item.Id, name = AiContextBudget.Shorten(item.Name, 100),
+                        group = AiContextBudget.Shorten(groupNames.GetValueOrDefault(item.FinancialGroupId) ?? "", 80), type = groupKinds.GetValueOrDefault(item.FinancialGroupId) }),
                     budgets = sentBudgets.Select(item => new { item.Id, item.Year, item.Month }),
-                    recentJournalEntries = examples.Select(entry => new
-                    {
-                        entry.Date,
-                        description = AiContextBudget.Shorten(entry.Description, 120),
-                        lines = entry.Lines.Select(line => new { line.AccountId, line.CategoryId, line.Debit, line.Credit })
-                    })
+                    recentJournalEntries = examples.Select(entry => new { entry.Date, description = AiContextBudget.Shorten(entry.Description, 120),
+                        lines = entry.Lines.Select(line => new { line.AccountId, line.CategoryId, line.Debit, line.Credit }) })
                 });
                 messages = AiContextBudget.Build(prompt, "CATALOG_JSON:\n" + catalog, attempt == 0 ? history : [], userMessage, maxBytes);
                 if (messages is not null || accountLimit <= 2 && categoryLimit == 0 && budgetLimit == 0 && exampleLimit == 0) break;
@@ -154,22 +122,13 @@ public sealed class JournalEntrySuggestionService(
             if (attempt > 0 && requestBytes >= previousBytes)
                 return new(false, "O fornecedor recusou o pedido por exceder o limite de contexto. Reduza os prompts nas Definições e tente novamente.", null, null);
             previousBytes = requestBytes;
-
-            LogModelRequest(messages, requestBytes, attempt + 1, sentAccounts.Count, sentCategories.Count, sentBudgets.Count, recentDetails.Count);
             try
             {
                 completion = await llmService.CompleteAsync(messages, Math.Min(settings.AiMaxTokens, 1024), cancellationToken);
-                LogModelResponse(completion, attempt + 1);
                 break;
             }
             catch (HttpRequestException exception) when (exception.StatusCode == HttpStatusCode.RequestEntityTooLarge)
             {
-                logger?.LogWarning(
-                    "Journal entry AI request was rejected as too large. Provider: {Provider}; Model: {Model}; Attempt: {Attempt}; RequestBytes: {RequestBytes}.",
-                    llmService.Provider,
-                    llmService.Model,
-                    attempt + 1,
-                    requestBytes);
                 if (attempt == 1)
                     return new(false, "O fornecedor recusou o pedido por exceder o limite de contexto. Reduza os prompts ou o limite de contexto nas Definições e tente novamente.", null, null);
                 exampleLimit = 0;
@@ -190,125 +149,6 @@ public sealed class JournalEntrySuggestionService(
             string.IsNullOrWhiteSpace(parsed.ClassificationExplanation) ? "A classificação foi baseada nos catálogos disponíveis e em movimentos recentes semelhantes; confirme a proposta antes de guardar." : parsed.ClassificationExplanation.Trim(),
             new(suggestion.Date!.Value, suggestion.Description!.Trim(), suggestion.Reference, suggestion.Notes, budgetId,
                 suggestion.Lines!.Select(line => new SuggestedJournalEntryLineDto(line.AccountId!.Value, line.CategoryId, line.Debit, line.Credit, line.Description)).ToList()));
-    }
-
-    /// <summary>
-    /// Writes a safe diagnostic description of the request sent to the configured model.
-    /// </summary>
-    /// <param name="messages">Messages passed to the provider-neutral LLM service.</param>
-    /// <param name="requestBytes">Serialized request message size in UTF-8 bytes.</param>
-    /// <param name="attempt">One-based provider request attempt.</param>
-    /// <param name="accountCount">Number of account catalog entries included.</param>
-    /// <param name="categoryCount">Number of category catalog entries included.</param>
-    /// <param name="budgetCount">Number of budget periods included.</param>
-    /// <param name="recentExampleCount">Number of relevant journal entry examples considered for the request.</param>
-    private void LogModelRequest(
-        IReadOnlyCollection<LlmMessageDto> messages,
-        int requestBytes,
-        int attempt,
-        int accountCount,
-        int categoryCount,
-        int budgetCount,
-        int recentExampleCount)
-    {
-        if (logger is null) return;
-
-        var messageDiagnostics = messages.Select((message, index) => new
-        {
-            index,
-            message.Role,
-            utf8Bytes = Encoding.UTF8.GetByteCount(message.Content),
-            content = message.Role == "system"
-                ? "[SYSTEM PROMPT REDACTED]"
-                : message.Content.StartsWith("CATALOG_JSON:", StringComparison.Ordinal)
-                    ? "[FINANCIAL CATALOG REDACTED]"
-                    : index == messages.Count - 1
-                        ? "[CURRENT USER MESSAGE REDACTED]"
-                        : "[CONVERSATION HISTORY REDACTED]"
-        });
-
-        logger.LogInformation(
-            "Journal entry AI request. Provider: {Provider}; Model: {Model}; Attempt: {Attempt}; RequestBytes: {RequestBytes}; MaxTokens: {MaxTokens}; Accounts: {AccountCount}; Categories: {CategoryCount}; Budgets: {BudgetCount}; RelevantExamples: {RecentExampleCount}; Messages: {Messages}.",
-            llmService.Provider,
-            llmService.Model,
-            attempt,
-            requestBytes,
-            1024,
-            accountCount,
-            categoryCount,
-            budgetCount,
-            recentExampleCount,
-            JsonSerializer.Serialize(messageDiagnostics));
-    }
-
-    /// <summary>
-    /// Writes a safe diagnostic description of the raw model response without logging financial content.
-    /// </summary>
-    /// <param name="completion">Raw completion returned by the provider-neutral LLM service.</param>
-    /// <param name="attempt">One-based provider request attempt.</param>
-    private void LogModelResponse(LlmCompletionDto completion, int attempt)
-    {
-        if (logger is null) return;
-
-        logger.LogInformation(
-            "Journal entry AI response. Provider: {Provider}; Model: {Model}; Attempt: {Attempt}; ResponseBytes: {ResponseBytes}; PromptTokens: {PromptTokens}; CompletionTokens: {CompletionTokens}; Structure: {Structure}.",
-            llmService.Provider,
-            completion.Model,
-            attempt,
-            Encoding.UTF8.GetByteCount(completion.Content),
-            completion.PromptTokens,
-            completion.CompletionTokens,
-            DescribeResponseStructure(completion.Content));
-    }
-
-    /// <summary>
-    /// Describes the JSON shape returned by the model while redacting values that may contain financial data.
-    /// </summary>
-    /// <param name="content">Raw model response content.</param>
-    /// <returns>A compact JSON diagnostic containing only structural metadata.</returns>
-    private static string DescribeResponseStructure(string content)
-    {
-        var json = content.Trim();
-        if (json.StartsWith("```", StringComparison.Ordinal))
-        {
-            var firstLine = json.IndexOf('\n');
-            var lastFence = json.LastIndexOf("```", StringComparison.Ordinal);
-            if (firstLine >= 0 && lastFence > firstLine) json = json[(firstLine + 1)..lastFence].Trim();
-        }
-
-        try
-        {
-            using var document = JsonDocument.Parse(json);
-            if (document.RootElement.ValueKind != JsonValueKind.Object)
-                return JsonSerializer.Serialize(new { validJson = true, rootKind = document.RootElement.ValueKind.ToString() });
-
-            var root = document.RootElement;
-            var status = root.TryGetProperty("status", out var statusElement) && statusElement.ValueKind == JsonValueKind.String
-                ? statusElement.GetString()
-                : null;
-            var suggestionProperties = Array.Empty<string>();
-            var lineCount = 0;
-            if (root.TryGetProperty("suggestion", out var suggestionElement) && suggestionElement.ValueKind == JsonValueKind.Object)
-            {
-                suggestionProperties = suggestionElement.EnumerateObject().Select(property => property.Name).ToArray();
-                if (suggestionElement.TryGetProperty("lines", out var linesElement) && linesElement.ValueKind == JsonValueKind.Array)
-                    lineCount = linesElement.GetArrayLength();
-            }
-
-            return JsonSerializer.Serialize(new
-            {
-                validJson = true,
-                status,
-                rootProperties = root.EnumerateObject().Select(property => property.Name).ToArray(),
-                suggestionProperties,
-                lineCount,
-                values = "[REDACTED]"
-            });
-        }
-        catch (JsonException)
-        {
-            return JsonSerializer.Serialize(new { validJson = false, values = "[REDACTED]" });
-        }
     }
 
     /// <summary>
@@ -350,12 +190,12 @@ public sealed class JournalEntrySuggestionService(
     /// Represents the parsed response from the LLM containing status and suggestion data.
     /// </summary>
     private sealed class ParsedResponse { public string? Status { get; set; } public string? Message { get; set; } public string? ClassificationExplanation { get; set; } public ParsedSuggestion? Suggestion { get; set; } }
-
+    
     /// <summary>
     /// Represents a parsed journal entry suggestion with all required fields.
     /// </summary>
     private sealed class ParsedSuggestion { public DateOnly? Date { get; set; } public string? Description { get; set; } public string? Reference { get; set; } public string? Notes { get; set; } public Guid? BudgetId { get; set; } public List<ParsedLine>? Lines { get; set; } }
-
+    
     /// <summary>
     /// Represents a parsed journal entry line with account, category, and amount information.
     /// </summary>
