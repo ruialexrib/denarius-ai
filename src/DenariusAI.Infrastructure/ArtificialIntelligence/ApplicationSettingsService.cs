@@ -12,8 +12,9 @@ namespace DenariusAI.Infrastructure.ArtificialIntelligence;
 /// <param name="dbContext">The application settings store.</param>
 /// <param name="mistralOptions">Installation defaults retained for existing deployments.</param>
 /// <param name="groqCloudOptions">Optional GroqCloud installation defaults.</param>
+/// <param name="nvidiaNimOptions">Optional NVIDIA NIM installation defaults.</param>
 public sealed class ApplicationSettingsService(DenariusDbContext dbContext, IOptions<MistralOptions> mistralOptions,
-    IOptions<GroqCloudOptions>? groqCloudOptions = null) : IApplicationSettingsService
+    IOptions<GroqCloudOptions>? groqCloudOptions = null, IOptions<NvidiaNimOptions>? nvidiaNimOptions = null) : IApplicationSettingsService
 {
     private const string DefaultIgcpSourceUrl = "https://www.igcp.pt/pt/aforristas/produtos-de-aforro/certificados-de-aforro";
     private const string DefaultIgcpPublicationUrlTemplate = "https://www.igcp.pt/pt/noticias/taxas-de-juro-dos-certificados-de-aforro-das-series-b-d-e-e-f-em-{month}-de-{year}";
@@ -26,6 +27,7 @@ public sealed class ApplicationSettingsService(DenariusDbContext dbContext, IOpt
         var values = await dbContext.ApplicationSettings.AsNoTracking().ToDictionaryAsync(item => item.Key, item => item.Value, cancellationToken);
         var defaults = mistralOptions.Value;
         var groqDefaults = groqCloudOptions?.Value ?? new GroqCloudOptions();
+        var nvidiaDefaults = nvidiaNimOptions?.Value ?? new NvidiaNimOptions();
         return new(
             Get(values, "Mistral.Model", defaults.Model), Get(values, "Mistral.BaseUrl", defaults.BaseUrl), GetInt(values, "AI.MaxTokens", GetInt(values, "Mistral.MaxTokens", defaults.MaxTokens)), GetDouble(values, "AI.Temperature", GetDouble(values, "Mistral.Temperature", defaults.Temperature)),
             Get(values, "Prompts.Assistant", ApplicationSettingsDefaults.AssistantPrompt), GetInt(values, "Assistant.ContextMonths", 12), GetInt(values, "Assistant.MaxTransactions", 200), GetInt(values, "Assistant.HistoryMessages", 10),
@@ -41,6 +43,7 @@ public sealed class ApplicationSettingsService(DenariusDbContext dbContext, IOpt
             GetInt(values, "AI.MaxInputBytes", 12000), Get(values, "Prompts.ContextGuidance", ApplicationSettingsDefaults.AiContextGuidancePrompt),
             Get(values, "GroqCloud.Model", groqDefaults.Model), Get(values, "GroqCloud.BaseUrl", groqDefaults.BaseUrl),
             Get(values, "GroqCloud.ReasoningEffort", groqDefaults.ReasoningEffort),
+            Get(values, "NvidiaNim.Model", nvidiaDefaults.Model), Get(values, "NvidiaNim.BaseUrl", nvidiaDefaults.BaseUrl),
             Get(values, "SavingsCertificates.IgcpSourceUrl", DefaultIgcpSourceUrl),
             Get(values, "SavingsCertificates.IgcpPublicationUrlTemplate", DefaultIgcpPublicationUrlTemplate));
     }
@@ -59,6 +62,8 @@ public sealed class ApplicationSettingsService(DenariusDbContext dbContext, IOpt
             ["GroqCloud.Model"] = settings.GroqCloudModel.Trim(),
             ["GroqCloud.BaseUrl"] = settings.GroqCloudBaseUrl.Trim(),
             ["GroqCloud.ReasoningEffort"] = settings.GroqCloudReasoningEffort,
+            ["NvidiaNim.Model"] = settings.NvidiaNimModel.Trim(),
+            ["NvidiaNim.BaseUrl"] = settings.NvidiaNimBaseUrl.Trim(),
             ["AI.MaxInputBytes"] = settings.AiMaxInputBytes.ToString(CultureInfo.InvariantCulture),
             ["Prompts.ContextGuidance"] = settings.AiContextGuidancePrompt.Trim(),
             ["AI.Provider"] = settings.AiProvider.Trim(),
@@ -99,10 +104,12 @@ public sealed class ApplicationSettingsService(DenariusDbContext dbContext, IOpt
     {
         if (value.AiMaxInputBytes is < 4000 or > 64000) throw new ArgumentException("O limite de contexto deve estar entre 4000 e 64000 bytes.");
         if (string.IsNullOrWhiteSpace(value.AiContextGuidancePrompt) || value.AiContextGuidancePrompt.Length > 10000) throw new ArgumentException("O prompt de contexto deve ter entre 1 e 10000 caracteres.");
-        if (!new[] { "Mistral", "Ollama", "GroqCloud" }.Contains(value.AiProvider.Trim(), StringComparer.OrdinalIgnoreCase)) throw new ArgumentException("O fornecedor de IA deve ser Mistral, Ollama ou GroqCloud.");
+        if (!new[] { "Mistral", "Ollama", "GroqCloud", "NvidiaNim" }.Contains(value.AiProvider.Trim(), StringComparer.OrdinalIgnoreCase)) throw new ArgumentException("O fornecedor de IA deve ser Mistral, Ollama, GroqCloud ou NVIDIA NIM.");
         if (string.IsNullOrWhiteSpace(value.GroqCloudModel) || value.GroqCloudModel.Length > 100) throw new ArgumentException("O modelo GroqCloud é obrigatório e deve ter até 100 caracteres.");
         if (!GroqCloudLLMService.IsValidBaseUrl(value.GroqCloudBaseUrl)) throw new ArgumentException("O endereço do GroqCloud deve ser um URL HTTPS válido, sem credenciais, parâmetros ou fragmentos.");
         if (!GroqCloudLLMService.IsValidReasoningEffort(value.GroqCloudReasoningEffort)) throw new ArgumentException("O esforço de raciocínio do GroqCloud deve ser low, medium ou high.");
+        if (string.IsNullOrWhiteSpace(value.NvidiaNimModel) || value.NvidiaNimModel.Length > 150) throw new ArgumentException("O modelo NVIDIA NIM é obrigatório e deve ter até 150 caracteres.");
+        if (!NvidiaNimLLMService.IsValidBaseUrl(value.NvidiaNimBaseUrl)) throw new ArgumentException("O endereço da NVIDIA NIM deve ser um URL HTTPS válido, sem credenciais, parâmetros ou fragmentos.");
         if (string.IsNullOrWhiteSpace(value.MistralModel) || string.IsNullOrWhiteSpace(value.OllamaModel)) throw new ArgumentException("Os modelos de IA são obrigatórios.");
         if (!Uri.TryCreate(value.MistralBaseUrl, UriKind.Absolute, out var mistralUri) || mistralUri.Scheme != Uri.UriSchemeHttps) throw new ArgumentException("O endereço da Mistral deve ser um URL HTTPS válido.");
         if (!Uri.TryCreate(value.OllamaBaseUrl, UriKind.Absolute, out var ollamaUri) || (ollamaUri.Scheme != Uri.UriSchemeHttp && ollamaUri.Scheme != Uri.UriSchemeHttps)) throw new ArgumentException("O endereço do Ollama deve ser um URL HTTP ou HTTPS válido.");
