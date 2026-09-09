@@ -40,4 +40,22 @@ public sealed class AiContextBudgetTests
 
         Assert.Equal(1, relevance);
     }
+
+    /// <summary>Verifies merchant tokens identify a historical movement as relevant to a reconciliation description.</summary>
+    [Fact]
+    public void RelevanceMatchesPingoDoceHistoricalDescription()
+    {
+        var relevance = AiContextBudget.Relevance("COMPRA PINGO DOCE PORTO", "Pingo Doce");
+
+        Assert.Equal(2, relevance);
+    }
+
+    /// <summary>Verifies unrelated recent history is excluded when selecting context for a merchant description.</summary>
+    [Fact]
+    public void RelevanceRejectsUnrelatedMerchantHistory()
+    {
+        var relevance = AiContextBudget.Relevance("PAGAMENTO NOS COMUNICACOES", "Pingo Doce");
+
+        Assert.Equal(0, relevance);
+    }
 }
