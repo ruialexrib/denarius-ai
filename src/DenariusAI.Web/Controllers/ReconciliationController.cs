@@ -37,6 +37,21 @@ public sealed class ReconciliationController(IReconciliationService service, IAc
     private const string ImportSessionKey = "Reconciliation.ConversationImport";
 
     /// <summary>
+    /// Maximum number of active historical movements considered for relevance ranking.
+    /// </summary>
+    private const int ReconciliationHistoryCandidateLimit = 1000;
+
+    /// <summary>
+    /// Maximum number of relevant historical movements sent to the reconciliation classifier.
+    /// </summary>
+    private const int ReconciliationHistoryExampleLimit = 50;
+
+    /// <summary>
+    /// Maximum number of ranked historical examples retained per imported row before fair merging.
+    /// </summary>
+    private const int ReconciliationHistoryExamplesPerRow = 5;
+
+    /// <summary>
     /// Account types that represent banking accounts.
     /// </summary>
     private static readonly AccountType[] BankingAccountTypes = [AccountType.BankAccount, AccountType.Savings, AccountType.TermDeposit];
@@ -267,26 +282,40 @@ public sealed class ReconciliationController(IReconciliationService service, IAc
         }
         if (!llmService.IsConfigured) return;
 
-        var relevanceQuery = string.Join(" ", rows.Select(row => row.Description));
         var historicalCandidates = await dbContext.JournalEntries.AsNoTracking()
             .Where(entry => entry.Status == JournalEntryStatus.Active)
+            .OrderByDescending(entry => entry.Date)
+            .ThenByDescending(entry => entry.CreatedAt)
+            .Take(ReconciliationHistoryCandidateLimit)
             .Select(entry => new { entry.Id, entry.Date, entry.CreatedAt, entry.Description })
             .ToListAsync(cancellationToken);
-        var relevantIds = historicalCandidates
+        var rankedByRow = rows.Select(row => historicalCandidates
             .Select(entry => new
             {
                 entry.Id,
                 entry.Date,
                 entry.CreatedAt,
-                Relevance = AiContextBudget.Relevance(entry.Description, relevanceQuery)
+                Relevance = AiContextBudget.Relevance(entry.Description, row.Description)
             })
             .Where(entry => entry.Relevance > 0)
             .OrderByDescending(entry => entry.Relevance)
             .ThenByDescending(entry => entry.Date)
             .ThenByDescending(entry => entry.CreatedAt)
-            .Take(50)
+            .Take(ReconciliationHistoryExamplesPerRow)
             .Select(entry => entry.Id)
+            .ToList())
             .ToList();
+        var relevantIds = new List<Guid>(ReconciliationHistoryExampleLimit);
+        for (var rank = 0; rank < ReconciliationHistoryExamplesPerRow && relevantIds.Count < ReconciliationHistoryExampleLimit; rank++)
+        {
+            foreach (var rowRanking in rankedByRow)
+            {
+                if (rank >= rowRanking.Count) continue;
+                var id = rowRanking[rank];
+                if (!relevantIds.Contains(id)) relevantIds.Add(id);
+                if (relevantIds.Count == ReconciliationHistoryExampleLimit) break;
+            }
+        }
         var relevanceOrder = relevantIds.Select((id, index) => new { id, index }).ToDictionary(item => item.id, item => item.index);
         var relevantExampleDetails = await dbContext.JournalEntries.AsNoTracking()
             .Where(entry => relevantIds.Contains(entry.Id))
