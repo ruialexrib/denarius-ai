@@ -65,15 +65,18 @@ public sealed class ConfigurableLLMService(
         CancellationToken cancellationToken)
     {
         var provider = Resolve(settings.AiProvider);
-        var status = provider.GetStatus(await ReadStoredSettingsAsync(cancellationToken));
+        LlmProviderStatus? diagnosticStatus = null;
         if (settings.AiVerboseModelLogging)
-            LogVerboseRequest(status, messages, maxTokens);
+        {
+            diagnosticStatus = provider.GetStatus(await ReadStoredSettingsAsync(cancellationToken));
+            LogVerboseRequest(diagnosticStatus, messages, maxTokens);
+        }
 
         try
         {
             var completion = await provider.CompleteAsync(messages, maxTokens, cancellationToken);
             if (settings.AiVerboseModelLogging)
-                LogVerboseResponse(status.Provider, completion);
+                LogVerboseResponse(diagnosticStatus?.Provider ?? provider.Id, completion);
             return completion;
         }
         catch (Exception exception) when (settings.AiVerboseModelLogging && exception is HttpRequestException or TaskCanceledException)
@@ -81,8 +84,8 @@ public sealed class ConfigurableLLMService(
             logger?.LogWarning(
                 exception,
                 "AI verbose diagnostics: provider call failed. Provider: {Provider}; Model: {Model}; Messages: {MessageCount}; MaxTokens: {MaxTokens}.",
-                status.Provider,
-                status.Model,
+                diagnosticStatus?.Provider ?? provider.Id,
+                diagnosticStatus?.Model ?? string.Empty,
                 messages.Count,
                 maxTokens);
             throw;
