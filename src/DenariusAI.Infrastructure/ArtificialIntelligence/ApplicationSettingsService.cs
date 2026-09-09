@@ -66,7 +66,7 @@ public sealed class ApplicationSettingsService(DenariusDbContext dbContext, IOpt
             ["NvidiaNim.Model"] = settings.NvidiaNimModel.Trim(),
             ["NvidiaNim.BaseUrl"] = settings.NvidiaNimBaseUrl.Trim(),
             ["AI.MaxInputBytes"] = settings.AiMaxInputBytes.ToString(CultureInfo.InvariantCulture),
-            ["AI.VerboseModelLogging"] = settings.AiVerboseModelLogging.ToString(CultureInfo.InvariantCulture),
+            ["AI.VerboseModelLogging"] = settings.AiVerboseModelLogging.ToString(),
             ["Prompts.ContextGuidance"] = settings.AiContextGuidancePrompt.Trim(),
             ["AI.Provider"] = settings.AiProvider.Trim(),
             ["Ollama.Model"] = settings.OllamaModel.Trim(),
