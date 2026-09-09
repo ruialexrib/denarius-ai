@@ -12,12 +12,12 @@ namespace DenariusAI.Infrastructure.ArtificialIntelligence;
 /// <param name="providers">The adapters registered by infrastructure configuration.</param>
 /// <param name="settingsService">The effective application settings.</param>
 /// <param name="dbContext">Persisted settings for synchronous availability properties.</param>
-/// <param name="logger">Logger used for provider-neutral model diagnostics.</param>
+/// <param name="logger">Optional logger used for provider-neutral model diagnostics.</param>
 public sealed class ConfigurableLLMService(
     IEnumerable<ILLMProvider> providers,
     IApplicationSettingsService settingsService,
     DenariusDbContext dbContext,
-    ILogger<ConfigurableLLMService> logger) : ILLMService
+    ILogger<ConfigurableLLMService>? logger = null) : ILLMService
 {
     private readonly IReadOnlyDictionary<string, ILLMProvider> _providers =
         providers.ToDictionary(provider => provider.Id, StringComparer.OrdinalIgnoreCase);
@@ -78,7 +78,7 @@ public sealed class ConfigurableLLMService(
         }
         catch (Exception exception) when (settings.AiVerboseModelLogging && exception is HttpRequestException or TaskCanceledException)
         {
-            logger.LogWarning(
+            logger?.LogWarning(
                 exception,
                 "AI verbose diagnostics: provider call failed. Provider: {Provider}; Model: {Model}; Messages: {MessageCount}; MaxTokens: {MaxTokens}.",
                 status.Provider,
@@ -95,6 +95,7 @@ public sealed class ConfigurableLLMService(
     /// <param name="maxTokens">Maximum output tokens requested.</param>
     private void LogVerboseRequest(LlmProviderStatus status, IReadOnlyCollection<LlmMessageDto> messages, int maxTokens)
     {
+        if (logger is null) return;
         var diagnostics = messages.Select((message, index) => new
         {
             index,
@@ -120,6 +121,7 @@ public sealed class ConfigurableLLMService(
     /// <param name="completion">Completion returned by the provider adapter.</param>
     private void LogVerboseResponse(string provider, LlmCompletionDto completion)
     {
+        if (logger is null) return;
         logger.LogInformation(
             "AI verbose response. Provider: {Provider}; Model: {Model}; ResponseBytes: {ResponseBytes}; PromptTokens: {PromptTokens}; CompletionTokens: {CompletionTokens}; FinishReason: {FinishReason}; ResponseStructure: {ResponseStructure}.",
             provider,
