@@ -61,8 +61,14 @@ public sealed class GroqCloudLLMServiceTests
     {
         await using var db = CreateContext();
         var settings = new ApplicationSettingsService(db, Options.Create(new MistralOptions()));
-        await settings.UpdateAsync((await settings.GetAsync()) with { AiProvider = "GroqCloud", GroqCloudModel = "openai/gpt-oss-120b",
-            GroqCloudBaseUrl = "https://example.test/openai/v1/", GroqCloudReasoningEffort = "high", AiTemperature = .4 }, "test");
+        await settings.UpdateAsync((await settings.GetAsync()) with
+        {
+            AiProvider = "GroqCloud",
+            GroqCloudModel = "openai/gpt-oss-120b",
+            GroqCloudBaseUrl = "https://example.test/openai/v1/",
+            GroqCloudReasoningEffort = "high",
+            AiTemperature = .4
+        }, "test");
         var handler = new RecordingHandler(ValidResponse);
         var service = CreateService(handler, settings);
         var result = await service.CompleteAsync([new("system", "instructions"), new("user", "test")], 8192);
