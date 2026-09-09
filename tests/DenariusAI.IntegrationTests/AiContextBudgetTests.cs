@@ -31,4 +31,13 @@ public sealed class AiContextBudgetTests
 
         Assert.Equal(0, relevance);
     }
+
+    /// <summary>Verifies exact matching is preserved for short words joined by a hyphen.</summary>
+    [Fact]
+    public void RelevancePreservesExactHyphenatedName()
+    {
+        var relevance = AiContextBudget.Relevance("MB-Way", "Paguei com MB-Way");
+
+        Assert.Equal(1, relevance);
+    }
 }
