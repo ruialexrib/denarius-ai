@@ -10,7 +10,8 @@ namespace DenariusAI.Application.Services;
 public static class AiContextBudget
 {
     private const double ApproximateMatchThreshold = 0.85;
-    private static readonly char[] TokenSeparators = [' ', '.', ',', ';', ':', '?', '!', '\n', '\r', '\t', '/', '\\', '-', '_', '(', ')', '[', ']', '{', '}'];
+    private static readonly char[] ExactTokenSeparators = [' ', '.', ',', ';', ':', '?', '!', '\n', '\r'];
+    private static readonly char[] ApproximateTokenSeparators = [' ', '.', ',', ';', ':', '?', '!', '\n', '\r', '\t', '/', '\\', '-', '_', '(', ')', '[', ']', '{', '}'];
     private static readonly JsonSerializerOptions CompactJson = new(JsonSerializerDefaults.Web) { Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping };
 
     /// <summary>Serializes compact context without unnecessarily escaping Portuguese text.</summary>
@@ -55,10 +56,13 @@ public static class AiContextBudget
     public static int Relevance(string? text, string query)
     {
         var normalizedText = Normalize(text ?? string.Empty);
-        var candidateTokens = Tokenize(normalizedText).Where(word => word.Length >= 4).Distinct().ToArray();
-        return Tokenize(query).Where(word => word.Length >= 4).Distinct().Count(word =>
-            normalizedText.Contains(word, StringComparison.Ordinal)
-            || candidateTokens.Any(candidate => IsApproximateMatch(word, candidate)));
+        var candidateTokens = Tokenize(normalizedText, ApproximateTokenSeparators).Where(word => word.Length >= 4).Distinct().ToArray();
+        return Tokenize(query, ExactTokenSeparators).Where(word => word.Length >= 4).Distinct().Count(word =>
+        {
+            if (normalizedText.Contains(word, StringComparison.Ordinal)) return true;
+            return Tokenize(word, ApproximateTokenSeparators).Where(token => token.Length >= 4)
+                .Any(token => candidateTokens.Any(candidate => IsApproximateMatch(token, candidate)));
+        });
     }
 
     /// <summary>Bounds a descriptive field without cutting a UTF-16 surrogate pair.</summary>
@@ -74,8 +78,9 @@ public static class AiContextBudget
 
     /// <summary>Splits normalized text into deterministic tokens for relevance comparison.</summary>
     /// <param name="text">The text to tokenize.</param>
+    /// <param name="separators">The separators to use for the requested matching mode.</param>
     /// <returns>The normalized non-empty tokens.</returns>
-    private static IEnumerable<string> Tokenize(string text) => Normalize(text).Split(TokenSeparators, StringSplitOptions.RemoveEmptyEntries);
+    private static IEnumerable<string> Tokenize(string text, char[] separators) => Normalize(text).Split(separators, StringSplitOptions.RemoveEmptyEntries);
 
     /// <summary>Determines whether two tokens are sufficiently similar using normalized Levenshtein distance.</summary>
     /// <param name="left">The first normalized token.</param>
