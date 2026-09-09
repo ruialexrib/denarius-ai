@@ -45,7 +45,8 @@ public sealed class ApplicationSettingsService(DenariusDbContext dbContext, IOpt
             Get(values, "GroqCloud.ReasoningEffort", groqDefaults.ReasoningEffort),
             Get(values, "NvidiaNim.Model", nvidiaDefaults.Model), Get(values, "NvidiaNim.BaseUrl", nvidiaDefaults.BaseUrl),
             Get(values, "SavingsCertificates.IgcpSourceUrl", DefaultIgcpSourceUrl),
-            Get(values, "SavingsCertificates.IgcpPublicationUrlTemplate", DefaultIgcpPublicationUrlTemplate));
+            Get(values, "SavingsCertificates.IgcpPublicationUrlTemplate", DefaultIgcpPublicationUrlTemplate),
+            GetBool(values, "AI.VerboseModelLogging", false));
     }
 
     /// <summary>Validates and persists settings without changing provider credentials.</summary>
@@ -65,6 +66,7 @@ public sealed class ApplicationSettingsService(DenariusDbContext dbContext, IOpt
             ["NvidiaNim.Model"] = settings.NvidiaNimModel.Trim(),
             ["NvidiaNim.BaseUrl"] = settings.NvidiaNimBaseUrl.Trim(),
             ["AI.MaxInputBytes"] = settings.AiMaxInputBytes.ToString(CultureInfo.InvariantCulture),
+            ["AI.VerboseModelLogging"] = settings.AiVerboseModelLogging.ToString(CultureInfo.InvariantCulture),
             ["Prompts.ContextGuidance"] = settings.AiContextGuidancePrompt.Trim(),
             ["AI.Provider"] = settings.AiProvider.Trim(),
             ["Ollama.Model"] = settings.OllamaModel.Trim(),
@@ -93,7 +95,18 @@ public sealed class ApplicationSettingsService(DenariusDbContext dbContext, IOpt
             ["SavingsCertificates.IgcpPublicationUrlTemplate"] = settings.SavingsCertificateIgcpPublicationUrlTemplate.Trim()
         };
         var existing = await dbContext.ApplicationSettings.ToDictionaryAsync(item => item.Key, cancellationToken);
-        foreach (var pair in values) { if (existing.TryGetValue(pair.Key, out var setting)) { setting.Value = pair.Value; setting.UpdatedBy = userId; } else dbContext.ApplicationSettings.Add(new ApplicationSetting { Key = pair.Key, Value = pair.Value, CreatedBy = userId }); }
+        foreach (var pair in values)
+        {
+            if (existing.TryGetValue(pair.Key, out var setting))
+            {
+                setting.Value = pair.Value;
+                setting.UpdatedBy = userId;
+            }
+            else
+            {
+                dbContext.ApplicationSettings.Add(new ApplicationSetting { Key = pair.Key, Value = pair.Value, CreatedBy = userId });
+            }
+        }
         await dbContext.SaveChangesAsync(cancellationToken);
     }
 
@@ -128,22 +141,32 @@ public sealed class ApplicationSettingsService(DenariusDbContext dbContext, IOpt
     /// <param name="fallback">The value used when missing or invalid.</param>
     /// <returns>The stored or fallback value.</returns>
     private static string Get(IReadOnlyDictionary<string, string> values, string key, string fallback) => values.GetValueOrDefault(key, fallback);
+
     /// <summary>Updates an unchanged legacy prompt while preserving custom prompts.</summary>
     /// <param name="value">The stored prompt.</param>
     /// <param name="legacyDefault">The previous default prompt.</param>
     /// <param name="currentDefault">The current default prompt.</param>
     /// <returns>The effective prompt.</returns>
     private static string UpgradeDefault(string value, string legacyDefault, string currentDefault) => string.Equals(value.Trim(), legacyDefault, StringComparison.Ordinal) ? currentDefault : value;
+
     /// <summary>Parses an invariant integer setting.</summary>
     /// <param name="values">Stored application settings.</param>
     /// <param name="key">The setting key.</param>
     /// <param name="fallback">The value used when missing or invalid.</param>
     /// <returns>The parsed value or fallback.</returns>
     private static int GetInt(IReadOnlyDictionary<string, string> values, string key, int fallback) => int.TryParse(values.GetValueOrDefault(key), CultureInfo.InvariantCulture, out var value) ? value : fallback;
+
     /// <summary>Parses an invariant floating-point setting.</summary>
     /// <param name="values">Stored application settings.</param>
     /// <param name="key">The setting key.</param>
     /// <param name="fallback">The value used when missing or invalid.</param>
     /// <returns>The parsed value or fallback.</returns>
     private static double GetDouble(IReadOnlyDictionary<string, string> values, string key, double fallback) => double.TryParse(values.GetValueOrDefault(key), CultureInfo.InvariantCulture, out var value) ? value : fallback;
+
+    /// <summary>Parses a persisted boolean setting.</summary>
+    /// <param name="values">Stored application settings.</param>
+    /// <param name="key">The setting key.</param>
+    /// <param name="fallback">The value used when missing or invalid.</param>
+    /// <returns>The parsed value or fallback.</returns>
+    private static bool GetBool(IReadOnlyDictionary<string, string> values, string key, bool fallback) => bool.TryParse(values.GetValueOrDefault(key), out var value) ? value : fallback;
 }
