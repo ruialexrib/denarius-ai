@@ -3,17 +3,18 @@
 }
 <link rel="stylesheet" href="~/css/analytics.css" asp-append-version="true" />
 
-<section class="analysis-hub-hero">
+<div class="page-header">
     <div>
         <p class="eyebrow">Análise Financeira</p>
-        <h1>Analise cada dimensão das suas finanças</h1>
-        <p>Escolha uma área para compreender os dados, os indicadores que serão apresentados e o tipo de conclusões que poderá retirar. Cada análise será desenvolvida de forma independente e incluirá interpretação assistida por IA.</p>
+        <h1>@ViewData["Title"]</h1>
+        <p class="page-subtitle">Explore cada dimensão das suas finanças e escolha a análise que pretende aprofundar.</p>
     </div>
-    <div class="analysis-hub-principle" aria-label="Princípio da análise">
-        <span aria-hidden="true">✦</span>
-        <div><small>Princípio</small><strong>Dados calculados pela aplicação. IA para interpretar.</strong></div>
-    </div>
-</section>
+</div>
+
+<div class="analysis-hub-principle" aria-label="Princípio da análise">
+    <span aria-hidden="true">✦</span>
+    <div><small>Princípio</small><strong>Dados calculados pela aplicação. IA para interpretar.</strong></div>
+</div>
 
 <section class="analysis-search-panel" aria-label="Pesquisar áreas de análise">
     <label for="analysisSearch">Pesquisar análise</label>
