@@ -35,6 +35,7 @@ public sealed class ApplicationSettingsServiceTests
         Assert.Equal("https://www.igcp.pt/pt/aforristas/produtos-de-aforro/certificados-de-aforro", loaded.SavingsCertificateIgcpSourceUrl);
         Assert.Contains("{month}", loaded.SavingsCertificateIgcpPublicationUrlTemplate);
         Assert.Contains("{year}", loaded.SavingsCertificateIgcpPublicationUrlTemplate);
+        Assert.False(loaded.AiVerboseModelLogging);
     }
 
     /// <summary>Verifies settings persist and are immediately effective.</summary>
@@ -44,13 +45,13 @@ public sealed class ApplicationSettingsServiceTests
         var options = new DbContextOptionsBuilder<DenariusDbContext>().UseInMemoryDatabase(Guid.NewGuid().ToString()).Options;
         await using var context = new DenariusDbContext(options);
         var service = new ApplicationSettingsService(context, Options.Create(new MistralOptions()));
-        var updated = new ApplicationSettingsDto("custom-model", "https://example.test/v1/", 500, .4, "Prompt assistant alterado", 6, 80, 4, "Prompt movimentos alterado", 3, "Prompt extração alterado", "Prompt classificação alterado", AiProvider: "Ollama", OllamaModel: "qwen3:8b", OllamaBaseUrl: "http://ollama:11434", NvidiaNimModel: "custom/nim-model", NvidiaNimBaseUrl: "https://nim.example.test/v1/", SavingsCertificateIgcpSourceUrl: "https://example.test/certificados", SavingsCertificateIgcpPublicationUrlTemplate: "https://example.test/taxas/{month}/{year}");
+        var updated = new ApplicationSettingsDto("custom-model", "https://example.test/v1/", 500, .4, "Prompt assistant alterado", 6, 80, 4, "Prompt movimentos alterado", 3, "Prompt extração alterado", "Prompt classificação alterado", AiProvider: "Ollama", OllamaModel: "qwen3:8b", OllamaBaseUrl: "http://ollama:11434", NvidiaNimModel: "custom/nim-model", NvidiaNimBaseUrl: "https://nim.example.test/v1/", SavingsCertificateIgcpSourceUrl: "https://example.test/certificados", SavingsCertificateIgcpPublicationUrlTemplate: "https://example.test/taxas/{month}/{year}", AiVerboseModelLogging: true);
 
         await service.UpdateAsync(updated, "admin");
         var loaded = await service.GetAsync();
 
         Assert.Equal(updated, loaded);
-        Assert.Equal(32, await context.ApplicationSettings.CountAsync());
+        Assert.Equal(33, await context.ApplicationSettings.CountAsync());
         Assert.Equal(updated.ReconciliationExtractionPrompt, loaded.ReconciliationExtractionPrompt);
         Assert.Equal(updated.ReconciliationClassificationPrompt, loaded.ReconciliationClassificationPrompt);
         Assert.Equal(updated.FinancialAnalysisPrompt, loaded.FinancialAnalysisPrompt);
@@ -67,5 +68,6 @@ public sealed class ApplicationSettingsServiceTests
         Assert.Equal("https://www.alphavantage.co/query", loaded.MarketDataBaseUrl);
         Assert.Equal("https://example.test/certificados", loaded.SavingsCertificateIgcpSourceUrl);
         Assert.Equal("https://example.test/taxas/{month}/{year}", loaded.SavingsCertificateIgcpPublicationUrlTemplate);
+        Assert.True(loaded.AiVerboseModelLogging);
     }
 }
