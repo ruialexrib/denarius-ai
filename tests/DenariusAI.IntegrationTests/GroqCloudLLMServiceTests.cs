@@ -21,7 +21,7 @@ public sealed class GroqCloudLLMServiceTests
 {
     private const string ValidResponse = """{"choices":[{"message":{"role":"assistant","content":"ok","reasoning":"private reasoning"},"finish_reason":"stop"}],"model":"openai/gpt-oss-20b","usage":{"prompt_tokens":12,"completion_tokens":7}}""";
 
-    /// <summary>Verifies actual infrastructure DI exposes all three providers and routes Groq without a Mistral credential.</summary>
+    /// <summary>Verifies actual infrastructure DI exposes all providers and routes Groq without a Mistral credential.</summary>
     [Fact]
     public async Task DependencyInjectionResolvesAndRoutesAllThreeProviders()
     {
@@ -42,7 +42,7 @@ public sealed class GroqCloudLLMServiceTests
         await using var container = services.BuildServiceProvider();
         using var scope = container.CreateScope();
         var registered = scope.ServiceProvider.GetServices<ILLMProvider>().ToList();
-        Assert.Equal(["GroqCloud", "Mistral", "Ollama"], registered.Select(item => item.Id).Order().ToArray());
+        Assert.Equal(["GroqCloud", "Mistral", "NvidiaNim", "Ollama"], registered.Select(item => item.Id).Order().ToArray());
         var settings = scope.ServiceProvider.GetRequiredService<IApplicationSettingsService>();
         await settings.UpdateAsync((await settings.GetAsync()) with { AiProvider = "groqcloud", AiMaxTokens = 512 }, "test");
         var router = scope.ServiceProvider.GetRequiredService<ILLMService>();
@@ -61,8 +61,14 @@ public sealed class GroqCloudLLMServiceTests
     {
         await using var db = CreateContext();
         var settings = new ApplicationSettingsService(db, Options.Create(new MistralOptions()));
-        await settings.UpdateAsync((await settings.GetAsync()) with { AiProvider = "GroqCloud", GroqCloudModel = "openai/gpt-oss-120b",
-            GroqCloudBaseUrl = "https://example.test/openai/v1/", GroqCloudReasoningEffort = "high", AiTemperature = .4 }, "test");
+        await settings.UpdateAsync((await settings.GetAsync()) with
+        {
+            AiProvider = "GroqCloud",
+            GroqCloudModel = "openai/gpt-oss-120b",
+            GroqCloudBaseUrl = "https://example.test/openai/v1/",
+            GroqCloudReasoningEffort = "high",
+            AiTemperature = .4
+        }, "test");
         var handler = new RecordingHandler(ValidResponse);
         var service = CreateService(handler, settings);
         var result = await service.CompleteAsync([new("system", "instructions"), new("user", "test")], 8192);

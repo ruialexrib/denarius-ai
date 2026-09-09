@@ -30,14 +30,14 @@ _The demo runs on an Azure virtual machine and may be temporarily unavailable wh
 
 DenariusAI is a personal and family finance management platform built around double-entry accounting. It combines daily financial management with budgeting, bank reconciliation, savings, investments, insurance, analytics and administrative organisation in one secure and consistent workspace.
 
-AI features assist with transaction entry, classification, financial questions, correspondence analysis and Markdown report generation. The AI layer is provider-neutral and currently supports Mistral AI and GroqCloud for cloud inference, plus Ollama for local or privately hosted inference. Suggestions are always reviewed by the user before relevant data is saved.
+AI features assist with transaction entry, classification, financial questions, correspondence analysis and Markdown report generation. The AI layer is provider-neutral and currently supports Mistral AI, GroqCloud and NVIDIA NIM for cloud inference, plus Ollama for local or privately hosted inference. Suggestions are always reviewed by the user before relevant data is saved.
 
 ## Highlights
 
 - Double-entry financial management with accounts, groups, categories and transactions
 - Monthly budgeting and transaction allocation
 - AI-assisted bank reconciliation and transaction classification
-- Configurable, provider-neutral AI integration with Mistral AI, GroqCloud and Ollama
+- Configurable, provider-neutral AI integration with Mistral AI, GroqCloud, NVIDIA NIM and Ollama
 - Dashboards, period comparisons and financial analytics
 - Portuguese Savings Certificates portfolio, official Série F rate history and indicative next-month ARIMA forecast
 - Configurable IGCP source URLs for Savings Certificate rate collection
@@ -113,7 +113,7 @@ The reminder layer complements areas such as documents and warranties by drawing
 
 The optional financial assistant provides a natural-language interface for questions about the user's DenariusAI data. AI is also used in selected workflows for interpretation, classification assistance and Markdown report generation.
 
-The AI provider is configurable in the application settings. Mistral AI remains the default cloud provider, GroqCloud is also available for cloud inference, and Ollama can run a compatible model through a local or privately hosted Ollama server. Business workflows consume the provider-neutral `ILLMService` boundary rather than depending directly on a specific vendor. With Ollama running inside the installation's trusted infrastructure, prompts and financial context sent to the model do not need to be processed by a third-party cloud AI provider.
+The AI provider is configurable in the application settings. Mistral AI remains the default cloud provider, GroqCloud and NVIDIA NIM are also available for cloud inference, and Ollama can run a compatible model through a local or privately hosted Ollama server. Business workflows consume the provider-neutral `ILLMService` boundary rather than depending directly on a specific vendor. With Ollama running inside the installation's trusted infrastructure, prompts and financial context sent to the model do not need to be processed by a third-party cloud AI provider.
 
 The AI layer is deliberately advisory: deterministic financial calculations remain application responsibilities, and suggestions that would affect financial records remain subject to user review.
 
@@ -138,6 +138,7 @@ The read-only design preserves the application's principle that financial change
 | **SQL Server 2022** | Financial and identity data |
 | **Mistral AI** | Optional cloud AI provider for natural-language assistance and reports |
 | **GroqCloud** | Optional cloud AI provider for natural-language assistance and reports |
+| **NVIDIA NIM** | Optional OpenAI-compatible cloud AI provider for NVIDIA-hosted models |
 | **Ollama** | Optional local or privately hosted AI inference |
 | **Docker Compose** | Reproducible local deployment |
 | **xUnit** | Unit, integration and MCP tests |
@@ -152,7 +153,7 @@ cd denarius-ai
 Copy-Item .env.example .env
 ```
 
-Set secure local passwords in `.env`. If you intend to use Mistral AI, add `MISTRAL_API_KEY`; if you intend to use GroqCloud, add `GROQ_API_KEY`. Ollama does not require a cloud-provider API key. Then start the application:
+Set secure local passwords in `.env`. If you intend to use Mistral AI, add `MISTRAL_API_KEY`; if you intend to use GroqCloud, add `GROQ_API_KEY`; if you intend to use NVIDIA NIM, add `NVIDIA_NIM_API_KEY`. Ollama does not require a cloud-provider API key. Then start the application:
 
 ```powershell
 docker compose up --build -d
@@ -170,9 +171,9 @@ Never commit `.env`, credentials or real financial data.
 
 ### AI providers
 
-DenariusAI currently includes three AI providers. **Mistral AI** is the installation default and uses remote cloud inference with `MISTRAL_API_KEY`. **GroqCloud** is an alternative cloud provider and uses `GROQ_API_KEY`. **Ollama** can run compatible models locally or through a privately hosted Ollama server and does not require either cloud-provider API key.
+DenariusAI currently includes four AI providers. **Mistral AI** is the installation default and uses remote cloud inference with `MISTRAL_API_KEY`. **GroqCloud** is an alternative cloud provider and uses `GROQ_API_KEY`. **NVIDIA NIM** uses NVIDIA's OpenAI-compatible hosted inference API and the deployment-only `NVIDIA_NIM_API_KEY`. **Ollama** can run compatible models locally or through a privately hosted Ollama server and does not require a cloud-provider API key.
 
-The provider is selected in the application's administrative settings through `AI.Provider`. The supported provider identifiers are `Mistral`, `GroqCloud` and `Ollama`. Provider-specific models, endpoints and other non-secret options are also configured through the application settings where supported.
+The provider is selected in the application's administrative settings through `AI.Provider`. The supported provider identifiers are `Mistral`, `GroqCloud`, `NvidiaNim` and `Ollama`. Provider-specific models, endpoints and other non-secret options are also configured through the application settings where supported. The NVIDIA NIM hosted defaults are `NvidiaNim.BaseUrl = https://integrate.api.nvidia.com/v1/` and `NvidiaNim.Model = meta/llama-3.1-8b-instruct`; both can be changed by an administrator without storing the API key in application settings.
 
 For local AI, install [Ollama](https://ollama.com/), download a suitable model and make the Ollama server reachable from the DenariusAI web application. Select Ollama as the provider and configure its model and endpoint. The built-in Ollama defaults are:
 

@@ -30,6 +30,8 @@ public sealed class ApplicationSettingsServiceTests
         Assert.Equal(DenariusAI.Application.Configuration.ApplicationSettingsDefaults.DashboardWelcomePrompt, loaded.DashboardWelcomePrompt);
         Assert.Equal(DenariusAI.Application.Configuration.ApplicationSettingsDefaults.JournalSuggestionPrompt, loaded.JournalSuggestionSystemPrompt);
         Assert.Equal(DenariusAI.Application.Configuration.ApplicationSettingsDefaults.InsuranceClipboardPrompt, loaded.InsuranceClipboardPrompt);
+        Assert.Equal(DenariusAI.Application.Configuration.NvidiaNimDefaults.Model, loaded.NvidiaNimModel);
+        Assert.Equal(DenariusAI.Application.Configuration.NvidiaNimDefaults.BaseUrl, loaded.NvidiaNimBaseUrl);
         Assert.Equal("https://www.igcp.pt/pt/aforristas/produtos-de-aforro/certificados-de-aforro", loaded.SavingsCertificateIgcpSourceUrl);
         Assert.Contains("{month}", loaded.SavingsCertificateIgcpPublicationUrlTemplate);
         Assert.Contains("{year}", loaded.SavingsCertificateIgcpPublicationUrlTemplate);
@@ -42,13 +44,13 @@ public sealed class ApplicationSettingsServiceTests
         var options = new DbContextOptionsBuilder<DenariusDbContext>().UseInMemoryDatabase(Guid.NewGuid().ToString()).Options;
         await using var context = new DenariusDbContext(options);
         var service = new ApplicationSettingsService(context, Options.Create(new MistralOptions()));
-        var updated = new ApplicationSettingsDto("custom-model", "https://example.test/v1/", 500, .4, "Prompt assistant alterado", 6, 80, 4, "Prompt movimentos alterado", 3, "Prompt extração alterado", "Prompt classificação alterado", AiProvider: "Ollama", OllamaModel: "qwen3:8b", OllamaBaseUrl: "http://ollama:11434", SavingsCertificateIgcpSourceUrl: "https://example.test/certificados", SavingsCertificateIgcpPublicationUrlTemplate: "https://example.test/taxas/{month}/{year}");
+        var updated = new ApplicationSettingsDto("custom-model", "https://example.test/v1/", 500, .4, "Prompt assistant alterado", 6, 80, 4, "Prompt movimentos alterado", 3, "Prompt extração alterado", "Prompt classificação alterado", AiProvider: "Ollama", OllamaModel: "qwen3:8b", OllamaBaseUrl: "http://ollama:11434", NvidiaNimModel: "custom/nim-model", NvidiaNimBaseUrl: "https://nim.example.test/v1/", SavingsCertificateIgcpSourceUrl: "https://example.test/certificados", SavingsCertificateIgcpPublicationUrlTemplate: "https://example.test/taxas/{month}/{year}");
 
         await service.UpdateAsync(updated, "admin");
         var loaded = await service.GetAsync();
 
         Assert.Equal(updated, loaded);
-        Assert.Equal(30, await context.ApplicationSettings.CountAsync());
+        Assert.Equal(32, await context.ApplicationSettings.CountAsync());
         Assert.Equal(updated.ReconciliationExtractionPrompt, loaded.ReconciliationExtractionPrompt);
         Assert.Equal(updated.ReconciliationClassificationPrompt, loaded.ReconciliationClassificationPrompt);
         Assert.Equal(updated.FinancialAnalysisPrompt, loaded.FinancialAnalysisPrompt);
@@ -59,6 +61,8 @@ public sealed class ApplicationSettingsServiceTests
         Assert.Equal("Ollama", loaded.AiProvider);
         Assert.Equal("qwen3:8b", loaded.OllamaModel);
         Assert.Equal("http://ollama:11434", loaded.OllamaBaseUrl);
+        Assert.Equal("custom/nim-model", loaded.NvidiaNimModel);
+        Assert.Equal("https://nim.example.test/v1/", loaded.NvidiaNimBaseUrl);
         Assert.Equal("AlphaVantage", loaded.MarketDataProvider);
         Assert.Equal("https://www.alphavantage.co/query", loaded.MarketDataBaseUrl);
         Assert.Equal("https://example.test/certificados", loaded.SavingsCertificateIgcpSourceUrl);

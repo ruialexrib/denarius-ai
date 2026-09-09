@@ -21,7 +21,7 @@ namespace DenariusAI.Application.DTOs;
 /// <param name="MarketDataBaseUrl">Base URL of the market-data API.</param>
 /// <param name="InsuranceClipboardPrompt">Prompt used to interpret insurance clipboard data.</param>
 /// <param name="SavingsCertificateClipboardPrompt">Prompt used to interpret Savings Certificate clipboard data.</param>
-/// <param name="AiProvider">Selected AI provider: Mistral, Ollama or GroqCloud.</param>
+/// <param name="AiProvider">Selected AI provider: Mistral, Ollama, GroqCloud or NvidiaNim.</param>
 /// <param name="OllamaModel">Ollama model identifier sent to the chat API.</param>
 /// <param name="OllamaBaseUrl">Base URL of the local or remote Ollama server.</param>
 /// <param name="AiMaxInputBytes">Maximum serialized chat message bytes for assistant and movement suggestions.</param>
@@ -29,6 +29,8 @@ namespace DenariusAI.Application.DTOs;
 /// <param name="GroqCloudModel">GroqCloud model identifier.</param>
 /// <param name="GroqCloudBaseUrl">GroqCloud HTTPS API root.</param>
 /// <param name="GroqCloudReasoningEffort">Reasoning effort sent only for GPT-OSS models.</param>
+/// <param name="NvidiaNimModel">NVIDIA NIM model identifier.</param>
+/// <param name="NvidiaNimBaseUrl">NVIDIA NIM HTTPS API root.</param>
 /// <param name="SavingsCertificateIgcpSourceUrl">Official IGCP Savings Certificates source page.</param>
 /// <param name="SavingsCertificateIgcpPublicationUrlTemplate">Monthly IGCP publication URL template using {month} and {year} placeholders.</param>
 public sealed record ApplicationSettingsDto(
@@ -60,5 +62,7 @@ public sealed record ApplicationSettingsDto(
     string GroqCloudModel = Application.Configuration.GroqCloudDefaults.Model,
     string GroqCloudBaseUrl = Application.Configuration.GroqCloudDefaults.BaseUrl,
     string GroqCloudReasoningEffort = Application.Configuration.GroqCloudDefaults.ReasoningEffort,
+    string NvidiaNimModel = Application.Configuration.NvidiaNimDefaults.Model,
+    string NvidiaNimBaseUrl = Application.Configuration.NvidiaNimDefaults.BaseUrl,
     string SavingsCertificateIgcpSourceUrl = "https://www.igcp.pt/pt/aforristas/produtos-de-aforro/certificados-de-aforro",
     string SavingsCertificateIgcpPublicationUrlTemplate = "https://www.igcp.pt/pt/noticias/taxas-de-juro-dos-certificados-de-aforro-das-series-b-d-e-e-f-em-{month}-de-{year}");
