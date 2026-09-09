@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using DenariusAI.Application.Abstractions.Persistence;
 using DenariusAI.Application.Abstractions.Services;
+using DenariusAI.Application.Services;
 using DenariusAI.Domain.Enums;
 using DenariusAI.Web.ViewModels;
 using Microsoft.AspNetCore.Authorization;
@@ -34,6 +35,21 @@ public sealed class ReconciliationController(IReconciliationService service, IAc
     /// Session key for storing import conversation data.
     /// </summary>
     private const string ImportSessionKey = "Reconciliation.ConversationImport";
+
+    /// <summary>
+    /// Maximum number of active historical movements considered for relevance ranking.
+    /// </summary>
+    private const int ReconciliationHistoryCandidateLimit = 1000;
+
+    /// <summary>
+    /// Maximum number of relevant historical movements sent to the reconciliation classifier.
+    /// </summary>
+    private const int ReconciliationHistoryExampleLimit = 50;
+
+    /// <summary>
+    /// Maximum number of ranked historical examples retained per imported row before fair merging.
+    /// </summary>
+    private const int ReconciliationHistoryExamplesPerRow = 5;
 
     /// <summary>
     /// Account types that represent banking accounts.
@@ -244,18 +260,110 @@ public sealed class ReconciliationController(IReconciliationService service, IAc
         await dbContext.SaveChangesAsync(cancellationToken); HttpContext.Session.Remove(ImportSessionKey); TempData["SuccessMessage"] = $"{selected.Count} movimentos criados e preparados para reconciliação."; return RedirectToAction(nameof(Index), new { accountId = bank.Id });
     }
 
+    /// <summary>Applies deterministic and AI-assisted accounting suggestions to imported reconciliation rows.</summary>
+    /// <param name="rows">The imported rows that require reviewable suggestions.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>A task that completes after suggestions have been applied.</returns>
     private async Task ApplySuggestionsAsync(List<ReconciliationImportRowViewModel> rows, CancellationToken cancellationToken)
     {
-        if (rows.Count == 0) return; var categories = await dbContext.Categories.AsNoTracking().Where(x => x.IsActive).Select(x => new { x.Id, x.Name, Kind = x.FinancialGroup.Kind }).ToListAsync(cancellationToken); var accounts = await dbContext.Accounts.AsNoTracking().Where(x => x.IsActive).Select(x => new { x.Id, x.Name, x.AccountType }).ToListAsync(cancellationToken);
-        foreach (var row in rows) { var category = categories.FirstOrDefault(x => row.Description.Contains(x.Name, StringComparison.OrdinalIgnoreCase)); if (category is not null) { row.CategoryId = category.Id; row.CounterAccountId = accounts.FirstOrDefault(x => category.Kind == FinancialGroupKind.Expense ? x.AccountType == AccountType.Expense : x.AccountType == AccountType.Income)?.Id; row.SuggestionReason = "Correspondência direta pelo nome da categoria."; row.SuggestionConfidence = "high"; } }
+        if (rows.Count == 0) return;
+        var categories = await dbContext.Categories.AsNoTracking().Where(x => x.IsActive).Select(x => new { x.Id, x.Name, Kind = x.FinancialGroup.Kind }).ToListAsync(cancellationToken);
+        var accounts = await dbContext.Accounts.AsNoTracking().Where(x => x.IsActive).Select(x => new { x.Id, x.Name, x.AccountType }).ToListAsync(cancellationToken);
+        foreach (var row in rows)
+        {
+            var category = categories.FirstOrDefault(x => row.Description.Contains(x.Name, StringComparison.OrdinalIgnoreCase));
+            if (category is not null)
+            {
+                row.CategoryId = category.Id;
+                row.CounterAccountId = accounts.FirstOrDefault(x => category.Kind == FinancialGroupKind.Expense ? x.AccountType == AccountType.Expense : x.AccountType == AccountType.Income)?.Id;
+                row.SuggestionReason = "Correspondência direta pelo nome da categoria.";
+                row.SuggestionConfidence = "high";
+            }
+        }
         if (!llmService.IsConfigured) return;
-        var recentExamples = await dbContext.JournalEntries.AsNoTracking()
-            .Where(x => x.Status == JournalEntryStatus.Active).OrderByDescending(x => x.Date).ThenByDescending(x => x.CreatedAt).Take(50)
-            .Select(x => new { x.Date, x.Description, x.Reference, lines = x.Lines.Select(line => new { line.AccountId, Account = line.Account.Name, line.CategoryId, Category = line.Category != null ? line.Category.Name : null, line.Debit, line.Credit }) })
+
+        var historicalCandidates = await dbContext.JournalEntries.AsNoTracking()
+            .Where(entry => entry.Status == JournalEntryStatus.Active)
+            .OrderByDescending(entry => entry.Date)
+            .ThenByDescending(entry => entry.CreatedAt)
+            .Take(ReconciliationHistoryCandidateLimit)
+            .Select(entry => new { entry.Id, entry.Date, entry.CreatedAt, entry.Description })
             .ToListAsync(cancellationToken);
+        var rankedByRow = rows.Select(row => historicalCandidates
+            .Select(entry => new
+            {
+                entry.Id,
+                entry.Date,
+                entry.CreatedAt,
+                Relevance = AiContextBudget.Relevance(entry.Description, row.Description)
+            })
+            .Where(entry => entry.Relevance > 0)
+            .OrderByDescending(entry => entry.Relevance)
+            .ThenByDescending(entry => entry.Date)
+            .ThenByDescending(entry => entry.CreatedAt)
+            .Take(ReconciliationHistoryExamplesPerRow)
+            .Select(entry => entry.Id)
+            .ToList())
+            .ToList();
+        var relevantIds = new List<Guid>(ReconciliationHistoryExampleLimit);
+        for (var rank = 0; rank < ReconciliationHistoryExamplesPerRow && relevantIds.Count < ReconciliationHistoryExampleLimit; rank++)
+        {
+            foreach (var rowRanking in rankedByRow)
+            {
+                if (rank >= rowRanking.Count) continue;
+                var id = rowRanking[rank];
+                if (!relevantIds.Contains(id)) relevantIds.Add(id);
+                if (relevantIds.Count == ReconciliationHistoryExampleLimit) break;
+            }
+        }
+        var relevanceOrder = relevantIds.Select((id, index) => new { id, index }).ToDictionary(item => item.id, item => item.index);
+        var relevantExampleDetails = await dbContext.JournalEntries.AsNoTracking()
+            .Where(entry => relevantIds.Contains(entry.Id))
+            .Select(entry => new
+            {
+                entry.Id,
+                entry.Date,
+                entry.Description,
+                entry.Reference,
+                lines = entry.Lines.Select(line => new
+                {
+                    line.AccountId,
+                    Account = line.Account.Name,
+                    line.CategoryId,
+                    Category = line.Category != null ? line.Category.Name : null,
+                    line.Debit,
+                    line.Credit
+                })
+            })
+            .ToListAsync(cancellationToken);
+        var recentExamples = relevantExampleDetails
+            .OrderBy(entry => relevanceOrder[entry.Id])
+            .Select(entry => new { entry.Date, entry.Description, entry.Reference, entry.lines })
+            .ToList();
         var groups = await dbContext.FinancialGroups.AsNoTracking().Where(x => x.IsActive).Select(x => new { x.Id, x.Name, x.Kind }).ToListAsync(cancellationToken);
         var payload = new { rows = rows.Select(x => new { x.RowNumber, x.Description, x.Amount }), groups, categories = categories.Select(x => new { x.Id, x.Name, x.Kind }), accounts, recentExamples };
-        try { var settings = await settingsService.GetAsync(cancellationToken); var completion = await llmService.CompleteAsync([new("system", settings.ReconciliationClassificationPrompt), new("user", JsonSerializer.Serialize(payload))], cancellationToken); var json = completion.Content.Replace("```json", "").Replace("```", "").Trim(); var suggestions = JsonSerializer.Deserialize<List<ImportSuggestion>>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? []; foreach (var suggestion in suggestions) { var row = rows.FirstOrDefault(x => x.RowNumber == suggestion.RowNumber); if (row is not null && categories.Any(x => x.Id == suggestion.CategoryId) && accounts.Any(x => x.Id == suggestion.CounterAccountId)) { row.CategoryId = suggestion.CategoryId; row.CounterAccountId = suggestion.CounterAccountId; row.SuggestionReason = suggestion.Reason; row.SuggestionConfidence = string.Equals(suggestion.Confidence, "high", StringComparison.OrdinalIgnoreCase) ? "high" : "low"; } } } catch (Exception exception) when (exception is JsonException or HttpRequestException or InvalidOperationException) { logger.LogWarning(exception, "AI import classification failed; manual review remains available."); }
+        try
+        {
+            var settings = await settingsService.GetAsync(cancellationToken);
+            var completion = await llmService.CompleteAsync([new("system", settings.ReconciliationClassificationPrompt), new("user", JsonSerializer.Serialize(payload))], cancellationToken);
+            var json = completion.Content.Replace("```json", "").Replace("```", "").Trim();
+            var suggestions = JsonSerializer.Deserialize<List<ImportSuggestion>>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? [];
+            foreach (var suggestion in suggestions)
+            {
+                var row = rows.FirstOrDefault(x => x.RowNumber == suggestion.RowNumber);
+                if (row is not null && categories.Any(x => x.Id == suggestion.CategoryId) && accounts.Any(x => x.Id == suggestion.CounterAccountId))
+                {
+                    row.CategoryId = suggestion.CategoryId;
+                    row.CounterAccountId = suggestion.CounterAccountId;
+                    row.SuggestionReason = suggestion.Reason;
+                    row.SuggestionConfidence = string.Equals(suggestion.Confidence, "high", StringComparison.OrdinalIgnoreCase) ? "high" : "low";
+                }
+            }
+        }
+        catch (Exception exception) when (exception is JsonException or HttpRequestException or InvalidOperationException)
+        {
+            logger.LogWarning(exception, "AI import classification failed; manual review remains available.");
+        }
     }
 
     /// <summary>Reloads authoritative selectors and a single budget execution snapshot after initial review or validation errors.</summary>
