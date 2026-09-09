@@ -19,6 +19,7 @@ public sealed class ConfigurableLLMService(
     DenariusDbContext dbContext,
     ILogger<ConfigurableLLMService>? logger = null) : ILLMService
 {
+    private const string JournalCatalogPrefix = "CATALOG_JSON:\n";
     private readonly IReadOnlyDictionary<string, ILLMProvider> _providers =
         providers.ToDictionary(provider => provider.Id, StringComparer.OrdinalIgnoreCase);
 
@@ -92,7 +93,7 @@ public sealed class ConfigurableLLMService(
         }
     }
 
-    /// <summary>Writes detailed request diagnostics without exposing financial or credential-bearing message content.</summary>
+    /// <summary>Writes detailed request diagnostics while exposing only support data that is safe to audit.</summary>
     /// <param name="status">Effective provider status.</param>
     /// <param name="messages">Messages passed to the provider adapter.</param>
     /// <param name="maxTokens">Maximum output tokens requested.</param>
@@ -104,9 +105,7 @@ public sealed class ConfigurableLLMService(
             index,
             role = message.Role,
             utf8Bytes = Encoding.UTF8.GetByteCount(message.Content),
-            content = string.Equals(message.Role, "system", StringComparison.OrdinalIgnoreCase)
-                ? message.Content
-                : "[REDACTED: USER OR FINANCIAL CONTENT]"
+            content = DescribeRequestMessageContent(message)
         });
 
         logger.LogInformation(
@@ -117,6 +116,113 @@ public sealed class ConfigurableLLMService(
             JsonSerializer.SerializeToUtf8Bytes(messages).Length,
             maxTokens,
             JsonSerializer.Serialize(diagnostics));
+    }
+
+    /// <summary>Returns an auditable representation of one request message without exposing personal financial content.</summary>
+    /// <param name="message">The message passed to the provider.</param>
+    /// <returns>The original system prompt, a sanitized support catalog, or a redaction marker.</returns>
+    private static string DescribeRequestMessageContent(LlmMessageDto message)
+    {
+        if (string.Equals(message.Role, "system", StringComparison.OrdinalIgnoreCase))
+            return message.Content;
+
+        if (message.Content.StartsWith(JournalCatalogPrefix, StringComparison.Ordinal))
+            return DescribeJournalCatalog(message.Content[JournalCatalogPrefix.Length..]);
+
+        return "[REDACTED: USER OR FINANCIAL CONTENT]";
+    }
+
+    /// <summary>Sanitizes the journal suggestion catalog while preserving data needed to audit model classification.</summary>
+    /// <param name="json">The serialized journal suggestion catalog.</param>
+    /// <returns>A sanitized JSON representation of the support catalog.</returns>
+    private static string DescribeJournalCatalog(string json)
+    {
+        try
+        {
+            using var document = JsonDocument.Parse(json);
+            var root = document.RootElement;
+            var accounts = root.TryGetProperty("accounts", out var accountArray) && accountArray.ValueKind == JsonValueKind.Array
+                ? accountArray.EnumerateArray().Select(account => new
+                {
+                    id = ReadString(account, "Id", "id"),
+                    name = "[REDACTED: ACCOUNT NAME]",
+                    type = ReadString(account, "type"),
+                    categoryId = ReadString(account, "categoryId"),
+                    currency = ReadString(account, "Currency", "currency")
+                }).ToList()
+                : [];
+            var categories = root.TryGetProperty("categories", out var categoryArray) && categoryArray.ValueKind == JsonValueKind.Array
+                ? categoryArray.EnumerateArray().Select(category => new
+                {
+                    id = ReadString(category, "Id", "id"),
+                    name = ReadString(category, "name"),
+                    group = ReadString(category, "group"),
+                    type = ReadString(category, "type")
+                }).ToList()
+                : [];
+            var budgets = root.TryGetProperty("budgets", out var budgetArray) && budgetArray.ValueKind == JsonValueKind.Array
+                ? budgetArray.EnumerateArray().Select(budget => new
+                {
+                    id = ReadString(budget, "Id", "id"),
+                    year = ReadInt32(budget, "Year", "year"),
+                    month = ReadInt32(budget, "Month", "month")
+                }).ToList()
+                : [];
+            var recentExampleCount = root.TryGetProperty("recentJournalEntries", out var examples) && examples.ValueKind == JsonValueKind.Array
+                ? examples.GetArrayLength()
+                : 0;
+
+            return JournalCatalogPrefix + JsonSerializer.Serialize(new
+            {
+                today = ReadString(root, "today"),
+                currency = ReadString(root, "currency"),
+                partial = root.TryGetProperty("partial", out var partial) ? partial.Clone() : default(JsonElement),
+                accounts,
+                categories,
+                budgets,
+                recentJournalEntries = new { count = recentExampleCount, content = "[REDACTED: PERSONAL FINANCIAL EXAMPLES]" }
+            });
+        }
+        catch (JsonException)
+        {
+            return JournalCatalogPrefix + "[INVALID JSON: CONTENT REDACTED]";
+        }
+    }
+
+    /// <summary>Reads a string-compatible property from a JSON object using one or more candidate names.</summary>
+    /// <param name="element">The JSON object to inspect.</param>
+    /// <param name="names">Candidate property names.</param>
+    /// <returns>The textual value, or null when no candidate exists.</returns>
+    private static string? ReadString(JsonElement element, params string[] names)
+    {
+        foreach (var name in names)
+        {
+            if (!element.TryGetProperty(name, out var value)) continue;
+            return value.ValueKind switch
+            {
+                JsonValueKind.String => value.GetString(),
+                JsonValueKind.Number or JsonValueKind.True or JsonValueKind.False => value.ToString(),
+                JsonValueKind.Null => null,
+                _ => value.GetRawText()
+            };
+        }
+
+        return null;
+    }
+
+    /// <summary>Reads an integer property from a JSON object using one or more candidate names.</summary>
+    /// <param name="element">The JSON object to inspect.</param>
+    /// <param name="names">Candidate property names.</param>
+    /// <returns>The integer value, or null when unavailable.</returns>
+    private static int? ReadInt32(JsonElement element, params string[] names)
+    {
+        foreach (var name in names)
+        {
+            if (element.TryGetProperty(name, out var value) && value.TryGetInt32(out var number))
+                return number;
+        }
+
+        return null;
     }
 
     /// <summary>Writes detailed response diagnostics without exposing generated financial or personal content.</summary>
