@@ -98,8 +98,9 @@ public sealed class RemindersController(DenariusDbContext dbContext) : Controlle
     /// Displays the form to create a new reminder.
     /// </summary>
     /// <returns>The reminder creation form view.</returns>
-    [HttpGet] public IActionResult Create() => View("Form", new ReminderFormViewModel());
-    
+    [HttpGet]
+    public IActionResult Create() => View("Form", new ReminderFormViewModel());
+
     /// <summary>
     /// Processes the creation of a new reminder.
     /// </summary>
@@ -119,7 +120,7 @@ public sealed class RemindersController(DenariusDbContext dbContext) : Controlle
     /// </summary>
     /// <param name="id">The unique identifier of the reminder to edit.</param>
     /// <param name="cancellationToken">Cancellation token for async operations.</param>
-    /// <returns>The reminder edit form view, or NotFound if the reminder doesn't exist.</returns>
+    /// <returns>The reminder edit form, or NotFound if the reminder doesn't exist.</returns>
     [HttpGet]
     public async Task<IActionResult> Edit(Guid id, CancellationToken cancellationToken)
     {
