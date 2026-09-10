@@ -94,6 +94,11 @@
                    aria-label="Mês seguinte">›</a>
             </div>
             <h2>@monthTitle</h2>
+            <a class="button secondary"
+               asp-action="ExportCalendarPdf"
+               asp-route-year="@monthStart.Year"
+               asp-route-month="@monthStart.Month"
+               aria-label="Exportar o calendário de @monthTitle para PDF">Exportar PDF</a>
         </div>
 
         <div class="reminder-calendar-scroll">
