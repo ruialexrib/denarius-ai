@@ -46,19 +46,11 @@
 <div class="reminder-view-switch" role="group" aria-label="Modo de visualização dos lembretes">
     <a class="reminder-view-option @(!isCalendarView ? "active" : null)"
        asp-action="Index"
-       asp-route-view="list"
-       asp-route-search="@Model.Search"
-       asp-route-status="@Model.Status"
-       asp-route-from="@(Model.From?.ToString("yyyy-MM-dd"))"
-       asp-route-to="@(Model.To?.ToString("yyyy-MM-dd"))">Lista</a>
+       asp-route-view="list">Lista</a>
     <a class="reminder-view-option @(isCalendarView ? "active" : null)"
        asp-action="Index"
        asp-route-view="calendar"
-       asp-route-month="@monthStart.ToString("yyyy-MM")"
-       asp-route-search="@Model.Search"
-       asp-route-status="@Model.Status"
-       asp-route-from="@(Model.From?.ToString("yyyy-MM-dd"))"
-       asp-route-to="@(Model.To?.ToString("yyyy-MM-dd"))">Calendário</a>
+       asp-route-month="@monthStart.ToString("yyyy-MM")">Calendário</a>
 </div>
 
 @if (isCalendarView)
@@ -70,27 +62,15 @@
                    asp-action="Index"
                    asp-route-view="calendar"
                    asp-route-month="@previousMonth.ToString("yyyy-MM")"
-                   asp-route-search="@Model.Search"
-                   asp-route-status="@Model.Status"
-                   asp-route-from="@(Model.From?.ToString("yyyy-MM-dd"))"
-                   asp-route-to="@(Model.To?.ToString("yyyy-MM-dd"))"
                    aria-label="Mês anterior">‹</a>
                 <a class="button secondary"
                    asp-action="Index"
                    asp-route-view="calendar"
-                   asp-route-month="@today.ToString("yyyy-MM")"
-                   asp-route-search="@Model.Search"
-                   asp-route-status="@Model.Status"
-                   asp-route-from="@(Model.From?.ToString("yyyy-MM-dd"))"
-                   asp-route-to="@(Model.To?.ToString("yyyy-MM-dd"))">Hoje</a>
+                   asp-route-month="@today.ToString("yyyy-MM")">Hoje</a>
                 <a class="button secondary"
                    asp-action="Index"
                    asp-route-view="calendar"
                    asp-route-month="@nextMonth.ToString("yyyy-MM")"
-                   asp-route-search="@Model.Search"
-                   asp-route-status="@Model.Status"
-                   asp-route-from="@(Model.From?.ToString("yyyy-MM-dd"))"
-                   asp-route-to="@(Model.To?.ToString("yyyy-MM-dd"))"
                    aria-label="Mês seguinte">›</a>
             </div>
             <h2>@monthTitle</h2>
