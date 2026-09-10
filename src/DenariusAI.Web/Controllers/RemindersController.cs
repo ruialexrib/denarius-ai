@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using DenariusAI.Domain.Entities;
 using DenariusAI.Infrastructure.Persistence;
+using DenariusAI.Web.Models;
 using DenariusAI.Web.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -52,11 +53,54 @@ public sealed class RemindersController(DenariusDbContext dbContext) : Controlle
     }
 
     /// <summary>
+    /// Exports the selected reminder month as an A4 landscape calendar PDF.
+    /// </summary>
+    /// <param name="year">The selected calendar year.</param>
+    /// <param name="month">The selected calendar month.</param>
+    /// <param name="cancellationToken">Cancellation token for async operations.</param>
+    /// <returns>The generated PDF file, or a bad request response for an invalid period.</returns>
+    [HttpGet]
+    public async Task<IActionResult> ExportCalendarPdf(int year, int month, CancellationToken cancellationToken = default)
+    {
+        if (year is < 1 or > 9999 || month is < 1 or > 12)
+        {
+            return BadRequest();
+        }
+
+        var monthStart = new DateOnly(year, month, 1);
+        var monthEnd = monthStart.AddMonths(1);
+        var today = DateOnly.FromDateTime(DateTime.Today);
+        var userId = UserId();
+        var items = await dbContext.Reminders.AsNoTracking()
+            .Where(item => item.EventDate >= monthStart && item.EventDate < monthEnd)
+            .OrderBy(item => item.EventDate)
+            .ThenBy(item => item.Text)
+            .ToListAsync(cancellationToken);
+        var reminderIds = items.Select(item => item.Id).ToList();
+        var acknowledged = await dbContext.ReminderAcknowledgements.AsNoTracking()
+            .Where(item => item.UserId == userId && reminderIds.Contains(item.ReminderId))
+            .Select(item => item.ReminderId)
+            .ToListAsync(cancellationToken);
+        var rows = items.Select(item => new ReminderRowViewModel(
+            item.Id,
+            item.Text,
+            item.EventDate,
+            item.NoticeDays,
+            item.EventDate.AddDays(-item.NoticeDays) <= today,
+            acknowledged.Contains(item.Id),
+            item.EventDate.DayNumber - today.DayNumber)).ToList();
+
+        var pdf = ReminderCalendarPdf.Generate(monthStart, rows, today);
+        return File(pdf, "application/pdf", $"lembretes-{year:0000}-{month:00}.pdf");
+    }
+
+    /// <summary>
     /// Displays the form to create a new reminder.
     /// </summary>
     /// <returns>The reminder creation form view.</returns>
-    [HttpGet] public IActionResult Create() => View("Form", new ReminderFormViewModel());
-    
+    [HttpGet]
+    public IActionResult Create() => View("Form", new ReminderFormViewModel());
+
     /// <summary>
     /// Processes the creation of a new reminder.
     /// </summary>
@@ -76,7 +120,7 @@ public sealed class RemindersController(DenariusDbContext dbContext) : Controlle
     /// </summary>
     /// <param name="id">The unique identifier of the reminder to edit.</param>
     /// <param name="cancellationToken">Cancellation token for async operations.</param>
-    /// <returns>The reminder edit form view, or NotFound if the reminder doesn't exist.</returns>
+    /// <returns>The reminder edit form, or NotFound if the reminder doesn't exist.</returns>
     [HttpGet]
     public async Task<IActionResult> Edit(Guid id, CancellationToken cancellationToken)
     {
