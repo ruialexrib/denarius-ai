@@ -39,7 +39,7 @@ public sealed class BudgetExecutionAnalysisServiceTests
         Assert.Equal(965m, result.TotalActual);
         Assert.Equal(-15m, result.TotalVariance);
         Assert.Equal(98.5m, result.ExecutionPercentage);
-        Assert.Equal(80m, result.OverBudgetAmount);
+        Assert.Equal(90m, result.OverBudgetAmount);
         Assert.Equal(2, result.OverBudgetCategoryCount);
         Assert.Equal(1, result.UnbudgetedCategoryCount);
         Assert.Contains(result.Categories, item => item.CategoryId == energyId && item.Status == BudgetExecutionStatus.OverBudget);
@@ -63,6 +63,7 @@ public sealed class BudgetExecutionAnalysisServiceTests
                 [(2026, 9)] =
                 [
                     new(nearId, "Alimentação", 100m, 85m),
+                    new(Guid.NewGuid(), "Comunicações", 100m, 100m),
                     new(zeroId, "Outros", 0m, 20m),
                     new(Guid.NewGuid(), "Saúde", 75m, 0m)
                 ]
@@ -71,6 +72,7 @@ public sealed class BudgetExecutionAnalysisServiceTests
         var result = await service.GetAsync(2026, 9);
 
         Assert.Contains(result.Categories, item => item.CategoryId == nearId && item.Status == BudgetExecutionStatus.NearLimit);
+        Assert.Contains(result.Categories, item => item.CategoryName == "Comunicações" && item.Status == BudgetExecutionStatus.NearLimit && item.ExecutionPercentage == 100m);
         var unbudgeted = Assert.Single(result.Categories.Where(item => item.CategoryId == zeroId));
         Assert.Null(unbudgeted.ExecutionPercentage);
         Assert.Null(unbudgeted.RelativeVariancePercentage);
