@@ -44,10 +44,10 @@ public sealed class SavingsLiquidityAnalysisService(
             .ThenBy(item => item.Name)
             .ToList();
 
-        var currentSavingsRate = current.Income == 0m
+        decimal? currentSavingsRate = current.Income == 0m
             ? null
             : decimal.Round(current.Savings / current.Income * 100m, 1);
-        var previousSavingsRate = previous.Income == 0m
+        decimal? previousSavingsRate = previous.Income == 0m
             ? null
             : decimal.Round(previous.Savings / previous.Income * 100m, 1);
         var certificatesValue = current.SavingsCertificates.Sum(item => item.CurrentValue);
