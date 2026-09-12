@@ -49,7 +49,7 @@
         <strong>@Money(analysis.Savings)</strong>
         <small>@(analysis.Savings - analysis.PreviousSavings >= 0m ? "+" : "")@Money(analysis.Savings - analysis.PreviousSavings) face ao período anterior</small>
     </article>
-    <article class="@(analysis.SavingsRate >= 0m ? "summary-positive" : "summary-negative")">
+    <article class="@(analysis.SavingsRate is null ? "summary-info" : analysis.SavingsRate >= 0m ? "summary-positive" : "summary-negative")">
         <span>Taxa de poupança</span>
         <strong>@Percentage(analysis.SavingsRate)</strong>
         <small>Anterior: @Percentage(analysis.PreviousSavingsRate)</small>
