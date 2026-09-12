@@ -303,15 +303,13 @@ public sealed class AnalyticsController(
     }
 
     /// <summary>Displays deterministic investment and financial-assets analysis.</summary>
-    /// <param name="asOf">Optional reference date.</param>
     /// <param name="cancellationToken">Token used to cancel the request.</param>
     /// <returns>The investment analysis view.</returns>
     [HttpGet]
     public async Task<IActionResult> Investments(
-        DateOnly? asOf,
         CancellationToken cancellationToken = default)
     {
-        var referenceDate = asOf ?? DateOnly.FromDateTime(DateTime.Today);
+        var referenceDate = DateOnly.FromDateTime(DateTime.Today);
         var analysis = await investmentPortfolioAnalysisService.GetAsync(referenceDate, cancellationToken);
         return View(new InvestmentPortfolioAnalysisViewModel(analysis, llmService.IsConfigured));
     }
