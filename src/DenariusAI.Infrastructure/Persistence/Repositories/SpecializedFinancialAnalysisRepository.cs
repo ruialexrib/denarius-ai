@@ -19,14 +19,14 @@ public sealed class SpecializedFinancialAnalysisRepository(DenariusDbContext dbC
         if (positions.Count == 0) return [];
 
         var ids = positions.Select(item => item.Id).ToArray();
-        var firstPrices = await dbContext.StockPrices.AsNoTracking()
+        var prices = await dbContext.StockPrices.AsNoTracking()
             .Where(item => ids.Contains(item.StockPositionId))
-            .GroupBy(item => item.StockPositionId)
-            .Select(group => group.OrderBy(item => item.Date)
-                .Select(item => new { item.StockPositionId, item.Date, item.Price })
-                .First())
+            .OrderBy(item => item.Date)
+            .Select(item => new { item.StockPositionId, item.Date, item.Price })
             .ToListAsync(cancellationToken);
-        var firstByPosition = firstPrices.ToDictionary(item => item.StockPositionId);
+        var firstByPosition = prices
+            .GroupBy(item => item.StockPositionId)
+            .ToDictionary(group => group.Key, group => group.First());
 
         return positions.Select(item =>
         {
