@@ -26,7 +26,7 @@ public sealed class ApiProbeController : ControllerBase
 
     /// <summary>Exercises the common field validation contract.</summary>
     /// <returns>A safe validation problem response.</returns>
-    [HttpPost("validation")]
+    [HttpGet("validation")]
     public IResult Validation() => ApiProblems.Validation(HttpContext,
         new Dictionary<string, string[]> { ["name"] = ["Indique o nome."] });
 }

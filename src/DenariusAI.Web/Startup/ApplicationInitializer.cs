@@ -83,7 +83,7 @@ public sealed class ApplicationInitializer : IApplicationInitializer
         }
         await userManager.AddToRoleAsync(user, ApplicationRoles.Administrator);
 
-        logger.LogInformation("Initial administrator created for {Email}.", email);
+        logger.LogInformation("Initial administrator created successfully.");
     }
 
     /// <summary>Initializes demonstration data and demonstration users when required.</summary>

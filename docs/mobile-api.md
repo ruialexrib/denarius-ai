@@ -10,7 +10,7 @@ No database schema, SQL port or financial workflow changes are introduced.
 
 | Method | Route | Authentication | Successful response |
 | --- | --- | --- | --- |
-| GET | `/api/v1/info` | API bearer policy | `{"apiVersion":"1","applicationVersion":"0.25.1-dev.44"}` |
+| GET | `/api/v1/info` | API bearer policy | `{"apiVersion":"1","applicationVersion":"0.25.1-dev.45"}` |
 | GET | `/api/v1/health/live` | Anonymous | `{"status":"ok"}` |
 | GET | `/api/v1/health/ready` | Anonymous | `{"status":"ready"}` |
 

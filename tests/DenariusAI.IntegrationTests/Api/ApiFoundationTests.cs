@@ -190,7 +190,7 @@ public sealed class ApiFoundationTests
         await using var factory = new ApiWebApplicationFactory();
         using var client = factory.CreateApiClient();
         client.DefaultRequestHeaders.Authorization = new("Bearer", factory.CreateAccessToken());
-        using var response = await client.PostAsync("/api/v1/test/validation", null);
+        using var response = await client.GetAsync("/api/v1/test/validation");
         await AssertProblemAsync(response, HttpStatusCode.BadRequest, "validation_failed");
         using var json = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
         Assert.Equal("Indique o nome.", json.RootElement.GetProperty("errors").GetProperty("name")[0].GetString());
