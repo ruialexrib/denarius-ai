@@ -34,6 +34,7 @@ namespace DenariusAI.Application.DTOs;
 /// <param name="SavingsCertificateIgcpSourceUrl">Official IGCP Savings Certificates source page.</param>
 /// <param name="SavingsCertificateIgcpPublicationUrlTemplate">Monthly IGCP publication URL template using {month} and {year} placeholders.</param>
 /// <param name="AiVerboseModelLogging">Whether provider-neutral verbose diagnostics are enabled for all model interactions.</param>
+/// <param name="IncomeExpenseFlowAnalysisPrompt">Prompt used to interpret income, expense and account-flow analysis.</param>
 public sealed record ApplicationSettingsDto(
     string MistralModel,
     string MistralBaseUrl,
@@ -67,4 +68,5 @@ public sealed record ApplicationSettingsDto(
     string NvidiaNimBaseUrl = Application.Configuration.NvidiaNimDefaults.BaseUrl,
     string SavingsCertificateIgcpSourceUrl = "https://www.igcp.pt/pt/aforristas/produtos-de-aforro/certificados-de-aforro",
     string SavingsCertificateIgcpPublicationUrlTemplate = "https://www.igcp.pt/pt/noticias/taxas-de-juro-dos-certificados-de-aforro-das-series-b-d-e-e-f-em-{month}-de-{year}",
-    bool AiVerboseModelLogging = false);
+    bool AiVerboseModelLogging = false,
+    string IncomeExpenseFlowAnalysisPrompt = Application.Configuration.ApplicationSettingsDefaults.IncomeExpenseFlowAnalysisPrompt);
