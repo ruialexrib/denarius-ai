@@ -162,7 +162,8 @@ public sealed class GlobalFinancialViewService(
                 $"As despesas excederam os rendimentos em {Money(Math.Abs(current.Savings))}.",
                 "Poupança e Liquidez"));
         }
-        else if (savingsRate.AbsoluteChange >= MaterialSavingsRatePointChange)
+        else if (current.Income != 0m && comparison.Income != 0m
+            && savingsRate.AbsoluteChange >= MaterialSavingsRatePointChange)
         {
             findings.Add(new(
                 "positive",
@@ -170,7 +171,8 @@ public sealed class GlobalFinancialViewService(
                 $"A taxa de poupança aumentou {savingsRate.AbsoluteChange.ToString("N1", PortugueseCulture)} pontos percentuais face ao período anterior.",
                 "Poupança e Liquidez"));
         }
-        else if (savingsRate.AbsoluteChange <= -MaterialSavingsRatePointChange)
+        else if (current.Income != 0m && comparison.Income != 0m
+            && savingsRate.AbsoluteChange <= -MaterialSavingsRatePointChange)
         {
             findings.Add(new(
                 "negative",
