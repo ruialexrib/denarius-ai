@@ -19,18 +19,24 @@
         trend = analysis.Trend.Select(item => new
         {
             label = new DateTime(item.Year, item.Month, 1).ToString("MMM yy", culture),
-            item.NetWorth,
-            item.Income,
-            item.Expenses,
-            item.Savings
+            netWorth = item.NetWorth,
+            income = item.Income,
+            expenses = item.Expenses,
+            savings = item.Savings
         })
     });
 
     string Money(decimal value) => $"{value.ToString("N2", culture)} €";
     string Rate(decimal value) => $"{value.ToString("N1", culture)}%";
-    string Current(GlobalFinancialMetricDto metric) => metric.IsPercentage ? Rate(metric.CurrentValue) : Money(metric.CurrentValue);
+    string Current(GlobalFinancialMetricDto metric)
+    {
+        if (metric.Key == "savings-rate" && analysis.Income.CurrentValue == 0m) return "—";
+        return metric.IsPercentage ? Rate(metric.CurrentValue) : Money(metric.CurrentValue);
+    }
     string Comparison(GlobalFinancialMetricDto metric)
     {
+        if (metric.Key == "savings-rate" && analysis.Income.CurrentValue == 0m)
+            return "Sem rendimentos no período; taxa de poupança não aplicável";
         if (metric.AbsoluteChange == 0m) return "Sem alteração face ao período anterior";
         var sign = metric.AbsoluteChange > 0m ? "+" : string.Empty;
         var absolute = metric.IsPercentage
@@ -106,7 +112,7 @@
         <strong>@Current(analysis.Savings)</strong>
         <small class="@ChangeClass(analysis.Savings)">@Comparison(analysis.Savings)</small>
     </article>
-    <article class="@(analysis.SavingsRate.CurrentValue < 0m ? "summary-negative" : "summary-positive")">
+    <article class="@(analysis.Income.CurrentValue == 0m ? "" : analysis.SavingsRate.CurrentValue < 0m ? "summary-negative" : "summary-positive")">
         <span>Taxa de poupança</span>
         <strong>@Current(analysis.SavingsRate)</strong>
         <small class="@ChangeClass(analysis.SavingsRate)">@Comparison(analysis.SavingsRate)</small>
@@ -148,6 +154,10 @@
 <section class="global-section-heading">
     <div><p class="eyebrow">Últimos 12 meses</p><h2>Evolução global</h2><p>A série termina no período selecionado e utiliza apenas valores calculados pela aplicação.</p></div>
 </section>
+@if (analysis.Trend.Count < 2)
+{
+    <div class="global-history-note" role="status">Ainda não existe histórico mensal suficiente para interpretar uma tendência. O ponto disponível é apresentado apenas como referência.</div>
+}
 <section class="global-charts">
     <article class="panel global-chart-card">
         <header><div><small>Património</small><h3>Evolução do património líquido</h3></div></header>
