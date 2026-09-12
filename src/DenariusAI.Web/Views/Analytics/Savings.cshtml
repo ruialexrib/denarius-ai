@@ -1,0 +1,178 @@
+@model SavingsLiquidityAnalysisViewModel
+@using System.Globalization
+@{
+    ViewData["Title"] = "Poupança e Liquidez";
+    var analysis = Model.Analysis;
+    var culture = CultureInfo.GetCultureInfo("pt-PT");
+    var today = DateOnly.FromDateTime(DateTime.Today);
+    var monthStart = new DateOnly(today.Year, today.Month, 1);
+    var yearStart = new DateOnly(today.Year, 1, 1);
+
+    string Money(decimal value) => $"{value.ToString("N2", culture)} €";
+    string SignedMoney(decimal value) => $"{(value > 0m ? "+" : string.Empty)}{value.ToString("N2", culture)} €";
+    string Percentage(decimal? value) => value.HasValue ? $"{value.Value.ToString("N1", culture)}%" : "—";
+}
+<link rel="stylesheet" href="~/css/summary-cards.css" asp-append-version="true" />
+<link rel="stylesheet" href="~/css/analytics.css" asp-append-version="true" />
+<link rel="stylesheet" href="~/css/specialized-financial-analysis.css" asp-append-version="true" />
+
+<div class="page-header">
+    <div>
+        <p class="eyebrow">Análise Financeira · Resiliência financeira</p>
+        <h1>@ViewData["Title"]</h1>
+        <p class="page-subtitle">Avalie capacidade de poupança, margem financeira disponível e concentração dos recursos líquidos.</p>
+    </div>
+    <a class="button secondary" asp-action="Index">← Voltar às análises</a>
+</div>
+
+<section class="specialized-period" aria-label="Período da análise">
+    <form method="get" asp-action="Savings" class="specialized-filter">
+        <label>De <input type="date" name="from" value="@analysis.From.ToString("yyyy-MM-dd")" /></label>
+        <label>Até <input type="date" name="to" value="@analysis.To.ToString("yyyy-MM-dd")" /></label>
+        <button class="button secondary" type="submit">Aplicar</button>
+    </form>
+    <div class="specialized-period-copy">
+        <strong>Comparação: período anterior equivalente</strong>
+        <span>@analysis.ComparisonFrom.ToString("dd/MM/yyyy") – @analysis.ComparisonTo.ToString("dd/MM/yyyy")</span>
+    </div>
+</section>
+
+<div class="specialized-filter" style="margin:-6px 0 18px">
+    <a class="text-link" asp-action="Savings" asp-route-from="@monthStart.ToString("yyyy-MM-dd")" asp-route-to="@today.ToString("yyyy-MM-dd")">Mês atual</a>
+    <a class="text-link" asp-action="Savings" asp-route-from="@today.AddDays(-89).ToString("yyyy-MM-dd")" asp-route-to="@today.ToString("yyyy-MM-dd")">90 dias</a>
+    <a class="text-link" asp-action="Savings" asp-route-from="@yearStart.ToString("yyyy-MM-dd")" asp-route-to="@today.ToString("yyyy-MM-dd")">Ano atual</a>
+</div>
+
+<section class="area-summary" aria-label="Resumo de poupança e liquidez">
+    <article class="summary-primary">
+        <span>Poupança do período</span>
+        <strong>@Money(analysis.Savings)</strong>
+        <small>@(analysis.Savings - analysis.PreviousSavings >= 0m ? "+" : "")@Money(analysis.Savings - analysis.PreviousSavings) face ao período anterior</small>
+    </article>
+    <article class="@(analysis.SavingsRate >= 0m ? "summary-positive" : "summary-negative")">
+        <span>Taxa de poupança</span>
+        <strong>@Percentage(analysis.SavingsRate)</strong>
+        <small>Anterior: @Percentage(analysis.PreviousSavingsRate)</small>
+    </article>
+    <article class="summary-info">
+        <span>Liquidez imediata EUR</span>
+        <strong>@Money(analysis.EurImmediateLiquidity)</strong>
+        <small>Contas bancárias, numerário e contas de poupança em EUR</small>
+    </article>
+    <article class="summary-warning">
+        <span>Certificados de Aforro</span>
+        <strong>@Money(analysis.SavingsCertificatesValue)</strong>
+        <small>Rendimento acumulado: @Money(analysis.SavingsCertificatesYield)</small>
+    </article>
+</section>
+
+<section>
+    <div class="specialized-section-heading">
+        <div><p class="eyebrow">Leitura determinística</p><h2>O que merece atenção?</h2></div>
+        <small>Liquidez e poupança são apresentadas separadamente; saldos noutras moedas não são convertidos para EUR.</small>
+    </div>
+    <div class="specialized-finding-grid">
+        @foreach (var finding in analysis.Findings)
+        {
+            <article class="specialized-finding @finding.Tone">
+                <span></span>
+                <div>
+                    <strong>@finding.Title</strong>
+                    <p>@finding.Detail</p>
+                    @if (!string.IsNullOrWhiteSpace(finding.TargetController) && !string.IsNullOrWhiteSpace(finding.TargetAction))
+                    {
+                        <a asp-controller="@finding.TargetController" asp-action="@finding.TargetAction">Abrir detalhe →</a>
+                    }
+                </div>
+            </article>
+        }
+    </div>
+</section>
+
+<section class="specialized-grid">
+    <article class="panel specialized-card">
+        <header class="specialized-card-header">
+            <div><p class="eyebrow">Disponibilidade</p><h2>Contas líquidas</h2><p>Saldos à data final do período. O peso é calculado apenas entre contas em EUR.</p></div>
+        </header>
+        @if (analysis.LiquidAccounts.Count == 0)
+        {
+            <p class="muted">Não existem contas classificadas como bancárias, numerário ou poupança.</p>
+        }
+        else
+        {
+            <div class="specialized-list">
+                @foreach (var account in analysis.LiquidAccounts)
+                {
+                    <div class="specialized-list-item">
+                        <div>
+                            <strong>@account.Name</strong>
+                            <small>@account.Type · @account.Currency</small>
+                            @if (account.Weight.HasValue)
+                            {
+                                <div class="specialized-bar"><i style="width:@Math.Min(account.Weight.Value, 100m).ToString("0.0", CultureInfo.InvariantCulture)%"></i></div>
+                            }
+                        </div>
+                        <b>@account.Balance.ToString("N2", culture) @account.Currency</b>
+                    </div>
+                }
+            </div>
+        }
+    </article>
+
+    <article class="panel specialized-card">
+        <header class="specialized-card-header">
+            <div><p class="eyebrow">Evolução</p><h2>Capacidade de poupança</h2><p>Rendimentos, despesas e poupança por mês dentro do período selecionado.</p></div>
+        </header>
+        @if (analysis.Trend.Count == 0)
+        {
+            <p class="muted">Sem histórico mensal disponível no período.</p>
+        }
+        else
+        {
+            <div class="table-wrap">
+                <table class="specialized-table">
+                    <thead><tr><th>Mês</th><th>Rendimentos</th><th>Despesas</th><th>Poupança</th><th>Taxa</th></tr></thead>
+                    <tbody>
+                    @foreach (var item in analysis.Trend)
+                    {
+                        <tr>
+                            <td>@(new DateTime(item.Year, item.Month, 1).ToString("MMM yyyy", culture))</td>
+                            <td class="amount">@Money(item.Income)</td>
+                            <td class="amount">@Money(item.Expenses)</td>
+                            <td class="amount @(item.Savings >= 0m ? "positive" : "negative")">@SignedMoney(item.Savings)</td>
+                            <td class="amount">@Percentage(item.SavingsRate)</td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </article>
+</section>
+
+<p class="specialized-note">A liquidez imediata considera apenas contas do tipo conta bancária, numerário e poupança. Depósitos a prazo, contas de investimento, outros ativos e Certificados de Aforro são apresentados separadamente e não são tratados como disponibilidade imediata.</p>
+
+<section class="specialized-ai">
+    <div class="specialized-ai-heading"><span aria-hidden="true">✦</span><div><p class="eyebrow">Interpretação opcional</p><h2>Leitura por IA</h2><p>A IA recebe apenas poupança, taxas, saldos, concentração e tendência já calculados pela aplicação.</p></div></div>
+    @if (!Model.AiAvailable)
+    {
+        <div class="specialized-ai-unavailable">Configure um fornecedor de IA nas Definições para gerar esta interpretação.</div>
+    }
+    else
+    {
+        <form asp-action="SavingsAi" method="post" class="specialized-ai-action">
+            <input type="hidden" name="from" value="@analysis.From.ToString("yyyy-MM-dd")" />
+            <input type="hidden" name="to" value="@analysis.To.ToString("yyyy-MM-dd")" />
+            <button class="button" type="submit" data-progress-message="A interpretar a poupança e liquidez…">@(string.IsNullOrWhiteSpace(Model.AiAnalysis) ? "Gerar análise com IA" : "Atualizar análise")</button>
+            <small>O prompt desta área pode ser alterado nas Definições da aplicação.</small>
+        </form>
+    }
+    @if (!string.IsNullOrWhiteSpace(Model.AiError))
+    {
+        <div class="validation-summary specialized-ai-error" role="alert">@Model.AiError</div>
+    }
+    @if (!string.IsNullOrWhiteSpace(Model.AiAnalysis))
+    {
+        <div class="specialized-ai-result markdown-preview">@Html.Raw(MarkdownPreview.Render(Model.AiAnalysis))</div>
+    }
+</section>
