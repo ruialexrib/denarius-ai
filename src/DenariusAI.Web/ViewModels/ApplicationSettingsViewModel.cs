@@ -55,7 +55,7 @@ public sealed class ApplicationSettingsViewModel
     /// <summary>Gets or sets the dashboard welcome prompt setting.</summary>
     [Required, StringLength(10000), Display(Name = "Prompt da mensagem de boas-vindas")] public string DashboardWelcomePrompt { get; set; } = string.Empty;
     /// <summary>Gets or sets the financial analysis prompt setting.</summary>
-    [Required, StringLength(10000), Display(Name = "Prompt da análise financeira")] public string FinancialAnalysisPrompt { get; set; } = string.Empty;
+    [Required, StringLength(10000), Display(Name = "Prompt da Visão Financeira Global")] public string FinancialAnalysisPrompt { get; set; } = string.Empty;
     /// <summary>Gets or sets the connection test prompt setting.</summary>
     [Required, StringLength(1000), Display(Name = "Prompt do teste de ligação")] public string ConnectionTestPrompt { get; set; } = string.Empty;
     /// <summary>Gets or sets the correspondence metadata prompt setting.</summary>
