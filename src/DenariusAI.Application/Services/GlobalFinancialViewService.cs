@@ -112,7 +112,7 @@ public sealed class GlobalFinancialViewService(
         bool isPercentage = false)
     {
         var absolute = current - comparison;
-        var percentage = comparison == 0m
+        decimal? percentage = comparison == 0m
             ? null
             : decimal.Round(absolute / Math.Abs(comparison) * 100m, 1);
         var direction = absolute > 0m
