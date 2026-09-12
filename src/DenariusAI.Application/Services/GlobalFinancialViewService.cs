@@ -199,10 +199,6 @@ public sealed class GlobalFinancialViewService(
             "Rendimentos, Despesas e Fluxos",
             positiveWhenIncrease: true);
 
-        var accountFinding = BuildAccountFinding(current, comparison, netWorth.AbsoluteChange);
-        if (accountFinding is not null)
-            findings.Add(accountFinding);
-
         if (current.Reconciliation.Unreconciled > 0)
         {
             findings.Add(new(
@@ -211,6 +207,10 @@ public sealed class GlobalFinancialViewService(
                 $"{current.Reconciliation.Unreconciled} movimento(s) do período ainda não estão reconciliados e devem ser considerados na leitura dos dados.",
                 "Rendimentos, Despesas e Fluxos"));
         }
+
+        var accountFinding = BuildAccountFinding(current, comparison, netWorth.AbsoluteChange);
+        if (accountFinding is not null)
+            findings.Add(accountFinding);
 
         if (findings.Count == 0)
         {
