@@ -1,5 +1,4 @@
 using System.Globalization;
-using DenariusAI.Application.Abstractions.Persistence;
 using DenariusAI.Application.Abstractions.Services;
 using DenariusAI.Application.DTOs;
 
@@ -8,9 +7,9 @@ namespace DenariusAI.Application.Services;
 /// <summary>
 /// Calculates monthly budget execution, deviations and deterministic risk indicators.
 /// </summary>
-/// <param name="budgetRepository">Repository that supplies authoritative budget execution data.</param>
+/// <param name="budgetService">Service that supplies authoritative budget execution data.</param>
 public sealed class BudgetExecutionAnalysisService(
-    IBudgetRepository budgetRepository) : IBudgetExecutionAnalysisService
+    IBudgetService budgetService) : IBudgetExecutionAnalysisService
 {
     private const decimal NearLimitExecutionPercentage = 85m;
     private const decimal MaterialVarianceAmount = 25m;
@@ -27,8 +26,9 @@ public sealed class BudgetExecutionAnalysisService(
         if (year is < 2000 or > 2200 || month is < 1 or > 12)
             throw new ArgumentOutOfRangeException(nameof(month), "O período orçamental é inválido.");
 
-        var budget = await budgetRepository.GetByPeriodAsync(year, month, cancellationToken);
-        var execution = await budgetRepository.GetExecutionAsync(year, month, cancellationToken);
+        var periods = await budgetService.ListPeriodsAsync(cancellationToken);
+        var hasBudget = periods.Any(item => item.Year == year && item.Month == month);
+        var execution = await budgetService.GetExecutionAsync(year, month, cancellationToken);
         var categories = execution
             .Select(AnalyseCategory)
             .Where(item => item.Budgeted != 0m || item.Actual != 0m)
@@ -54,7 +54,7 @@ public sealed class BudgetExecutionAnalysisService(
         return new(
             year,
             month,
-            budget is not null,
+            hasBudget,
             totalBudgeted,
             totalActual,
             totalVariance,
@@ -120,7 +120,7 @@ public sealed class BudgetExecutionAnalysisService(
         for (var offset = HistoryMonths - 1; offset >= 0; offset--)
         {
             var period = selected.AddMonths(-offset);
-            var rows = await budgetRepository.GetExecutionAsync(period.Year, period.Month, cancellationToken);
+            var rows = await budgetService.GetExecutionAsync(period.Year, period.Month, cancellationToken);
             var relevant = rows.Where(item => item.Budgeted != 0m || item.Actual != 0m).ToList();
             var budgeted = relevant.Sum(item => item.Budgeted);
             var actual = relevant.Sum(item => item.Actual);
