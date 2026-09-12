@@ -82,6 +82,7 @@ public sealed class GlobalFinancialViewServiceTests
         Assert.Equal(-100m, result.Savings.CurrentValue);
         Assert.Equal(0m, result.SavingsRate.CurrentValue);
         Assert.Contains(result.Findings, item => item.Title == "Poupança negativa no período");
+        Assert.DoesNotContain(result.Findings, item => item.Title.Contains("Taxa de poupança", StringComparison.Ordinal));
     }
 
     /// <summary>
