@@ -13,6 +13,9 @@ namespace DenariusAI.Web.Controllers;
 /// <param name="globalFinancialViewService">Service that calculates the deterministic global financial view.</param>
 /// <param name="incomeExpenseFlowAnalysisService">Service that calculates income, expense and account-flow analysis.</param>
 /// <param name="budgetExecutionAnalysisService">Service that calculates monthly budget execution analysis.</param>
+/// <param name="savingsLiquidityAnalysisService">Service that calculates savings and liquidity analysis.</param>
+/// <param name="investmentPortfolioAnalysisService">Service that calculates investment and financial-assets analysis.</param>
+/// <param name="financialCommitmentsAnalysisService">Service that calculates known financial commitments and insurance analysis.</param>
 /// <param name="llmService">Provider-neutral language model service.</param>
 /// <param name="settingsService">Application settings service used to obtain the effective financial-analysis prompt.</param>
 /// <param name="logger">Logger used for safe AI failure diagnostics.</param>
@@ -21,6 +24,9 @@ public sealed class AnalyticsController(
     IGlobalFinancialViewService globalFinancialViewService,
     IIncomeExpenseFlowAnalysisService incomeExpenseFlowAnalysisService,
     IBudgetExecutionAnalysisService budgetExecutionAnalysisService,
+    ISavingsLiquidityAnalysisService savingsLiquidityAnalysisService,
+    IInvestmentPortfolioAnalysisService investmentPortfolioAnalysisService,
+    IFinancialCommitmentsAnalysisService financialCommitmentsAnalysisService,
     ILLMService llmService,
     IApplicationSettingsService settingsService,
     ILogger<AnalyticsController> logger) : Controller
@@ -237,6 +243,175 @@ public sealed class AnalyticsController(
         }
     }
 
+    /// <summary>Displays deterministic savings and liquidity analysis for the selected interval.</summary>
+    /// <param name="from">Optional selected-period start.</param>
+    /// <param name="to">Optional selected-period end.</param>
+    /// <param name="cancellationToken">Token used to cancel the request.</param>
+    /// <returns>The savings and liquidity analysis view.</returns>
+    [HttpGet]
+    public async Task<IActionResult> Savings(
+        DateOnly? from,
+        DateOnly? to,
+        CancellationToken cancellationToken = default)
+    {
+        var period = ResolvePeriod(from, to);
+        var analysis = await savingsLiquidityAnalysisService.GetAsync(period.From, period.To, cancellationToken);
+        return View(new SavingsLiquidityAnalysisViewModel(analysis, llmService.IsConfigured));
+    }
+
+    /// <summary>Generates an optional AI interpretation of pre-calculated savings and liquidity facts.</summary>
+    /// <param name="from">Selected-period start.</param>
+    /// <param name="to">Selected-period end.</param>
+    /// <param name="cancellationToken">Token used to cancel the request.</param>
+    /// <returns>The savings analysis view with optional AI interpretation.</returns>
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> SavingsAi(
+        DateOnly from,
+        DateOnly to,
+        CancellationToken cancellationToken = default)
+    {
+        var analysis = await savingsLiquidityAnalysisService.GetAsync(from, to, cancellationToken);
+        if (!llmService.IsConfigured)
+        {
+            return View("Savings", new SavingsLiquidityAnalysisViewModel(
+                analysis,
+                false,
+                AiError: "A interpretação por IA não está disponível porque o fornecedor selecionado não está configurado."));
+        }
+
+        try
+        {
+            var settings = await settingsService.GetAsync(cancellationToken);
+            var completion = await llmService.CompleteAsync(
+                [
+                    new LlmMessageDto("system", settings.SavingsLiquidityAnalysisPrompt),
+                    new LlmMessageDto("user", JsonSerializer.Serialize(BuildSavingsAiContext(analysis)))
+                ],
+                Math.Min(settings.AiMaxTokens, 1600),
+                cancellationToken);
+            return View("Savings", new SavingsLiquidityAnalysisViewModel(analysis, true, completion.Content.Trim()));
+        }
+        catch (Exception exception) when (exception is HttpRequestException or InvalidOperationException or TaskCanceledException)
+        {
+            logger.LogWarning(exception, "Savings and liquidity AI interpretation failed.");
+            return View("Savings", new SavingsLiquidityAnalysisViewModel(
+                analysis,
+                true,
+                AiError: "Não foi possível gerar a interpretação por IA. A análise calculada continua disponível."));
+        }
+    }
+
+    /// <summary>Displays deterministic investment and financial-assets analysis.</summary>
+    /// <param name="asOf">Optional reference date.</param>
+    /// <param name="cancellationToken">Token used to cancel the request.</param>
+    /// <returns>The investment analysis view.</returns>
+    [HttpGet]
+    public async Task<IActionResult> Investments(
+        DateOnly? asOf,
+        CancellationToken cancellationToken = default)
+    {
+        var referenceDate = asOf ?? DateOnly.FromDateTime(DateTime.Today);
+        var analysis = await investmentPortfolioAnalysisService.GetAsync(referenceDate, cancellationToken);
+        return View(new InvestmentPortfolioAnalysisViewModel(analysis, llmService.IsConfigured));
+    }
+
+    /// <summary>Generates an optional AI interpretation of pre-calculated investment facts.</summary>
+    /// <param name="asOf">Reference date.</param>
+    /// <param name="cancellationToken">Token used to cancel the request.</param>
+    /// <returns>The investment analysis view with optional AI interpretation.</returns>
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> InvestmentsAi(
+        DateOnly asOf,
+        CancellationToken cancellationToken = default)
+    {
+        var analysis = await investmentPortfolioAnalysisService.GetAsync(asOf, cancellationToken);
+        if (!llmService.IsConfigured)
+        {
+            return View("Investments", new InvestmentPortfolioAnalysisViewModel(
+                analysis,
+                false,
+                AiError: "A interpretação por IA não está disponível porque o fornecedor selecionado não está configurado."));
+        }
+
+        try
+        {
+            var settings = await settingsService.GetAsync(cancellationToken);
+            var completion = await llmService.CompleteAsync(
+                [
+                    new LlmMessageDto("system", settings.InvestmentPortfolioAnalysisPrompt),
+                    new LlmMessageDto("user", JsonSerializer.Serialize(BuildInvestmentAiContext(analysis)))
+                ],
+                Math.Min(settings.AiMaxTokens, 1600),
+                cancellationToken);
+            return View("Investments", new InvestmentPortfolioAnalysisViewModel(analysis, true, completion.Content.Trim()));
+        }
+        catch (Exception exception) when (exception is HttpRequestException or InvalidOperationException or TaskCanceledException)
+        {
+            logger.LogWarning(exception, "Investment portfolio AI interpretation failed.");
+            return View("Investments", new InvestmentPortfolioAnalysisViewModel(
+                analysis,
+                true,
+                AiError: "Não foi possível gerar a interpretação por IA. A análise calculada continua disponível."));
+        }
+    }
+
+    /// <summary>Displays deterministic known financial commitments and insurance analysis.</summary>
+    /// <param name="asOf">Optional reference date.</param>
+    /// <param name="cancellationToken">Token used to cancel the request.</param>
+    /// <returns>The commitments analysis view.</returns>
+    [HttpGet]
+    public async Task<IActionResult> Commitments(
+        DateOnly? asOf,
+        CancellationToken cancellationToken = default)
+    {
+        var referenceDate = asOf ?? DateOnly.FromDateTime(DateTime.Today);
+        var analysis = await financialCommitmentsAnalysisService.GetAsync(referenceDate, cancellationToken);
+        return View(new FinancialCommitmentsAnalysisViewModel(analysis, llmService.IsConfigured));
+    }
+
+    /// <summary>Generates an optional AI interpretation of pre-calculated commitments facts.</summary>
+    /// <param name="asOf">Reference date.</param>
+    /// <param name="cancellationToken">Token used to cancel the request.</param>
+    /// <returns>The commitments analysis view with optional AI interpretation.</returns>
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> CommitmentsAi(
+        DateOnly asOf,
+        CancellationToken cancellationToken = default)
+    {
+        var analysis = await financialCommitmentsAnalysisService.GetAsync(asOf, cancellationToken);
+        if (!llmService.IsConfigured)
+        {
+            return View("Commitments", new FinancialCommitmentsAnalysisViewModel(
+                analysis,
+                false,
+                AiError: "A interpretação por IA não está disponível porque o fornecedor selecionado não está configurado."));
+        }
+
+        try
+        {
+            var settings = await settingsService.GetAsync(cancellationToken);
+            var completion = await llmService.CompleteAsync(
+                [
+                    new LlmMessageDto("system", settings.FinancialCommitmentsAnalysisPrompt),
+                    new LlmMessageDto("user", JsonSerializer.Serialize(BuildCommitmentsAiContext(analysis)))
+                ],
+                Math.Min(settings.AiMaxTokens, 1600),
+                cancellationToken);
+            return View("Commitments", new FinancialCommitmentsAnalysisViewModel(analysis, true, completion.Content.Trim()));
+        }
+        catch (Exception exception) when (exception is HttpRequestException or InvalidOperationException or TaskCanceledException)
+        {
+            logger.LogWarning(exception, "Financial commitments AI interpretation failed.");
+            return View("Commitments", new FinancialCommitmentsAnalysisViewModel(
+                analysis,
+                true,
+                AiError: "Não foi possível gerar a interpretação por IA. A análise calculada continua disponível."));
+        }
+    }
+
     /// <summary>
     /// Resolves the requested interval and applies the current-month default.
     /// </summary>
@@ -368,6 +543,81 @@ public sealed class AnalyticsController(
             status = item.StatusLabel
         }),
         trend = analysis.Trend,
+        findings = analysis.Findings.Select(item => new { item.Tone, item.Title, item.Detail })
+    };
+
+    /// <summary>Builds bounded AI context for savings and liquidity interpretation.</summary>
+    /// <param name="analysis">Calculated savings and liquidity analysis.</param>
+    /// <returns>Pre-calculated provider-neutral facts.</returns>
+    private static object BuildSavingsAiContext(SavingsLiquidityAnalysisDto analysis) => new
+    {
+        purpose = "Interpretar Poupança e Liquidez sem recalcular valores.",
+        period = new { analysis.From, analysis.To },
+        comparison = new { analysis.ComparisonFrom, analysis.ComparisonTo },
+        summary = new
+        {
+            analysis.Savings,
+            analysis.SavingsRate,
+            analysis.PreviousSavings,
+            analysis.PreviousSavingsRate,
+            analysis.EurImmediateLiquidity,
+            analysis.EurSavingsAccounts,
+            analysis.SavingsCertificatesValue,
+            analysis.SavingsCertificatesYield,
+            analysis.LargestLiquidAccountWeight,
+            analysis.NonEurLiquidAccountCount
+        },
+        liquidAccounts = analysis.LiquidAccounts.Take(12),
+        trend = analysis.Trend,
+        findings = analysis.Findings.Select(item => new { item.Tone, item.Title, item.Detail })
+    };
+
+    /// <summary>Builds bounded AI context for investment portfolio interpretation.</summary>
+    /// <param name="analysis">Calculated financial-assets analysis.</param>
+    /// <returns>Pre-calculated provider-neutral facts.</returns>
+    private static object BuildInvestmentAiContext(InvestmentPortfolioAnalysisDto analysis) => new
+    {
+        purpose = "Interpretar Investimentos e Património Financeiro sem recalcular valores ou converter moedas.",
+        analysis.AsOf,
+        summary = new
+        {
+            analysis.EurStockCost,
+            analysis.EurStockMarketValue,
+            analysis.EurStockGain,
+            analysis.EurStockReturnPercentage,
+            analysis.SavingsCertificatesInvestment,
+            analysis.SavingsCertificatesValue,
+            analysis.SavingsCertificatesYield,
+            analysis.EurTrackedFinancialAssets,
+            analysis.OwnedStockPositions,
+            analysis.SavingsCertificateCount,
+            analysis.NonEurStockPositions
+        },
+        currencySummaries = analysis.CurrencySummaries,
+        stocks = analysis.Stocks.Take(12),
+        certificates = analysis.Certificates.Take(12),
+        findings = analysis.Findings.Select(item => new { item.Tone, item.Title, item.Detail })
+    };
+
+    /// <summary>Builds bounded AI context for financial commitments interpretation.</summary>
+    /// <param name="analysis">Calculated known commitments analysis.</param>
+    /// <returns>Pre-calculated provider-neutral facts.</returns>
+    private static object BuildCommitmentsAiContext(FinancialCommitmentsAnalysisDto analysis) => new
+    {
+        purpose = "Interpretar Compromissos Financeiros e Seguros sem inventar prémios futuros.",
+        period = new { analysis.AsOf, analysis.HorizonEnd },
+        summary = new
+        {
+            analysis.ActivePolicies,
+            analysis.ScheduledPremiums,
+            analysis.OutstandingAmount,
+            analysis.OutstandingPremiums,
+            analysis.RenewalsWithin90Days,
+            analysis.PaidWithinHorizon
+        },
+        policies = analysis.Policies.Take(12),
+        calendar = analysis.Calendar,
+        types = analysis.Types,
         findings = analysis.Findings.Select(item => new { item.Tone, item.Title, item.Detail })
     };
 }
