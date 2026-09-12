@@ -47,7 +47,8 @@ public sealed class ApplicationSettingsService(DenariusDbContext dbContext, IOpt
             Get(values, "SavingsCertificates.IgcpSourceUrl", DefaultIgcpSourceUrl),
             Get(values, "SavingsCertificates.IgcpPublicationUrlTemplate", DefaultIgcpPublicationUrlTemplate),
             GetBool(values, "AI.VerboseModelLogging", false),
-            Get(values, "Prompts.IncomeExpenseFlowAnalysis", ApplicationSettingsDefaults.IncomeExpenseFlowAnalysisPrompt));
+            Get(values, "Prompts.IncomeExpenseFlowAnalysis", ApplicationSettingsDefaults.IncomeExpenseFlowAnalysisPrompt),
+            Get(values, "Prompts.BudgetExecutionAnalysis", ApplicationSettingsDefaults.BudgetExecutionAnalysisPrompt));
     }
 
     /// <summary>Validates and persists settings without changing provider credentials.</summary>
@@ -69,6 +70,7 @@ public sealed class ApplicationSettingsService(DenariusDbContext dbContext, IOpt
             ["AI.MaxInputBytes"] = settings.AiMaxInputBytes.ToString(CultureInfo.InvariantCulture),
             ["AI.VerboseModelLogging"] = settings.AiVerboseModelLogging.ToString(),
             ["Prompts.IncomeExpenseFlowAnalysis"] = settings.IncomeExpenseFlowAnalysisPrompt.Trim(),
+            ["Prompts.BudgetExecutionAnalysis"] = settings.BudgetExecutionAnalysisPrompt.Trim(),
             ["Prompts.ContextGuidance"] = settings.AiContextGuidancePrompt.Trim(),
             ["AI.Provider"] = settings.AiProvider.Trim(),
             ["Ollama.Model"] = settings.OllamaModel.Trim(),
@@ -128,7 +130,7 @@ public sealed class ApplicationSettingsService(DenariusDbContext dbContext, IOpt
         if (string.IsNullOrWhiteSpace(value.MistralModel) || string.IsNullOrWhiteSpace(value.OllamaModel)) throw new ArgumentException("Os modelos de IA são obrigatórios.");
         if (!Uri.TryCreate(value.MistralBaseUrl, UriKind.Absolute, out var mistralUri) || mistralUri.Scheme != Uri.UriSchemeHttps) throw new ArgumentException("O endereço da Mistral deve ser um URL HTTPS válido.");
         if (!Uri.TryCreate(value.OllamaBaseUrl, UriKind.Absolute, out var ollamaUri) || (ollamaUri.Scheme != Uri.UriSchemeHttp && ollamaUri.Scheme != Uri.UriSchemeHttps)) throw new ArgumentException("O endereço do Ollama deve ser um URL HTTP ou HTTPS válido.");
-        if (string.IsNullOrWhiteSpace(value.AssistantSystemPrompt) || string.IsNullOrWhiteSpace(value.JournalSuggestionSystemPrompt) || string.IsNullOrWhiteSpace(value.ReconciliationExtractionPrompt) || string.IsNullOrWhiteSpace(value.ReconciliationClassificationPrompt) || string.IsNullOrWhiteSpace(value.DashboardWelcomePrompt) || string.IsNullOrWhiteSpace(value.FinancialAnalysisPrompt) || string.IsNullOrWhiteSpace(value.ConnectionTestPrompt) || string.IsNullOrWhiteSpace(value.CorrespondenceMetadataPrompt) || string.IsNullOrWhiteSpace(value.InsuranceClipboardPrompt) || string.IsNullOrWhiteSpace(value.SavingsCertificateClipboardPrompt) || string.IsNullOrWhiteSpace(value.IncomeExpenseFlowAnalysisPrompt)) throw new ArgumentException("Os prompts são obrigatórios.");
+        if (string.IsNullOrWhiteSpace(value.AssistantSystemPrompt) || string.IsNullOrWhiteSpace(value.JournalSuggestionSystemPrompt) || string.IsNullOrWhiteSpace(value.ReconciliationExtractionPrompt) || string.IsNullOrWhiteSpace(value.ReconciliationClassificationPrompt) || string.IsNullOrWhiteSpace(value.DashboardWelcomePrompt) || string.IsNullOrWhiteSpace(value.FinancialAnalysisPrompt) || string.IsNullOrWhiteSpace(value.ConnectionTestPrompt) || string.IsNullOrWhiteSpace(value.CorrespondenceMetadataPrompt) || string.IsNullOrWhiteSpace(value.InsuranceClipboardPrompt) || string.IsNullOrWhiteSpace(value.SavingsCertificateClipboardPrompt) || string.IsNullOrWhiteSpace(value.IncomeExpenseFlowAnalysisPrompt) || string.IsNullOrWhiteSpace(value.BudgetExecutionAnalysisPrompt)) throw new ArgumentException("Os prompts são obrigatórios.");
         if (!string.Equals(value.MarketDataProvider, "AlphaVantage", StringComparison.OrdinalIgnoreCase)) throw new ArgumentException("O fornecedor gratuito suportado é Alpha Vantage.");
         if (!Uri.TryCreate(value.MarketDataBaseUrl, UriKind.Absolute, out var marketUri) || marketUri.Scheme != Uri.UriSchemeHttps) throw new ArgumentException("O endereço do fornecedor de cotações deve ser um URL HTTPS válido.");
         if (!Uri.TryCreate(value.SavingsCertificateIgcpSourceUrl, UriKind.Absolute, out var sourceUri) || sourceUri.Scheme != Uri.UriSchemeHttps) throw new ArgumentException("A página oficial do IGCP deve ser um URL HTTPS válido.");
