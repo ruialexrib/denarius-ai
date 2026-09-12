@@ -145,7 +145,7 @@
                         <td>
                             <div class="budget-analysis-execution">
                                 <span>@Percentage(item.ExecutionPercentage)</span>
-                                <div><i class="@StatusClass(item.Status)" style="width:@Math.Min(item.ExecutionPercentage ?? 0m, 100m).ToString("0.0", CultureInfo.InvariantCulture)%"></i></div>
+                                <div><i class="@StatusClass(item.Status)" style="width:@Math.Clamp(item.ExecutionPercentage ?? 0m, 0m, 100m).ToString("0.0", CultureInfo.InvariantCulture)%"></i></div>
                             </div>
                         </td>
                         <td><span class="budget-analysis-status @StatusClass(item.Status)">@item.StatusLabel</span></td>
