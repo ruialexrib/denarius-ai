@@ -1,0 +1,239 @@
+@model IncomeExpenseFlowViewModel
+@using System.Globalization
+@using System.Text.Json
+@using DenariusAI.Application.DTOs
+@{
+    ViewData["Title"] = "Rendimentos, Despesas e Fluxos";
+    var analysis = Model.Analysis;
+    var data = analysis.Data;
+    var culture = CultureInfo.GetCultureInfo("pt-PT");
+    var today = DateOnly.FromDateTime(DateTime.Today);
+    var monthStart = new DateOnly(today.Year, today.Month, 1);
+    var yearStart = new DateOnly(today.Year, 1, 1);
+    var chartData = JsonSerializer.Serialize(new
+    {
+        trend = data.Trend.Select(item => new
+        {
+            label = new DateTime(item.Year, item.Month, 1).ToString("MMM yy", culture),
+            income = item.Income,
+            expenses = item.Expenses,
+            balance = item.Balance
+        })
+    });
+
+    string Money(decimal value) => $"{value.ToString("N2", culture)} €";
+    string SignedMoney(decimal value) => $"{(value > 0m ? "+" : string.Empty)}{value.ToString("N2", culture)} €";
+    string MetricComparison(GlobalFinancialMetricDto metric)
+    {
+        if (metric.AbsoluteChange == 0m) return "Sem alteração face ao período anterior";
+        var percentage = metric.PercentageChange.HasValue
+            ? $" · {(metric.PercentageChange.Value > 0m ? "+" : string.Empty)}{metric.PercentageChange.Value.ToString("N1", culture)}%"
+            : " · sem base percentual comparável";
+        return $"{SignedMoney(metric.AbsoluteChange)}{percentage}";
+    }
+    string Tone(GlobalFinancialMetricDto metric, bool increasePositive)
+    {
+        if (metric.Direction == FinancialMetricDirection.Unchanged) return "neutral";
+        return (metric.Direction == FinancialMetricDirection.Increase) == increasePositive ? "positive" : "negative";
+    }
+}
+<link rel="stylesheet" href="~/css/summary-cards.css" asp-append-version="true" />
+<link rel="stylesheet" href="~/css/analytics.css" asp-append-version="true" />
+<link rel="stylesheet" href="~/css/income-expense-flows.css" asp-append-version="true" />
+<script id="flow-analysis-chart-data" type="application/json">@Html.Raw(chartData)</script>
+<script src="~/js/income-expense-flows.js" asp-append-version="true" defer></script>
+
+<div class="page-header flow-page-header">
+    <div>
+        <p class="eyebrow">Análise Financeira · Movimentos</p>
+        <h1>@ViewData["Title"]</h1>
+        <p class="page-subtitle">Perceba de onde vem o dinheiro, onde é gasto, como circula entre contas e o que mudou face ao período anterior.</p>
+    </div>
+    <a class="button secondary" asp-action="Index">← Voltar às análises</a>
+</div>
+
+<section class="flow-period-panel" aria-label="Período da análise">
+    <form method="get" asp-action="Flows" class="flow-period-filter">
+        <label>De <input type="date" name="from" value="@data.From.ToString("yyyy-MM-dd")" /></label>
+        <label>Até <input type="date" name="to" value="@data.To.ToString("yyyy-MM-dd")" /></label>
+        <button class="button secondary" type="submit">Aplicar</button>
+    </form>
+    <div class="flow-period-presets">
+        <a asp-action="Flows" asp-route-from="@monthStart.ToString("yyyy-MM-dd")" asp-route-to="@today.ToString("yyyy-MM-dd")">Mês atual</a>
+        <a asp-action="Flows" asp-route-from="@today.AddDays(-29).ToString("yyyy-MM-dd")" asp-route-to="@today.ToString("yyyy-MM-dd")">30 dias</a>
+        <a asp-action="Flows" asp-route-from="@today.AddDays(-89).ToString("yyyy-MM-dd")" asp-route-to="@today.ToString("yyyy-MM-dd")">90 dias</a>
+        <a asp-action="Flows" asp-route-from="@yearStart.ToString("yyyy-MM-dd")" asp-route-to="@today.ToString("yyyy-MM-dd")">Ano atual</a>
+    </div>
+    <div class="flow-comparison">
+        <strong>Comparação: período anterior equivalente</strong>
+        <span>@data.ComparisonFrom.ToString("dd/MM/yyyy") – @data.ComparisonTo.ToString("dd/MM/yyyy")</span>
+    </div>
+</section>
+
+@if (data.Income == 0m && data.Expenses == 0m)
+{
+    <div class="flow-empty-state" role="status">
+        <strong>Não existem rendimentos ou despesas classificados neste período.</strong>
+        <span>Pode alterar o intervalo. Transferências entre contas podem continuar visíveis na secção de fluxos se existirem.</span>
+    </div>
+}
+
+<section class="area-summary three" aria-label="Resumo do período">
+    <article class="summary-primary">
+        <span>Saldo do período</span>
+        <strong>@Money(analysis.BalanceMetric.CurrentValue)</strong>
+        <small class="@Tone(analysis.BalanceMetric, true)">@MetricComparison(analysis.BalanceMetric)</small>
+    </article>
+    <article class="summary-positive">
+        <span>Rendimentos</span>
+        <strong>@Money(analysis.IncomeMetric.CurrentValue)</strong>
+        <small class="@Tone(analysis.IncomeMetric, true)">@MetricComparison(analysis.IncomeMetric)</small>
+    </article>
+    <article class="summary-negative">
+        <span>Despesas</span>
+        <strong>@Money(analysis.ExpenseMetric.CurrentValue)</strong>
+        <small class="@Tone(analysis.ExpenseMetric, false)">@MetricComparison(analysis.ExpenseMetric)</small>
+    </article>
+</section>
+
+<section class="flow-findings">
+    <div class="flow-section-heading">
+        <div><p class="eyebrow">Leitura determinística</p><h2>O que está a mudar?</h2></div>
+        <small>Materialidade: 10% nos totais, 20% nas categorias e 40% para concentração de despesa.</small>
+    </div>
+    <div class="flow-finding-grid">
+        @foreach (var finding in analysis.Findings)
+        {
+            <article class="flow-finding @finding.Tone"><span></span><div><strong>@finding.Title</strong><p>@finding.Detail</p></div></article>
+        }
+    </div>
+</section>
+
+<section class="flow-breakdown-grid">
+    <article class="panel flow-breakdown-card">
+        <header><div><p class="eyebrow">Origem</p><h2>Principais fontes de rendimento</h2></div><span>@Money(data.Income)</span></header>
+        @if (data.IncomeCategories.Count == 0)
+        {
+            <p class="flow-muted">Sem categorias de rendimento no período.</p>
+        }
+        else
+        {
+            <div class="flow-ranked-list">
+                @foreach (var item in data.IncomeCategories.Take(8))
+                {
+                    <div class="flow-ranked-item">
+                        <div><strong>@item.Name</strong><span>@Money(item.CurrentAmount) · @item.Weight.ToString("N1", culture)%</span></div>
+                        <div class="flow-bar"><i style="width:@Math.Min(item.Weight, 100m).ToString("0.0", CultureInfo.InvariantCulture)%"></i></div>
+                        <small>@(item.ChangePercentage.HasValue ? $"{(item.ChangePercentage.Value > 0m ? "+" : string.Empty)}{item.ChangePercentage.Value.ToString("N1", culture)}% vs. período anterior" : "Sem base comparável")</small>
+                    </div>
+                }
+            </div>
+        }
+        @if (data.IncomeGroups.Count > 1)
+        {
+            <footer>@string.Join(" · ", data.IncomeGroups.Take(4).Select(item => $"{item.Name} {item.Weight.ToString("N1", culture)}%"))</footer>
+        }
+    </article>
+
+    <article class="panel flow-breakdown-card expense">
+        <header><div><p class="eyebrow">Destino</p><h2>Onde se concentram as despesas</h2></div><span>@Money(data.Expenses)</span></header>
+        @if (data.ExpenseCategories.Count == 0)
+        {
+            <p class="flow-muted">Sem categorias de despesa no período.</p>
+        }
+        else
+        {
+            <div class="flow-ranked-list">
+                @foreach (var item in data.ExpenseCategories.Take(8))
+                {
+                    <div class="flow-ranked-item">
+                        <div><strong>@item.Name</strong><span>@Money(item.CurrentAmount) · @item.Weight.ToString("N1", culture)%</span></div>
+                        <div class="flow-bar"><i style="width:@Math.Min(item.Weight, 100m).ToString("0.0", CultureInfo.InvariantCulture)%"></i></div>
+                        <small>@(item.ChangePercentage.HasValue ? $"{(item.ChangePercentage.Value > 0m ? "+" : string.Empty)}{item.ChangePercentage.Value.ToString("N1", culture)}% vs. período anterior" : "Sem base comparável")</small>
+                    </div>
+                }
+            </div>
+        }
+        @if (data.ExpenseGroups.Count > 1)
+        {
+            <footer>@string.Join(" · ", data.ExpenseGroups.Take(4).Select(item => $"{item.Name} {item.Weight.ToString("N1", culture)}%"))</footer>
+        }
+    </article>
+</section>
+
+<section class="panel flow-trend-card">
+    <header class="flow-card-header"><div><p class="eyebrow">Evolução</p><h2>Rendimentos, despesas e saldo</h2><p>Últimos 12 meses até à data final selecionada.</p></div><div class="flow-legend"><span class="income">Rendimentos</span><span class="expenses">Despesas</span><span class="balance">Saldo</span></div></header>
+    <div class="flow-chart" role="img" aria-label="Evolução mensal de rendimentos, despesas e saldo">
+        <svg viewBox="0 0 900 280" preserveAspectRatio="none" aria-hidden="true">
+            <line class="flow-grid" x1="42" y1="30" x2="870" y2="30"></line>
+            <line class="flow-grid" x1="42" y1="140" x2="870" y2="140"></line>
+            <line class="flow-grid" x1="42" y1="250" x2="870" y2="250"></line>
+            <polyline class="flow-series income" data-series="income"></polyline>
+            <polyline class="flow-series expenses" data-series="expenses"></polyline>
+            <polyline class="flow-series balance" data-series="balance"></polyline>
+        </svg>
+        <div class="flow-chart-axis" data-flow-axis></div>
+        <div class="flow-tooltip" data-flow-tooltip hidden></div>
+    </div>
+</section>
+
+<section class="flow-lower-grid">
+    <article class="panel">
+        <header class="flow-card-header"><div><p class="eyebrow">Contas</p><h2>Fluxos entre contas</h2><p>Entradas, saídas e efeito líquido nas contas patrimoniais.</p></div></header>
+        @if (data.AccountFlows.Count == 0)
+        {
+            <p class="flow-muted">Sem fluxos de contas no período.</p>
+        }
+        else
+        {
+            <div class="flow-table-wrap"><table class="flow-table"><thead><tr><th>Conta</th><th>Entradas</th><th>Saídas</th><th>Líquido</th><th>Anterior</th></tr></thead><tbody>
+            @foreach (var item in data.AccountFlows.Take(10))
+            {
+                <tr><td>@item.Name</td><td>@Money(item.Inflows)</td><td>@Money(item.Outflows)</td><td class="@(item.NetFlow >= 0m ? "positive" : "negative")">@SignedMoney(item.NetFlow)</td><td>@SignedMoney(item.PreviousNetFlow)</td></tr>
+            }
+            </tbody></table></div>
+        }
+    </article>
+
+    <article class="panel">
+        <header class="flow-card-header"><div><p class="eyebrow">Movimentos</p><h2>Movimentos de maior valor</h2><p>Maiores rendimentos e despesas classificados no período.</p></div></header>
+        @if (data.LargestMovements.Count == 0)
+        {
+            <p class="flow-muted">Sem movimentos classificados no período.</p>
+        }
+        else
+        {
+            <div class="flow-movement-list">
+            @foreach (var item in data.LargestMovements)
+            {
+                <div class="flow-movement"><span class="@(item.Kind == "Income" ? "income" : "expense")">@(item.Kind == "Income" ? "↑" : "↓")</span><div><strong>@item.Description</strong><small>@item.Date.ToString("dd/MM/yyyy") · @(item.Category ?? "Sem categoria")</small></div><b>@Money(item.Amount)</b></div>
+            }
+            </div>
+        }
+    </article>
+</section>
+
+<section class="flow-ai-panel">
+    <div class="flow-ai-heading"><span aria-hidden="true">✦</span><div><p class="eyebrow">Interpretação opcional</p><h2>Leitura por IA</h2><p>A IA recebe apenas os totais, variações, distribuições, fluxos, tendência e movimentos destacados já calculados pela aplicação.</p></div></div>
+    @if (!Model.AiAvailable)
+    {
+        <div class="flow-ai-unavailable">Configure um fornecedor de IA nas Definições para gerar esta interpretação.</div>
+    }
+    else
+    {
+        <form asp-action="FlowsAi" method="post" class="flow-ai-action">
+            <input type="hidden" name="from" value="@data.From.ToString("yyyy-MM-dd")" />
+            <input type="hidden" name="to" value="@data.To.ToString("yyyy-MM-dd")" />
+            <button class="button" type="submit" data-progress-message="A interpretar rendimentos, despesas e fluxos…">@(string.IsNullOrWhiteSpace(Model.AiAnalysis) ? "Gerar análise com IA" : "Atualizar análise")</button>
+            <small>O prompt desta área pode ser alterado nas Definições da aplicação.</small>
+        </form>
+    }
+    @if (!string.IsNullOrWhiteSpace(Model.AiError))
+    {
+        <div class="validation-summary flow-ai-error" role="alert">@Model.AiError</div>
+    }
+    @if (!string.IsNullOrWhiteSpace(Model.AiAnalysis))
+    {
+        <div class="flow-ai-result markdown-preview">@Html.Raw(MarkdownPreview.Render(Model.AiAnalysis))</div>
+    }
+</section>
