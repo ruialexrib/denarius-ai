@@ -73,7 +73,7 @@ public sealed class BudgetExecutionAnalysisServiceTests
 
         Assert.Contains(result.Categories, item => item.CategoryId == nearId && item.Status == BudgetExecutionStatus.NearLimit);
         Assert.Contains(result.Categories, item => item.CategoryName == "Comunicações" && item.Status == BudgetExecutionStatus.NearLimit && item.ExecutionPercentage == 100m);
-        var unbudgeted = Assert.Single(result.Categories.Where(item => item.CategoryId == zeroId));
+        var unbudgeted = Assert.Single(result.Categories, item => item.CategoryId == zeroId);
         Assert.Null(unbudgeted.ExecutionPercentage);
         Assert.Null(unbudgeted.RelativeVariancePercentage);
         Assert.Contains(result.Findings, item => item.Title == "Categoria próxima do limite");
