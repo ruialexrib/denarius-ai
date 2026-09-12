@@ -74,7 +74,8 @@ public sealed class IncomeExpenseFlowRepository(DenariusDbContext dbContext) : I
     /// <returns>Classified journal lines.</returns>
     private IQueryable<JournalEntryLine> ClassifiedLines(DateOnly from, DateOnly to, FinancialGroupKind kind) =>
         ActiveLines(from, to).Where(line =>
-            (line.Category != null
+            (line.Category != null || line.Account.Category != null)
+            && (line.Category != null
                 ? line.Category.FinancialGroup.Kind
                 : line.Account.Category!.FinancialGroup.Kind) == kind);
 
@@ -260,12 +261,13 @@ public sealed class IncomeExpenseFlowRepository(DenariusDbContext dbContext) : I
     {
         var rows = await ActiveLines(from, to)
             .Where(line =>
-                (line.Category != null
+                (line.Category != null || line.Account.Category != null)
+                && ((line.Category != null
                     ? line.Category.FinancialGroup.Kind
                     : line.Account.Category!.FinancialGroup.Kind) == FinancialGroupKind.Income
                 || (line.Category != null
                     ? line.Category.FinancialGroup.Kind
-                    : line.Account.Category!.FinancialGroup.Kind) == FinancialGroupKind.Expense)
+                    : line.Account.Category!.FinancialGroup.Kind) == FinancialGroupKind.Expense))
             .Select(line => new
             {
                 EntryId = line.JournalEntryId,
