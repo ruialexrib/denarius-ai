@@ -1,0 +1,213 @@
+@model InvestmentPortfolioAnalysisViewModel
+@using System.Globalization
+@{
+    ViewData["Title"] = "Investimentos e Património Financeiro";
+    var analysis = Model.Analysis;
+    var culture = CultureInfo.GetCultureInfo("pt-PT");
+
+    string Money(decimal value) => $"{value.ToString("N2", culture)} €";
+    string CurrencyMoney(decimal value, string currency) => $"{value.ToString("N2", culture)} {currency}";
+    string SignedCurrencyMoney(decimal value, string currency) => $"{(value > 0m ? "+" : string.Empty)}{value.ToString("N2", culture)} {currency}";
+    string Percentage(decimal? value) => value.HasValue ? $"{value.Value.ToString("N1", culture)}%" : "—";
+}
+<link rel="stylesheet" href="~/css/summary-cards.css" asp-append-version="true" />
+<link rel="stylesheet" href="~/css/analytics.css" asp-append-version="true" />
+<link rel="stylesheet" href="~/css/specialized-financial-analysis.css" asp-append-version="true" />
+
+<div class="page-header">
+    <div>
+        <p class="eyebrow">Análise Financeira · Património</p>
+        <h1>@ViewData["Title"]</h1>
+        <p class="page-subtitle">Consolide ações detidas e Certificados de Aforro sem misturar moedas nem confundir previsões com resultados efetivos.</p>
+    </div>
+    <a class="button secondary" asp-action="Index">← Voltar às análises</a>
+</div>
+
+<section class="specialized-period" aria-label="Referência da análise">
+    <div class="specialized-period-copy" style="text-align:left">
+        <strong>Posição acompanhada em @analysis.AsOf.ToString("dd/MM/yyyy")</strong>
+        <span>As ações usam a última cotação guardada em cada posição. Não é efetuada conversão cambial.</span>
+    </div>
+    <div class="header-actions">
+        <a class="button secondary" asp-controller="StockPortfolio" asp-action="Index">Abrir ações</a>
+        <a class="button secondary" asp-controller="SavingsCertificates" asp-action="Index">Abrir Certificados</a>
+    </div>
+</section>
+
+<section class="area-summary" aria-label="Resumo do património financeiro">
+    <article class="summary-primary">
+        <span>Ativos acompanhados em EUR</span>
+        <strong>@Money(analysis.EurTrackedFinancialAssets)</strong>
+        <small>Ações em EUR + Certificados de Aforro; posições noutras moedas excluídas</small>
+    </article>
+    <article class="summary-info">
+        <span>Ações em EUR</span>
+        <strong>@Money(analysis.EurStockMarketValue)</strong>
+        <small>Custo: @Money(analysis.EurStockCost)</small>
+    </article>
+    <article class="@(analysis.EurStockGain >= 0m ? "summary-positive" : "summary-negative")">
+        <span>Ganho/perda ações EUR</span>
+        <strong>@(analysis.EurStockGain >= 0m ? "+" : "")@Money(analysis.EurStockGain)</strong>
+        <small>Rentabilidade não realizada: @Percentage(analysis.EurStockReturnPercentage)</small>
+    </article>
+    <article class="summary-warning">
+        <span>Certificados de Aforro</span>
+        <strong>@Money(analysis.SavingsCertificatesValue)</strong>
+        <small>Rendimento acumulado: @Money(analysis.SavingsCertificatesYield)</small>
+    </article>
+</section>
+
+<section>
+    <div class="specialized-section-heading">
+        <div><p class="eyebrow">Leitura determinística</p><h2>Desempenho e exposição</h2></div>
+        <small>Valores em moedas diferentes permanecem separados. A aplicação não aplica taxas de câmbio implícitas.</small>
+    </div>
+    <div class="specialized-finding-grid">
+        @foreach (var finding in analysis.Findings)
+        {
+            <article class="specialized-finding @finding.Tone">
+                <span></span>
+                <div>
+                    <strong>@finding.Title</strong>
+                    <p>@finding.Detail</p>
+                    @if (!string.IsNullOrWhiteSpace(finding.TargetController) && !string.IsNullOrWhiteSpace(finding.TargetAction))
+                    {
+                        <a asp-controller="@finding.TargetController" asp-action="@finding.TargetAction" asp-route-id="@finding.TargetId">Abrir detalhe →</a>
+                    }
+                </div>
+            </article>
+        }
+    </div>
+</section>
+
+<section class="specialized-grid">
+    <article class="panel specialized-card">
+        <header class="specialized-card-header">
+            <div><p class="eyebrow">Exposição</p><h2>Resumo por moeda</h2><p>Cada moeda é analisada autonomamente para evitar somas economicamente incorretas.</p></div>
+        </header>
+        @if (analysis.CurrencySummaries.Count == 0)
+        {
+            <p class="muted">Não existem posições de ações detidas.</p>
+        }
+        else
+        {
+            <div class="specialized-list">
+                @foreach (var item in analysis.CurrencySummaries)
+                {
+                    <div class="specialized-list-item">
+                        <div>
+                            <strong>@item.Currency · @CurrencyMoney(item.MarketValue, item.Currency)</strong>
+                            <small>Custo @CurrencyMoney(item.CostValue, item.Currency) · maior posição @Percentage(item.LargestPositionWeight)</small>
+                            @if (item.LargestPositionWeight.HasValue)
+                            {
+                                <div class="specialized-bar"><i style="width:@Math.Min(item.LargestPositionWeight.Value, 100m).ToString("0.0", CultureInfo.InvariantCulture)%"></i></div>
+                            }
+                        </div>
+                        <b class="@(item.Gain >= 0m ? "positive" : "negative")">@SignedCurrencyMoney(item.Gain, item.Currency)<br /><small>@Percentage(item.ReturnPercentage)</small></b>
+                    </div>
+                }
+            </div>
+        }
+    </article>
+
+    <article class="panel specialized-card">
+        <header class="specialized-card-header">
+            <div><p class="eyebrow">Composição</p><h2>Instrumentos acompanhados</h2><p>Contagens de posições efetivamente detidas; a watchlist não entra nos totais.</p></div>
+        </header>
+        <div class="specialized-list">
+            <div class="specialized-list-item"><div><strong>Ações detidas</strong><small>Posições com quantidade superior a zero</small></div><b>@analysis.OwnedStockPositions</b></div>
+            <div class="specialized-list-item"><div><strong>Certificados de Aforro</strong><small>Subscrições acompanhadas</small></div><b>@analysis.SavingsCertificateCount</b></div>
+            <div class="specialized-list-item"><div><strong>Ações fora do EUR</strong><small>Apresentadas separadamente, sem conversão cambial</small></div><b>@analysis.NonEurStockPositions</b></div>
+        </div>
+    </article>
+</section>
+
+<section class="panel specialized-card">
+    <header class="specialized-card-header">
+        <div><p class="eyebrow">Ações</p><h2>Posições detidas</h2><p>O ganho/perda compara a última cotação guardada com o custo médio registado. A variação histórica usa a primeira cotação importada disponível.</p></div>
+    </header>
+    @if (analysis.Stocks.Count == 0)
+    {
+        <p class="muted">Não existem posições de ações detidas.</p>
+    }
+    else
+    {
+        <div class="table-wrap">
+            <table class="specialized-table">
+                <thead><tr><th>Posição</th><th>Custo</th><th>Valor mercado</th><th>Ganho/perda</th><th>Rentabilidade</th><th>Variação histórica</th><th>Concentração</th><th>Cotação</th></tr></thead>
+                <tbody>
+                @foreach (var item in analysis.Stocks)
+                {
+                    <tr>
+                        <td><strong>@item.Ticker</strong><small>@item.Name · @item.Currency</small></td>
+                        <td class="amount">@CurrencyMoney(item.CostValue, item.Currency)</td>
+                        <td class="amount">@CurrencyMoney(item.MarketValue, item.Currency)</td>
+                        <td class="amount @(item.Gain >= 0m ? "positive" : "negative")">@SignedCurrencyMoney(item.Gain, item.Currency)</td>
+                        <td class="amount">@Percentage(item.ReturnPercentage)</td>
+                        <td class="amount">@Percentage(item.PeriodChangePercentage)</td>
+                        <td class="amount">@Percentage(item.CurrencyWeight)</td>
+                        <td class="amount">@item.PriceDate.ToString("dd/MM/yyyy")</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    }
+</section>
+
+<section class="panel specialized-card">
+    <header class="specialized-card-header">
+        <div><p class="eyebrow">Poupança investida</p><h2>Certificados de Aforro</h2><p>Valor atual e rendimento acumulado das subscrições já acompanhadas no módulo específico.</p></div>
+    </header>
+    @if (analysis.Certificates.Count == 0)
+    {
+        <p class="muted">Não existem Certificados de Aforro registados.</p>
+    }
+    else
+    {
+        <div class="table-wrap">
+            <table class="specialized-table">
+                <thead><tr><th>Certificado</th><th>Investido</th><th>Valor atual</th><th>Rendimento</th><th>Rentabilidade</th><th>Próxima capitalização</th></tr></thead>
+                <tbody>
+                @foreach (var item in analysis.Certificates)
+                {
+                    <tr>
+                        <td><strong>@item.SeriesNumber</strong><small>@item.Description</small></td>
+                        <td class="amount">@Money(item.InvestmentValue)</td>
+                        <td class="amount">@Money(item.CurrentValue)</td>
+                        <td class="amount @(item.Yield >= 0m ? "positive" : "negative")">@Money(item.Yield)</td>
+                        <td class="amount">@Percentage(item.ReturnPercentage)</td>
+                        <td class="amount">@item.NextCapitalization.ToString("dd/MM/yyyy")</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    }
+</section>
+
+<p class="specialized-note">Esta área apresenta património financeiro registado no DenariusAI. Não estima valor de mercado para ativos sem cotação, não converte moedas e não incorpora a watchlist nos totais. As previsões estatísticas existentes no módulo de ações permanecem indicativas e não são tratadas como rentabilidade realizada.</p>
+
+<section class="specialized-ai">
+    <div class="specialized-ai-heading"><span aria-hidden="true">✦</span><div><p class="eyebrow">Interpretação opcional</p><h2>Leitura por IA</h2><p>A IA recebe apenas valores, rentabilidades, concentração, moedas e limitações já calculadas pela aplicação.</p></div></div>
+    @if (!Model.AiAvailable)
+    {
+        <div class="specialized-ai-unavailable">Configure um fornecedor de IA nas Definições para gerar esta interpretação.</div>
+    }
+    else
+    {
+        <form asp-action="InvestmentsAi" method="post" class="specialized-ai-action">
+            <input type="hidden" name="asOf" value="@analysis.AsOf.ToString("yyyy-MM-dd")" />
+            <button class="button" type="submit" data-progress-message="A interpretar o património financeiro…">@(string.IsNullOrWhiteSpace(Model.AiAnalysis) ? "Gerar análise com IA" : "Atualizar análise")</button>
+            <small>O prompt desta área pode ser alterado nas Definições da aplicação.</small>
+        </form>
+    }
+    @if (!string.IsNullOrWhiteSpace(Model.AiError))
+    {
+        <div class="validation-summary specialized-ai-error" role="alert">@Model.AiError</div>
+    }
+    @if (!string.IsNullOrWhiteSpace(Model.AiAnalysis))
+    {
+        <div class="specialized-ai-result markdown-preview">@Html.Raw(MarkdownPreview.Render(Model.AiAnalysis))</div>
+    }
+</section>

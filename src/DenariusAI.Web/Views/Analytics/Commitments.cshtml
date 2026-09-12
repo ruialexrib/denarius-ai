@@ -1,0 +1,191 @@
+@model FinancialCommitmentsAnalysisViewModel
+@using System.Globalization
+@{
+    ViewData["Title"] = "Compromissos Financeiros e Seguros";
+    var analysis = Model.Analysis;
+    var culture = CultureInfo.GetCultureInfo("pt-PT");
+
+    string Money(decimal value) => $"{value.ToString("N2", culture)} €";
+}
+<link rel="stylesheet" href="~/css/summary-cards.css" asp-append-version="true" />
+<link rel="stylesheet" href="~/css/analytics.css" asp-append-version="true" />
+<link rel="stylesheet" href="~/css/specialized-financial-analysis.css" asp-append-version="true" />
+
+<div class="page-header">
+    <div>
+        <p class="eyebrow">Análise Financeira · Compromissos</p>
+        <h1>@ViewData["Title"]</h1>
+        <p class="page-subtitle">Antecipe prémios conhecidos, valores vencidos e renovações próximas sem inventar encargos que ainda não estejam registados.</p>
+    </div>
+    <a class="button secondary" asp-action="Index">← Voltar às análises</a>
+</div>
+
+<section class="specialized-period" aria-label="Horizonte da análise">
+    <form method="get" asp-action="Commitments" class="specialized-filter">
+        <label>Data de referência <input type="date" name="asOf" value="@analysis.AsOf.ToString("yyyy-MM-dd")" /></label>
+        <button class="button secondary" type="submit">Aplicar</button>
+    </form>
+    <div class="specialized-period-copy">
+        <strong>Horizonte: 12 meses</strong>
+        <span>@analysis.AsOf.ToString("dd/MM/yyyy") – @analysis.HorizonEnd.ToString("dd/MM/yyyy")</span>
+    </div>
+</section>
+
+<section class="area-summary" aria-label="Resumo dos compromissos">
+    <article class="summary-primary">
+        <span>Prémios conhecidos próximos 12 meses</span>
+        <strong>@Money(analysis.ScheduledPremiums)</strong>
+        <small>@analysis.ActivePolicies apólice(s) ativa(s)</small>
+    </article>
+    <article class="@(analysis.OutstandingAmount > 0m ? "summary-negative" : "summary-positive")">
+        <span>Vencido por regularizar</span>
+        <strong>@Money(analysis.OutstandingAmount)</strong>
+        <small>@analysis.OutstandingPremiums prémio(s) sem pagamento ativo associado</small>
+    </article>
+    <article class="summary-warning">
+        <span>Renovações em 90 dias</span>
+        <strong>@analysis.RenewalsWithin90Days</strong>
+        <small>Apólices ativas com data de renovação conhecida</small>
+    </article>
+    <article class="summary-info">
+        <span>Prémios já pagos no horizonte</span>
+        <strong>@Money(analysis.PaidWithinHorizon)</strong>
+        <small>Pagamentos associados a movimentos ativos</small>
+    </article>
+</section>
+
+<section>
+    <div class="specialized-section-heading">
+        <div><p class="eyebrow">Leitura determinística</p><h2>Pressão financeira conhecida</h2></div>
+        <small>A análise usa apenas prémios e renovações explicitamente registados. A periodicidade da apólice não é usada para inventar pagamentos futuros.</small>
+    </div>
+    <div class="specialized-finding-grid">
+        @foreach (var finding in analysis.Findings)
+        {
+            <article class="specialized-finding @finding.Tone">
+                <span></span>
+                <div>
+                    <strong>@finding.Title</strong>
+                    <p>@finding.Detail</p>
+                    @if (!string.IsNullOrWhiteSpace(finding.TargetController) && !string.IsNullOrWhiteSpace(finding.TargetAction))
+                    {
+                        <a asp-controller="@finding.TargetController" asp-action="@finding.TargetAction" asp-route-id="@finding.TargetId">Abrir detalhe →</a>
+                    }
+                </div>
+            </article>
+        }
+    </div>
+</section>
+
+<section class="specialized-grid">
+    <article class="panel specialized-card">
+        <header class="specialized-card-header">
+            <div><p class="eyebrow">Calendário financeiro</p><h2>Prémios por mês</h2><p>Montantes com vencimento conhecido dentro do horizonte selecionado.</p></div>
+        </header>
+        @if (analysis.Calendar.Count == 0)
+        {
+            <p class="muted">Não existem prémios futuros registados no horizonte.</p>
+        }
+        else
+        {
+            <div class="specialized-list">
+                @foreach (var item in analysis.Calendar)
+                {
+                    <div class="specialized-list-item">
+                        <div>
+                            <strong>@(new DateTime(item.Year, item.Month, 1).ToString("MMMM yyyy", culture))</strong>
+                            <small>@item.PremiumCount prémio(s) conhecido(s)</small>
+                        </div>
+                        <b>@Money(item.ScheduledAmount)</b>
+                    </div>
+                }
+            </div>
+        }
+    </article>
+
+    <article class="panel specialized-card">
+        <header class="specialized-card-header">
+            <div><p class="eyebrow">Concentração</p><h2>Encargos por tipo de seguro</h2><p>Peso calculado apenas sobre prémios conhecidos nos próximos 12 meses.</p></div>
+        </header>
+        @if (analysis.Types.Count == 0)
+        {
+            <p class="muted">Sem encargos futuros registados para distribuir por tipo.</p>
+        }
+        else
+        {
+            <div class="specialized-list">
+                @foreach (var item in analysis.Types)
+                {
+                    <div class="specialized-list-item">
+                        <div>
+                            <strong>@item.Type</strong>
+                            <small>@item.PolicyCount apólice(s) · @item.Weight.ToString("N1", culture)%</small>
+                            <div class="specialized-bar"><i style="width:@Math.Min(item.Weight, 100m).ToString("0.0", CultureInfo.InvariantCulture)%"></i></div>
+                        </div>
+                        <b>@Money(item.ScheduledAmount)</b>
+                    </div>
+                }
+            </div>
+        }
+    </article>
+</section>
+
+<section class="panel specialized-card">
+    <header class="specialized-card-header">
+        <div><p class="eyebrow">Apólices</p><h2>Compromissos conhecidos por apólice</h2><p>Inclui montante agendado no horizonte, valores já vencidos e próximo prémio conhecido.</p></div>
+        <a class="button secondary" asp-controller="Insurance" asp-action="Index">Gerir seguros</a>
+    </header>
+    @if (analysis.Policies.Count == 0)
+    {
+        <p class="muted">Não existem apólices ativas.</p>
+    }
+    else
+    {
+        <div class="table-wrap">
+            <table class="specialized-table">
+                <thead><tr><th>Apólice</th><th>Tipo</th><th>Periodicidade</th><th>Próximo vencimento</th><th>Agendado 12 meses</th><th>Vencido</th><th>Renovação</th><th></th></tr></thead>
+                <tbody>
+                @foreach (var item in analysis.Policies)
+                {
+                    <tr>
+                        <td><strong>@item.Name</strong><small>@item.Insurer</small></td>
+                        <td>@item.Type</td>
+                        <td>@item.PaymentFrequency</td>
+                        <td>@(item.NextDueDate?.ToString("dd/MM/yyyy") ?? "—")</td>
+                        <td class="amount">@Money(item.ScheduledAmount)</td>
+                        <td class="amount @(item.OutstandingAmount > 0m ? "negative" : "")">@Money(item.OutstandingAmount)@if(item.OutstandingCount > 0){<small>@item.OutstandingCount prémio(s)</small>}</td>
+                        <td>@(item.RenewalDate?.ToString("dd/MM/yyyy") ?? "—")</td>
+                        <td><a class="text-link" asp-controller="Insurance" asp-action="Details" asp-route-id="@item.Id">Detalhe</a></td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    }
+</section>
+
+<p class="specialized-note">O DenariusAI ainda não possui uma entidade genérica para outros compromissos contratuais recorrentes. Nesta fase, esta análise cobre exclusivamente seguros e os prémios explicitamente registados, mantendo a distinção entre informação conhecida e valores que seriam apenas inferidos.</p>
+
+<section class="specialized-ai">
+    <div class="specialized-ai-heading"><span aria-hidden="true">✦</span><div><p class="eyebrow">Interpretação opcional</p><h2>Leitura por IA</h2><p>A IA recebe apenas prémios conhecidos, vencimentos, pagamentos associados, renovações e concentrações já calculados.</p></div></div>
+    @if (!Model.AiAvailable)
+    {
+        <div class="specialized-ai-unavailable">Configure um fornecedor de IA nas Definições para gerar esta interpretação.</div>
+    }
+    else
+    {
+        <form asp-action="CommitmentsAi" method="post" class="specialized-ai-action">
+            <input type="hidden" name="asOf" value="@analysis.AsOf.ToString("yyyy-MM-dd")" />
+            <button class="button" type="submit" data-progress-message="A interpretar os compromissos financeiros…">@(string.IsNullOrWhiteSpace(Model.AiAnalysis) ? "Gerar análise com IA" : "Atualizar análise")</button>
+            <small>O prompt desta área pode ser alterado nas Definições da aplicação.</small>
+        </form>
+    }
+    @if (!string.IsNullOrWhiteSpace(Model.AiError))
+    {
+        <div class="validation-summary specialized-ai-error" role="alert">@Model.AiError</div>
+    }
+    @if (!string.IsNullOrWhiteSpace(Model.AiAnalysis))
+    {
+        <div class="specialized-ai-result markdown-preview">@Html.Raw(MarkdownPreview.Render(Model.AiAnalysis))</div>
+    }
+</section>

@@ -1,0 +1,203 @@
+@model BudgetExecutionAnalysisViewModel
+@using System.Globalization
+@using DenariusAI.Application.DTOs
+@{
+    ViewData["Title"] = "Orçamento e Execução Orçamental";
+    var analysis = Model.Analysis;
+    var culture = CultureInfo.GetCultureInfo("pt-PT");
+    var period = new DateTime(analysis.Year, analysis.Month, 1);
+    var years = Enumerable.Range(analysis.Year - 3, 7).OrderByDescending(value => value).ToList();
+
+    string Money(decimal value) => $"{value.ToString("N2", culture)} €";
+    string SignedMoney(decimal value) => $"{(value > 0m ? "+" : string.Empty)}{value.ToString("N2", culture)} €";
+    string Percentage(decimal? value) => value.HasValue ? $"{value.Value.ToString("N1", culture)}%" : "—";
+    string StatusClass(BudgetExecutionStatus status) => status switch
+    {
+        BudgetExecutionStatus.OverBudget => "negative",
+        BudgetExecutionStatus.Unbudgeted => "warning",
+        BudgetExecutionStatus.NearLimit => "warning",
+        BudgetExecutionStatus.NoExecution => "neutral",
+        _ => "positive"
+    };
+}
+<link rel="stylesheet" href="~/css/summary-cards.css" asp-append-version="true" />
+<link rel="stylesheet" href="~/css/analytics.css" asp-append-version="true" />
+<link rel="stylesheet" href="~/css/budget-execution-analysis.css" asp-append-version="true" />
+
+<div class="page-header budget-analysis-header">
+    <div>
+        <p class="eyebrow">Análise Financeira · Planeamento</p>
+        <h1>@ViewData["Title"]</h1>
+        <p class="page-subtitle">Compare o planeado com o realizado, localize os principais desvios e identifique categorias próximas do limite.</p>
+    </div>
+    <a class="button secondary" asp-action="Index">← Voltar às análises</a>
+</div>
+
+<section class="budget-analysis-period" aria-label="Período orçamental">
+    <form method="get" asp-action="Budget" class="budget-analysis-filter">
+        <label>Mês
+            <select name="month">
+                @for (var value = 1; value <= 12; value++)
+                {
+                    <option value="@value" selected="@(value == analysis.Month)">@(new DateTime(2000, value, 1).ToString("MMMM", culture))</option>
+                }
+            </select>
+        </label>
+        <label>Ano
+            <select name="year">
+                @foreach (var value in years)
+                {
+                    <option value="@value" selected="@(value == analysis.Year)">@value</option>
+                }
+            </select>
+        </label>
+        <button class="button secondary" type="submit">Aplicar</button>
+    </form>
+    <div>
+        <strong>@period.ToString("MMMM yyyy", culture)</strong>
+        <span>@(analysis.HasBudget ? "Orçamento existente" : "Sem orçamento criado para este período")</span>
+    </div>
+</section>
+
+@if (!analysis.HasBudget)
+{
+    <div class="budget-analysis-empty" role="status">
+        <strong>Não existe um orçamento para @period.ToString("MMMM yyyy", culture).</strong>
+        <span>A análise mantém o período selecionado, mas só pode avaliar execução associada a um orçamento existente.</span>
+        <a class="button secondary" asp-controller="Budget" asp-action="Index" asp-route-year="@analysis.Year" asp-route-month="@analysis.Month">Abrir orçamento</a>
+    </div>
+}
+
+<section class="area-summary" aria-label="Resumo da execução orçamental">
+    <article class="summary-primary">
+        <span>Grau de execução</span>
+        <strong>@Percentage(analysis.ExecutionPercentage)</strong>
+        <small>@Money(analysis.TotalActual) executados de @Money(analysis.TotalBudgeted)</small>
+    </article>
+    <article class="@(analysis.TotalVariance > 0m ? "summary-negative" : "summary-positive")">
+        <span>Desvio total</span>
+        <strong>@SignedMoney(analysis.TotalVariance)</strong>
+        <small>@(analysis.TotalVariance > 0m ? "Acima do planeado" : analysis.TotalVariance < 0m ? "Abaixo do planeado" : "Em linha com o planeado")</small>
+    </article>
+    <article class="summary-warning">
+        <span>Categorias em atenção</span>
+        <strong>@(analysis.OverBudgetCategoryCount + analysis.NearLimitCategoryCount + analysis.UnbudgetedCategoryCount)</strong>
+        <small>@analysis.OverBudgetCategoryCount acima · @analysis.NearLimitCategoryCount próximas · @analysis.UnbudgetedCategoryCount sem orçamento</small>
+    </article>
+    <article class="summary-info">
+        <span>Valor acima do planeado</span>
+        <strong>@Money(analysis.OverBudgetAmount)</strong>
+        <small>Soma dos excessos e execução sem valor orçamentado</small>
+    </article>
+</section>
+
+<section class="budget-analysis-findings">
+    <div class="budget-analysis-section-heading">
+        <div><p class="eyebrow">Leitura determinística</p><h2>Principais desvios</h2></div>
+        <small>Risco: categoria próxima do limite a partir de 85% de execução. Destaques materiais exigem pelo menos 25 € e 10% de desvio.</small>
+    </div>
+    <div class="budget-analysis-finding-grid">
+        @foreach (var finding in analysis.Findings)
+        {
+            <article class="budget-analysis-finding @finding.Tone">
+                <span></span>
+                <div>
+                    <strong>@finding.Title</strong>
+                    <p>@finding.Detail</p>
+                    @if (finding.CategoryId.HasValue)
+                    {
+                        <a asp-controller="Budget" asp-action="Category" asp-route-id="@finding.CategoryId.Value">Ver histórico da categoria →</a>
+                    }
+                </div>
+            </article>
+        }
+    </div>
+</section>
+
+<section class="panel budget-analysis-table-card">
+    <header class="budget-analysis-card-header">
+        <div><p class="eyebrow">Planeado vs. realizado</p><h2>Execução por categoria</h2><p>Ordenada por risco e relevância do desvio, sem repetir a análise de padrões de consumo da área de fluxos.</p></div>
+        <a class="button secondary" asp-controller="Budget" asp-action="Index" asp-route-year="@analysis.Year" asp-route-month="@analysis.Month">Gerir orçamento</a>
+    </header>
+    @if (analysis.Categories.Count == 0)
+    {
+        <p class="budget-analysis-muted">Sem valores orçamentados ou executados para apresentar.</p>
+    }
+    else
+    {
+        <div class="table-wrap">
+            <table class="budget-analysis-table">
+                <thead><tr><th>Grupo / Categoria</th><th>Orçamentado</th><th>Realizado</th><th>Desvio</th><th>Execução</th><th>Estado</th><th></th></tr></thead>
+                <tbody>
+                @foreach (var item in analysis.Categories)
+                {
+                    <tr>
+                        <td><small>@item.FinancialGroupName</small><strong>@item.CategoryName</strong></td>
+                        <td class="amount">@Money(item.Budgeted)</td>
+                        <td class="amount">@Money(item.Actual)</td>
+                        <td class="amount @(item.Variance > 0m ? "negative" : item.Variance < 0m ? "positive" : "")">
+                            @SignedMoney(item.Variance)
+                            @if (item.RelativeVariancePercentage.HasValue)
+                            {
+                                <small>@((item.RelativeVariancePercentage.Value > 0m ? "+" : string.Empty) + item.RelativeVariancePercentage.Value.ToString("N1", culture))%</small>
+                            }
+                        </td>
+                        <td>
+                            <div class="budget-analysis-execution">
+                                <span>@Percentage(item.ExecutionPercentage)</span>
+                                <div><i class="@StatusClass(item.Status)" style="width:@Math.Clamp(item.ExecutionPercentage ?? 0m, 0m, 100m).ToString("0.0", CultureInfo.InvariantCulture)%"></i></div>
+                            </div>
+                        </td>
+                        <td><span class="budget-analysis-status @StatusClass(item.Status)">@item.StatusLabel</span></td>
+                        <td><a class="text-link" asp-controller="Budget" asp-action="Category" asp-route-id="@item.CategoryId">Histórico</a></td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    }
+</section>
+
+<section class="panel budget-analysis-history">
+    <header class="budget-analysis-card-header">
+        <div><p class="eyebrow">Evolução</p><h2>Execução dos últimos 6 meses</h2><p>Contexto orçamental agregado para distinguir um desvio isolado de uma repetição mensal.</p></div>
+    </header>
+    <div class="budget-analysis-history-grid">
+        @foreach (var item in analysis.Trend)
+        {
+            var label = new DateTime(item.Year, item.Month, 1).ToString("MMM yy", culture);
+            <article>
+                <strong>@label</strong>
+                <div><span>Orçamentado</span><b>@Money(item.Budgeted)</b></div>
+                <div><span>Realizado</span><b>@Money(item.Actual)</b></div>
+                <div><span>Execução</span><b>@Percentage(item.ExecutionPercentage)</b></div>
+                <div class="@(item.Variance > 0m ? "negative" : item.Variance < 0m ? "positive" : "")"><span>Desvio</span><b>@SignedMoney(item.Variance)</b></div>
+            </article>
+        }
+    </div>
+</section>
+
+<section class="budget-analysis-ai-panel">
+    <div class="budget-analysis-ai-heading"><span aria-hidden="true">✦</span><div><p class="eyebrow">Interpretação opcional</p><h2>Leitura por IA</h2><p>A IA recebe apenas totais, desvios, estados, histórico e destaques já calculados pela aplicação. Não recalcula execução nem analisa padrões de consumo.</p></div></div>
+    @if (!Model.AiAvailable)
+    {
+        <div class="budget-analysis-ai-unavailable">Configure um fornecedor de IA nas Definições para gerar esta interpretação.</div>
+    }
+    else
+    {
+        <form asp-action="BudgetAi" method="post" class="budget-analysis-ai-action">
+            <input type="hidden" name="year" value="@analysis.Year" />
+            <input type="hidden" name="month" value="@analysis.Month" />
+            <button class="button" type="submit" data-progress-message="A interpretar a execução orçamental…">@(string.IsNullOrWhiteSpace(Model.AiAnalysis) ? "Gerar análise com IA" : "Atualizar análise")</button>
+            <small>O prompt desta área pode ser alterado nas Definições da aplicação.</small>
+        </form>
+    }
+    @if (!string.IsNullOrWhiteSpace(Model.AiError))
+    {
+        <div class="validation-summary budget-analysis-ai-error" role="alert">@Model.AiError</div>
+    }
+    @if (!string.IsNullOrWhiteSpace(Model.AiAnalysis))
+    {
+        <div class="budget-analysis-ai-result markdown-preview">@Html.Raw(MarkdownPreview.Render(Model.AiAnalysis))</div>
+    }
+</section>

@@ -85,6 +85,7 @@ public static class DependencyInjection
         services.AddScoped<IAnalyticsRepository, AnalyticsRepository>();
         services.AddScoped<IIncomeExpenseFlowRepository, IncomeExpenseFlowRepository>();
         services.AddScoped<ISavingsCertificateReadRepository, SavingsCertificateReadRepository>();
+        services.AddScoped<ISpecializedFinancialAnalysisRepository, SpecializedFinancialAnalysisRepository>();
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddScoped<IFinancialDataResetService, FinancialDataResetService>();
         services.AddScoped<IDemonstrationDataService, DemonstrationDataService>();

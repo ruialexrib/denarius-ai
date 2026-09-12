@@ -28,6 +28,10 @@ public static class DependencyInjection
         services.AddScoped<IFinancialReportDataService, FinancialReportDataService>();
         services.AddScoped<IGlobalFinancialViewService, GlobalFinancialViewService>();
         services.AddScoped<IIncomeExpenseFlowAnalysisService, IncomeExpenseFlowAnalysisService>();
+        services.AddScoped<IBudgetExecutionAnalysisService, BudgetExecutionAnalysisService>();
+        services.AddScoped<ISavingsLiquidityAnalysisService, SavingsLiquidityAnalysisService>();
+        services.AddScoped<IInvestmentPortfolioAnalysisService, InvestmentPortfolioAnalysisService>();
+        services.AddScoped<IFinancialCommitmentsAnalysisService, FinancialCommitmentsAnalysisService>();
         services.AddScoped<IAssistantService, FinancialAssistantService>();
         services.AddScoped<IJournalEntrySuggestionService, JournalEntrySuggestionService>();
         services.AddScoped<IStockForecastService, StockForecastService>();

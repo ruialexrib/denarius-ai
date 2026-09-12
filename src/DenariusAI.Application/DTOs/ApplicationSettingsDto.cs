@@ -35,6 +35,10 @@ namespace DenariusAI.Application.DTOs;
 /// <param name="SavingsCertificateIgcpPublicationUrlTemplate">Monthly IGCP publication URL template using {month} and {year} placeholders.</param>
 /// <param name="AiVerboseModelLogging">Whether provider-neutral verbose diagnostics are enabled for all model interactions.</param>
 /// <param name="IncomeExpenseFlowAnalysisPrompt">Prompt used to interpret income, expense and account-flow analysis.</param>
+/// <param name="BudgetExecutionAnalysisPrompt">Prompt used to interpret monthly budget execution analysis.</param>
+/// <param name="SavingsLiquidityAnalysisPrompt">Prompt used to interpret savings and liquidity analysis.</param>
+/// <param name="InvestmentPortfolioAnalysisPrompt">Prompt used to interpret investment portfolio analysis.</param>
+/// <param name="FinancialCommitmentsAnalysisPrompt">Prompt used to interpret financial commitments analysis.</param>
 public sealed record ApplicationSettingsDto(
     string MistralModel,
     string MistralBaseUrl,
@@ -69,4 +73,8 @@ public sealed record ApplicationSettingsDto(
     string SavingsCertificateIgcpSourceUrl = "https://www.igcp.pt/pt/aforristas/produtos-de-aforro/certificados-de-aforro",
     string SavingsCertificateIgcpPublicationUrlTemplate = "https://www.igcp.pt/pt/noticias/taxas-de-juro-dos-certificados-de-aforro-das-series-b-d-e-e-f-em-{month}-de-{year}",
     bool AiVerboseModelLogging = false,
-    string IncomeExpenseFlowAnalysisPrompt = Application.Configuration.ApplicationSettingsDefaults.IncomeExpenseFlowAnalysisPrompt);
+    string IncomeExpenseFlowAnalysisPrompt = Application.Configuration.ApplicationSettingsDefaults.IncomeExpenseFlowAnalysisPrompt,
+    string BudgetExecutionAnalysisPrompt = Application.Configuration.ApplicationSettingsDefaults.BudgetExecutionAnalysisPrompt,
+    string SavingsLiquidityAnalysisPrompt = Application.Configuration.ApplicationSettingsDefaults.SavingsLiquidityAnalysisPrompt,
+    string InvestmentPortfolioAnalysisPrompt = Application.Configuration.ApplicationSettingsDefaults.InvestmentPortfolioAnalysisPrompt,
+    string FinancialCommitmentsAnalysisPrompt = Application.Configuration.ApplicationSettingsDefaults.FinancialCommitmentsAnalysisPrompt);
