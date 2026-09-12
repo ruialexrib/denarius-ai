@@ -11,12 +11,14 @@ namespace DenariusAI.Web.Controllers;
 /// Provides the financial-analysis catalogue and the specialised global financial view.
 /// </summary>
 /// <param name="globalFinancialViewService">Service that calculates the deterministic global financial view.</param>
+/// <param name="incomeExpenseFlowAnalysisService">Service that calculates income, expense and account-flow analysis.</param>
 /// <param name="llmService">Provider-neutral language model service.</param>
 /// <param name="settingsService">Application settings service used to obtain the effective financial-analysis prompt.</param>
 /// <param name="logger">Logger used for safe AI failure diagnostics.</param>
 [Authorize]
 public sealed class AnalyticsController(
     IGlobalFinancialViewService globalFinancialViewService,
+    IIncomeExpenseFlowAnalysisService incomeExpenseFlowAnalysisService,
     ILLMService llmService,
     IApplicationSettingsService settingsService,
     ILogger<AnalyticsController> logger) : Controller
@@ -96,6 +98,74 @@ public sealed class AnalyticsController(
     }
 
     /// <summary>
+    /// Displays the deterministic Income, Expenses and Flows analysis.
+    /// </summary>
+    /// <param name="from">Optional selected-period start.</param>
+    /// <param name="to">Optional selected-period end.</param>
+    /// <param name="cancellationToken">Token used to cancel the request.</param>
+    /// <returns>The populated flow analysis view.</returns>
+    [HttpGet]
+    public async Task<IActionResult> Flows(
+        DateOnly? from,
+        DateOnly? to,
+        CancellationToken cancellationToken = default)
+    {
+        var period = ResolvePeriod(from, to);
+        var analysis = await incomeExpenseFlowAnalysisService.GetAsync(period.From, period.To, cancellationToken);
+        return View(new IncomeExpenseFlowViewModel(analysis, llmService.IsConfigured));
+    }
+
+    /// <summary>
+    /// Generates an optional AI interpretation of already calculated income, expense and flow facts.
+    /// </summary>
+    /// <param name="from">Selected-period start.</param>
+    /// <param name="to">Selected-period end.</param>
+    /// <param name="cancellationToken">Token used to cancel the request.</param>
+    /// <returns>The flow analysis view with an optional AI interpretation.</returns>
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> FlowsAi(
+        DateOnly from,
+        DateOnly to,
+        CancellationToken cancellationToken = default)
+    {
+        var analysis = await incomeExpenseFlowAnalysisService.GetAsync(from, to, cancellationToken);
+        if (!llmService.IsConfigured)
+        {
+            return View("Flows", new IncomeExpenseFlowViewModel(
+                analysis,
+                false,
+                AiError: "A interpretação por IA não está disponível porque o fornecedor selecionado não está configurado."));
+        }
+
+        try
+        {
+            var settings = await settingsService.GetAsync(cancellationToken);
+            var context = JsonSerializer.Serialize(BuildFlowAiContext(analysis));
+            var completion = await llmService.CompleteAsync(
+                [
+                    new LlmMessageDto("system", settings.IncomeExpenseFlowAnalysisPrompt),
+                    new LlmMessageDto("user", context)
+                ],
+                Math.Min(settings.AiMaxTokens, 1600),
+                cancellationToken);
+
+            return View("Flows", new IncomeExpenseFlowViewModel(
+                analysis,
+                true,
+                completion.Content.Trim()));
+        }
+        catch (Exception exception) when (exception is HttpRequestException or InvalidOperationException or TaskCanceledException)
+        {
+            logger.LogWarning(exception, "Income, expense and flow AI interpretation failed.");
+            return View("Flows", new IncomeExpenseFlowViewModel(
+                analysis,
+                true,
+                AiError: "Não foi possível gerar a interpretação por IA. A análise calculada continua disponível."));
+        }
+    }
+
+    /// <summary>
     /// Resolves the requested interval and applies the current-month default.
     /// </summary>
     /// <param name="from">Optional selected-period start.</param>
@@ -165,5 +235,31 @@ public sealed class AnalyticsController(
         percentageChange = metric.PercentageChange,
         direction = metric.Direction.ToString(),
         metric.IsPercentage
+    };
+
+    /// <summary>
+    /// Builds bounded, calculated context for the income, expense and flow AI interpretation.
+    /// </summary>
+    /// <param name="analysis">Calculated flow analysis.</param>
+    /// <returns>Provider-neutral facts with no raw unrestricted financial history.</returns>
+    private static object BuildFlowAiContext(IncomeExpenseFlowAnalysisDto analysis) => new
+    {
+        purpose = "Interpretar Rendimentos, Despesas e Fluxos sem recalcular valores.",
+        period = new { from = analysis.Data.From, to = analysis.Data.To },
+        comparisonPeriod = new { from = analysis.Data.ComparisonFrom, to = analysis.Data.ComparisonTo },
+        metrics = new
+        {
+            income = MetricContext(analysis.IncomeMetric),
+            expenses = MetricContext(analysis.ExpenseMetric),
+            balance = MetricContext(analysis.BalanceMetric)
+        },
+        incomeGroups = analysis.Data.IncomeGroups.Take(8),
+        incomeCategories = analysis.Data.IncomeCategories.Take(10),
+        expenseGroups = analysis.Data.ExpenseGroups.Take(8),
+        expenseCategories = analysis.Data.ExpenseCategories.Take(10),
+        accountFlows = analysis.Data.AccountFlows.Take(10),
+        trend = analysis.Data.Trend,
+        largestMovements = analysis.Data.LargestMovements,
+        findings = analysis.Findings
     };
 }
