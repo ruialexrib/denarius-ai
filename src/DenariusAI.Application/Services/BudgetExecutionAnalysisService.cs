@@ -40,7 +40,7 @@ public sealed class BudgetExecutionAnalysisService(
         var totalBudgeted = categories.Sum(item => item.Budgeted);
         var totalActual = categories.Sum(item => item.Actual);
         var totalVariance = totalActual - totalBudgeted;
-        var overallExecution = totalBudgeted == 0m
+        decimal? overallExecution = totalBudgeted == 0m
             ? null
             : decimal.Round(totalActual / totalBudgeted * 100m, 1);
 
