@@ -256,9 +256,10 @@ public static class HelpCatalog
                     "A página distingue prémios futuros registados, valores vencidos sem pagamento associado e renovações próximas.",
                     "A periodicidade da apólice não é usada para inventar prémios em falta.",
                     "Enquanto não existir uma entidade genérica de compromissos recorrentes, esta área cobre exclusivamente seguros e respetivos prémios registados."),
-                Section("ia", "Interpretação por IA", "A interpretação é opcional e parte exclusivamente dos factos já calculados.",
+                Section("ia", "Interpretação por IA", "A interpretação é opcional e usa um formato consistente em todas as áreas de análise financeira.",
                     "Clique em Gerar análise com IA quando pretender uma síntese; abrir a página não efetua automaticamente uma chamada ao modelo.",
-                    "A IA não recalcula totais, saldos, percentagens ou variações e não altera registos financeiros.",
+                    "A IA recebe apenas factos já calculados pela aplicação, não recalcula totais, saldos, percentagens ou variações e não altera registos financeiros.",
+                    "O relatório apresenta uma síntese executiva, secções específicas da análise e uma conclusão; o prompt de cada área pode ser ajustado nas Definições.",
                     "Sem fornecedor configurado ou em caso de erro, toda a análise determinística permanece disponível.")),
 
             AiPage("assistant", "Inteligência artificial", "✦", "Assistência por IA", "Consulte dados em linguagem natural e prepare sugestões sob controlo do utilizador.", "Assistant", "Index", "Abrir Assistente",
