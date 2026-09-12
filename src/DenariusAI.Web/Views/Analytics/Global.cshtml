@@ -1,0 +1,208 @@
+@model GlobalFinancialViewViewModel
+@using System.Globalization
+@using System.Text.Json
+@using DenariusAI.Application.DTOs
+@{
+    ViewData["Title"] = "Visão Financeira Global";
+    var analysis = Model.Analysis;
+    var culture = CultureInfo.GetCultureInfo("pt-PT");
+    var today = DateOnly.FromDateTime(DateTime.Today);
+    var monthStart = new DateOnly(today.Year, today.Month, 1);
+    var last30From = today.AddDays(-29);
+    var last90From = today.AddDays(-89);
+    var yearStart = new DateOnly(today.Year, 1, 1);
+    var hasAnyData = analysis.NetWorth.CurrentValue != 0m
+        || analysis.LiquidBalance.CurrentValue != 0m
+        || analysis.HasActivity;
+    var chartData = JsonSerializer.Serialize(new
+    {
+        trend = analysis.Trend.Select(item => new
+        {
+            label = new DateTime(item.Year, item.Month, 1).ToString("MMM yy", culture),
+            item.NetWorth,
+            item.Income,
+            item.Expenses,
+            item.Savings
+        })
+    });
+
+    string Money(decimal value) => $"{value.ToString("N2", culture)} €";
+    string Rate(decimal value) => $"{value.ToString("N1", culture)}%";
+    string Current(GlobalFinancialMetricDto metric) => metric.IsPercentage ? Rate(metric.CurrentValue) : Money(metric.CurrentValue);
+    string Comparison(GlobalFinancialMetricDto metric)
+    {
+        if (metric.AbsoluteChange == 0m) return "Sem alteração face ao período anterior";
+        var sign = metric.AbsoluteChange > 0m ? "+" : string.Empty;
+        var absolute = metric.IsPercentage
+            ? $"{sign}{metric.AbsoluteChange.ToString("N1", culture)} p.p."
+            : $"{sign}{metric.AbsoluteChange.ToString("N2", culture)} €";
+        var relative = metric.PercentageChange.HasValue
+            ? $" · {(metric.PercentageChange.Value > 0m ? "+" : string.Empty)}{metric.PercentageChange.Value.ToString("N1", culture)}%"
+            : " · sem base percentual comparável";
+        return absolute + relative;
+    }
+    string ChangeClass(GlobalFinancialMetricDto metric, bool increaseIsPositive = true)
+    {
+        if (metric.Direction == FinancialMetricDirection.Unchanged) return "neutral";
+        var positive = metric.Direction == FinancialMetricDirection.Increase == increaseIsPositive;
+        return positive ? "positive" : "negative";
+    }
+}
+<link rel="stylesheet" href="~/css/summary-cards.css" asp-append-version="true" />
+<link rel="stylesheet" href="~/css/analytics.css" asp-append-version="true" />
+<link rel="stylesheet" href="~/css/global-financial-view.css" asp-append-version="true" />
+<script id="global-financial-chart-data" type="application/json">@Html.Raw(chartData)</script>
+<script src="~/js/global-financial-view.js" asp-append-version="true" defer></script>
+
+<div class="page-header global-financial-header">
+    <div>
+        <p class="eyebrow">Análise Financeira · Visão integrada</p>
+        <h1>@ViewData["Title"]</h1>
+        <p class="page-subtitle">Perceba rapidamente a sua posição financeira, a evolução face ao período anterior e os pontos que justificam análise adicional.</p>
+    </div>
+    <a class="button secondary" asp-action="Index">← Voltar às análises</a>
+</div>
+
+<section class="global-period-panel" aria-label="Período da análise">
+    <form method="get" asp-action="Global" class="global-period-filter">
+        <label>De <input type="date" name="from" value="@analysis.From.ToString("yyyy-MM-dd")" /></label>
+        <label>Até <input type="date" name="to" value="@analysis.To.ToString("yyyy-MM-dd")" /></label>
+        <button class="button secondary" type="submit">Aplicar</button>
+    </form>
+    <div class="global-period-presets" aria-label="Períodos rápidos">
+        <span>Períodos rápidos</span>
+        <a asp-action="Global" asp-route-from="@monthStart.ToString("yyyy-MM-dd")" asp-route-to="@today.ToString("yyyy-MM-dd")">Mês atual</a>
+        <a asp-action="Global" asp-route-from="@last30From.ToString("yyyy-MM-dd")" asp-route-to="@today.ToString("yyyy-MM-dd")">30 dias</a>
+        <a asp-action="Global" asp-route-from="@last90From.ToString("yyyy-MM-dd")" asp-route-to="@today.ToString("yyyy-MM-dd")">90 dias</a>
+        <a asp-action="Global" asp-route-from="@yearStart.ToString("yyyy-MM-dd")" asp-route-to="@today.ToString("yyyy-MM-dd")">Ano atual</a>
+    </div>
+    <div class="global-comparison-note">
+        <strong>Comparação: período anterior equivalente</strong>
+        <span>@analysis.ComparisonFrom.ToString("dd/MM/yyyy") – @analysis.ComparisonTo.ToString("dd/MM/yyyy")</span>
+    </div>
+</section>
+
+@if (!hasAnyData)
+{
+    <section class="global-empty-state" role="status">
+        <span aria-hidden="true">◎</span>
+        <div><strong>Ainda não existem dados financeiros para este período.</strong><p>Os indicadores serão preenchidos quando existirem saldos ou movimentos. Pode alterar o período sem perder acesso à análise.</p></div>
+    </section>
+}
+
+<section class="area-summary global-summary" aria-label="Indicadores financeiros principais">
+    <article class="summary-primary">
+        <span>Património líquido</span>
+        <strong>@Current(analysis.NetWorth)</strong>
+        <small class="@ChangeClass(analysis.NetWorth)">@Comparison(analysis.NetWorth)</small>
+    </article>
+    <article class="summary-info">
+        <span>Saldo disponível</span>
+        <strong>@Current(analysis.LiquidBalance)</strong>
+        <small class="@ChangeClass(analysis.LiquidBalance)">@Comparison(analysis.LiquidBalance)</small>
+    </article>
+    <article class="@(analysis.Savings.CurrentValue < 0m ? "summary-negative" : "summary-positive")">
+        <span>Poupança do período</span>
+        <strong>@Current(analysis.Savings)</strong>
+        <small class="@ChangeClass(analysis.Savings)">@Comparison(analysis.Savings)</small>
+    </article>
+    <article class="@(analysis.SavingsRate.CurrentValue < 0m ? "summary-negative" : "summary-positive")">
+        <span>Taxa de poupança</span>
+        <strong>@Current(analysis.SavingsRate)</strong>
+        <small class="@ChangeClass(analysis.SavingsRate)">@Comparison(analysis.SavingsRate)</small>
+    </article>
+</section>
+
+<section class="global-supporting-metrics" aria-label="Rendimentos e despesas">
+    <article>
+        <div><span class="metric-icon positive" aria-hidden="true">↑</span><div><small>Rendimentos</small><strong>@Current(analysis.Income)</strong></div></div>
+        <span class="@ChangeClass(analysis.Income)">@Comparison(analysis.Income)</span>
+    </article>
+    <article>
+        <div><span class="metric-icon negative" aria-hidden="true">↓</span><div><small>Despesas</small><strong>@Current(analysis.Expenses)</strong></div></div>
+        <span class="@ChangeClass(analysis.Expenses, false)">@Comparison(analysis.Expenses)</span>
+    </article>
+    <article>
+        <div><span class="metric-icon warning" aria-hidden="true">✓</span><div><small>Reconciliação</small><strong>@analysis.UnreconciledMovements</strong></div></div>
+        <span>@(analysis.UnreconciledMovements == 0 ? "Sem movimentos por reconciliar no período" : "Movimentos por reconciliar no período")</span>
+    </article>
+</section>
+
+<section class="global-section-heading">
+    <div><p class="eyebrow">Leitura executiva</p><h2>O que mudou?</h2><p>Os destaques usam regras determinísticas de materialidade: 5% para património, 10% para rendimentos/despesas e 5 pontos percentuais para taxa de poupança.</p></div>
+</section>
+<section class="global-findings" aria-label="Alterações relevantes">
+    @foreach (var finding in analysis.Findings)
+    {
+        <article class="global-finding @finding.Tone">
+            <span class="finding-marker" aria-hidden="true"></span>
+            <div>
+                <strong>@finding.Title</strong>
+                <p>@finding.Detail</p>
+                <small>Análise relacionada: @finding.TargetArea</small>
+            </div>
+        </article>
+    }
+</section>
+
+<section class="global-section-heading">
+    <div><p class="eyebrow">Últimos 12 meses</p><h2>Evolução global</h2><p>A série termina no período selecionado e utiliza apenas valores calculados pela aplicação.</p></div>
+</section>
+<section class="global-charts">
+    <article class="panel global-chart-card">
+        <header><div><small>Património</small><h3>Evolução do património líquido</h3></div></header>
+        <div class="global-chart" data-global-chart="networth" role="img" aria-label="Evolução mensal do património líquido">
+            <svg viewBox="0 0 900 260" preserveAspectRatio="none" aria-hidden="true">
+                <line class="chart-grid" x1="38" y1="30" x2="870" y2="30"></line>
+                <line class="chart-grid" x1="38" y1="130" x2="870" y2="130"></line>
+                <line class="chart-grid" x1="38" y1="230" x2="870" y2="230"></line>
+                <polyline class="global-series networth" data-series="netWorth" points=""></polyline>
+            </svg>
+            <div class="global-chart-axis" data-chart-axis></div>
+            <div class="global-chart-tooltip" data-chart-tooltip hidden></div>
+        </div>
+    </article>
+    <article class="panel global-chart-card">
+        <header><div><small>Fluxos</small><h3>Rendimentos, despesas e poupança</h3></div><div class="global-chart-legend"><span class="income">Rendimentos</span><span class="expenses">Despesas</span><span class="savings">Poupança</span></div></header>
+        <div class="global-chart" data-global-chart="flows" role="img" aria-label="Evolução mensal de rendimentos, despesas e poupança">
+            <svg viewBox="0 0 900 260" preserveAspectRatio="none" aria-hidden="true">
+                <line class="chart-grid" x1="38" y1="30" x2="870" y2="30"></line>
+                <line class="chart-grid" x1="38" y1="130" x2="870" y2="130"></line>
+                <line class="chart-grid" x1="38" y1="230" x2="870" y2="230"></line>
+                <polyline class="global-series income" data-series="income" points=""></polyline>
+                <polyline class="global-series expenses" data-series="expenses" points=""></polyline>
+                <polyline class="global-series savings" data-series="savings" points=""></polyline>
+            </svg>
+            <div class="global-chart-axis" data-chart-axis></div>
+            <div class="global-chart-tooltip" data-chart-tooltip hidden></div>
+        </div>
+    </article>
+</section>
+
+<section class="global-ai-panel">
+    <div class="global-ai-heading">
+        <span class="global-ai-icon" aria-hidden="true">✦</span>
+        <div><p class="eyebrow">Interpretação opcional</p><h2>Leitura por IA</h2><p>A IA recebe apenas os indicadores, variações, tendências e destaques já calculados. Não efetua a aritmética financeira nem altera registos.</p></div>
+    </div>
+    @if (!Model.AiAvailable)
+    {
+        <div class="global-ai-unavailable">Configure um fornecedor de IA nas Definições para gerar uma interpretação. A análise determinística acima permanece completa.</div>
+    }
+    else
+    {
+        <form asp-action="GlobalAi" method="post" class="global-ai-action">
+            <input type="hidden" name="from" value="@analysis.From.ToString("yyyy-MM-dd")" />
+            <input type="hidden" name="to" value="@analysis.To.ToString("yyyy-MM-dd")" />
+            <button class="button" type="submit" data-progress-message="A interpretar a visão financeira…">@(string.IsNullOrWhiteSpace(Model.AiAnalysis) ? "Gerar análise com IA" : "Atualizar análise")</button>
+            <small>A geração é feita apenas quando solicitar.</small>
+        </form>
+    }
+    @if (!string.IsNullOrWhiteSpace(Model.AiError))
+    {
+        <div class="validation-summary global-ai-error" role="alert">@Model.AiError</div>
+    }
+    @if (!string.IsNullOrWhiteSpace(Model.AiAnalysis))
+    {
+        <div class="global-ai-result markdown-preview">@Html.Raw(MarkdownPreview.Render(Model.AiAnalysis))</div>
+    }
+</section>
