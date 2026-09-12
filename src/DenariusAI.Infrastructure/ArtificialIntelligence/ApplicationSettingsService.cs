@@ -35,7 +35,7 @@ public sealed class ApplicationSettingsService(DenariusDbContext dbContext, IOpt
             UpgradeDefault(Get(values, "Prompts.ReconciliationExtraction", ApplicationSettingsDefaults.ReconciliationExtractionPrompt), ApplicationSettingsDefaults.LegacyReconciliationExtractionPrompt, ApplicationSettingsDefaults.ReconciliationExtractionPrompt),
             UpgradeDefault(Get(values, "Prompts.ReconciliationClassification", ApplicationSettingsDefaults.ReconciliationClassificationPrompt), ApplicationSettingsDefaults.LegacyReconciliationClassificationPrompt, ApplicationSettingsDefaults.ReconciliationClassificationPrompt),
             UpgradeDefault(Get(values, "Prompts.DashboardWelcome", ApplicationSettingsDefaults.DashboardWelcomePrompt), ApplicationSettingsDefaults.LegacyDashboardWelcomePrompt, ApplicationSettingsDefaults.DashboardWelcomePrompt),
-            UpgradeDefault(Get(values, "Prompts.FinancialAnalysis", ApplicationSettingsDefaults.FinancialAnalysisPrompt), ApplicationSettingsDefaults.LegacyFinancialAnalysisPrompt, ApplicationSettingsDefaults.FinancialAnalysisPrompt), Get(values, "Prompts.ConnectionTest", ApplicationSettingsDefaults.ConnectionTestPrompt), Get(values, "Prompts.CorrespondenceMetadata", ApplicationSettingsDefaults.CorrespondenceMetadataPrompt),
+            UpgradeDefault(UpgradeDefault(Get(values, "Prompts.FinancialAnalysis", ApplicationSettingsDefaults.FinancialAnalysisPrompt), ApplicationSettingsDefaults.LegacyFinancialAnalysisPrompt, ApplicationSettingsDefaults.FinancialAnalysisPrompt), ApplicationSettingsDefaults.PreviousFinancialAnalysisPrompt, ApplicationSettingsDefaults.FinancialAnalysisPrompt), Get(values, "Prompts.ConnectionTest", ApplicationSettingsDefaults.ConnectionTestPrompt), Get(values, "Prompts.CorrespondenceMetadata", ApplicationSettingsDefaults.CorrespondenceMetadataPrompt),
             Get(values, "MarketData.Provider", "AlphaVantage"), Get(values, "MarketData.BaseUrl", "https://www.alphavantage.co/query"),
             UpgradeDefault(Get(values, "Prompts.InsuranceClipboard", ApplicationSettingsDefaults.InsuranceClipboardPrompt), ApplicationSettingsDefaults.LegacyInsuranceClipboardPrompt, ApplicationSettingsDefaults.InsuranceClipboardPrompt),
             Get(values, "Prompts.SavingsCertificateClipboard", ApplicationSettingsDefaults.SavingsCertificateClipboardPrompt),
@@ -47,11 +47,11 @@ public sealed class ApplicationSettingsService(DenariusDbContext dbContext, IOpt
             Get(values, "SavingsCertificates.IgcpSourceUrl", DefaultIgcpSourceUrl),
             Get(values, "SavingsCertificates.IgcpPublicationUrlTemplate", DefaultIgcpPublicationUrlTemplate),
             GetBool(values, "AI.VerboseModelLogging", false),
-            Get(values, "Prompts.IncomeExpenseFlowAnalysis", ApplicationSettingsDefaults.IncomeExpenseFlowAnalysisPrompt),
-            Get(values, "Prompts.BudgetExecutionAnalysis", ApplicationSettingsDefaults.BudgetExecutionAnalysisPrompt),
-            Get(values, "Prompts.SavingsLiquidityAnalysis", ApplicationSettingsDefaults.SavingsLiquidityAnalysisPrompt),
-            Get(values, "Prompts.InvestmentPortfolioAnalysis", ApplicationSettingsDefaults.InvestmentPortfolioAnalysisPrompt),
-            Get(values, "Prompts.FinancialCommitmentsAnalysis", ApplicationSettingsDefaults.FinancialCommitmentsAnalysisPrompt));
+            UpgradeDefault(Get(values, "Prompts.IncomeExpenseFlowAnalysis", ApplicationSettingsDefaults.IncomeExpenseFlowAnalysisPrompt), ApplicationSettingsDefaults.PreviousIncomeExpenseFlowAnalysisPrompt, ApplicationSettingsDefaults.IncomeExpenseFlowAnalysisPrompt),
+            UpgradeDefault(Get(values, "Prompts.BudgetExecutionAnalysis", ApplicationSettingsDefaults.BudgetExecutionAnalysisPrompt), ApplicationSettingsDefaults.PreviousBudgetExecutionAnalysisPrompt, ApplicationSettingsDefaults.BudgetExecutionAnalysisPrompt),
+            UpgradeDefault(Get(values, "Prompts.SavingsLiquidityAnalysis", ApplicationSettingsDefaults.SavingsLiquidityAnalysisPrompt), ApplicationSettingsDefaults.PreviousSavingsLiquidityAnalysisPrompt, ApplicationSettingsDefaults.SavingsLiquidityAnalysisPrompt),
+            UpgradeDefault(Get(values, "Prompts.InvestmentPortfolioAnalysis", ApplicationSettingsDefaults.InvestmentPortfolioAnalysisPrompt), ApplicationSettingsDefaults.PreviousInvestmentPortfolioAnalysisPrompt, ApplicationSettingsDefaults.InvestmentPortfolioAnalysisPrompt),
+            UpgradeDefault(Get(values, "Prompts.FinancialCommitmentsAnalysis", ApplicationSettingsDefaults.FinancialCommitmentsAnalysisPrompt), ApplicationSettingsDefaults.PreviousFinancialCommitmentsAnalysisPrompt, ApplicationSettingsDefaults.FinancialCommitmentsAnalysisPrompt));
     }
 
     /// <summary>Validates and persists settings without changing provider credentials.</summary>

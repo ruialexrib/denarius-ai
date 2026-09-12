@@ -22,6 +22,7 @@
 }
 <link rel="stylesheet" href="~/css/summary-cards.css" asp-append-version="true" />
 <link rel="stylesheet" href="~/css/analytics.css" asp-append-version="true" />
+<link rel="stylesheet" href="~/css/financial-analysis-ai.css" asp-append-version="true" />
 <link rel="stylesheet" href="~/css/budget-execution-analysis.css" asp-append-version="true" />
 
 <div class="page-header budget-analysis-header">
@@ -177,27 +178,40 @@
     </div>
 </section>
 
-<section class="budget-analysis-ai-panel">
-    <div class="budget-analysis-ai-heading"><span aria-hidden="true">✦</span><div><p class="eyebrow">Interpretação opcional</p><h2>Leitura por IA</h2><p>A IA recebe apenas totais, desvios, estados, histórico e destaques já calculados pela aplicação. Não recalcula execução nem analisa padrões de consumo.</p></div></div>
+<section class="financial-analysis-ai">
+    <div class="financial-analysis-ai-heading">
+        <span class="financial-analysis-ai-icon" aria-hidden="true">✦</span>
+        <div>
+            <p class="eyebrow">Interpretação opcional</p>
+            <h2>Leitura por IA</h2>
+            <p>A IA interpreta apenas factos financeiros já calculados pela aplicação. Não recalcula valores nem altera registos. Nesta análise recebe totais, desvios, estados, histórico e destaques já calculados.</p>
+        </div>
+    </div>
     @if (!Model.AiAvailable)
     {
-        <div class="budget-analysis-ai-unavailable">Configure um fornecedor de IA nas Definições para gerar esta interpretação.</div>
+        <div class="financial-analysis-ai-unavailable">Configure um fornecedor de IA nas Definições para gerar esta interpretação. A análise determinística acima permanece disponível.</div>
     }
     else
     {
-        <form asp-action="BudgetAi" method="post" class="budget-analysis-ai-action">
+        <form asp-action="BudgetAi" method="post" class="financial-analysis-ai-action">
             <input type="hidden" name="year" value="@analysis.Year" />
             <input type="hidden" name="month" value="@analysis.Month" />
             <button class="button" type="submit" data-progress-message="A interpretar a execução orçamental…">@(string.IsNullOrWhiteSpace(Model.AiAnalysis) ? "Gerar análise com IA" : "Atualizar análise")</button>
-            <small>O prompt desta área pode ser alterado nas Definições da aplicação.</small>
+            <small>A geração ocorre apenas quando solicitar. O prompt desta área pode ser alterado nas Definições da aplicação.</small>
         </form>
     }
     @if (!string.IsNullOrWhiteSpace(Model.AiError))
     {
-        <div class="validation-summary budget-analysis-ai-error" role="alert">@Model.AiError</div>
+        <div class="validation-summary financial-analysis-ai-error" role="alert">@Model.AiError</div>
     }
     @if (!string.IsNullOrWhiteSpace(Model.AiAnalysis))
     {
-        <div class="budget-analysis-ai-result markdown-preview">@Html.Raw(MarkdownPreview.Render(Model.AiAnalysis))</div>
+        <div class="financial-analysis-ai-result">
+            <div class="financial-analysis-ai-result-heading">
+                <strong>Relatório gerado</strong>
+                <small>Interpretação por IA com base nos dados determinísticos desta análise.</small>
+            </div>
+            <div class="financial-analysis-ai-report markdown-preview">@Html.Raw(MarkdownPreview.Render(Model.AiAnalysis))</div>
+        </div>
     }
 </section>
