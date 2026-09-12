@@ -26,6 +26,7 @@ public static class DependencyInjection
         services.AddScoped<IDashboardService, DashboardService>();
         services.AddScoped<IAnalyticsService, AnalyticsService>();
         services.AddScoped<IFinancialReportDataService, FinancialReportDataService>();
+        services.AddScoped<IGlobalFinancialViewService, GlobalFinancialViewService>();
         services.AddScoped<IAssistantService, FinancialAssistantService>();
         services.AddScoped<IJournalEntrySuggestionService, JournalEntrySuggestionService>();
         services.AddScoped<IStockForecastService, StockForecastService>();
