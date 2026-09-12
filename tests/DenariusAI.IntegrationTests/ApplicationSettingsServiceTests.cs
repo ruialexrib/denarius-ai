@@ -32,6 +32,9 @@ public sealed class ApplicationSettingsServiceTests
         Assert.Equal(DenariusAI.Application.Configuration.ApplicationSettingsDefaults.FinancialAnalysisPrompt, loaded.FinancialAnalysisPrompt);
         Assert.Equal(DenariusAI.Application.Configuration.ApplicationSettingsDefaults.IncomeExpenseFlowAnalysisPrompt, loaded.IncomeExpenseFlowAnalysisPrompt);
         Assert.Equal(DenariusAI.Application.Configuration.ApplicationSettingsDefaults.BudgetExecutionAnalysisPrompt, loaded.BudgetExecutionAnalysisPrompt);
+        Assert.Equal(DenariusAI.Application.Configuration.ApplicationSettingsDefaults.SavingsLiquidityAnalysisPrompt, loaded.SavingsLiquidityAnalysisPrompt);
+        Assert.Equal(DenariusAI.Application.Configuration.ApplicationSettingsDefaults.InvestmentPortfolioAnalysisPrompt, loaded.InvestmentPortfolioAnalysisPrompt);
+        Assert.Equal(DenariusAI.Application.Configuration.ApplicationSettingsDefaults.FinancialCommitmentsAnalysisPrompt, loaded.FinancialCommitmentsAnalysisPrompt);
         Assert.Equal(DenariusAI.Application.Configuration.ApplicationSettingsDefaults.JournalSuggestionPrompt, loaded.JournalSuggestionSystemPrompt);
         Assert.Equal(DenariusAI.Application.Configuration.ApplicationSettingsDefaults.InsuranceClipboardPrompt, loaded.InsuranceClipboardPrompt);
         Assert.Equal(DenariusAI.Application.Configuration.NvidiaNimDefaults.Model, loaded.NvidiaNimModel);
@@ -55,12 +58,15 @@ public sealed class ApplicationSettingsServiceTests
         var loaded = await service.GetAsync();
 
         Assert.Equal(updated, loaded);
-        Assert.Equal(35, await context.ApplicationSettings.CountAsync());
+        Assert.Equal(38, await context.ApplicationSettings.CountAsync());
         Assert.Equal(updated.ReconciliationExtractionPrompt, loaded.ReconciliationExtractionPrompt);
         Assert.Equal(updated.ReconciliationClassificationPrompt, loaded.ReconciliationClassificationPrompt);
         Assert.Equal(updated.FinancialAnalysisPrompt, loaded.FinancialAnalysisPrompt);
         Assert.Equal(updated.IncomeExpenseFlowAnalysisPrompt, loaded.IncomeExpenseFlowAnalysisPrompt);
         Assert.Equal(updated.BudgetExecutionAnalysisPrompt, loaded.BudgetExecutionAnalysisPrompt);
+        Assert.Equal(updated.SavingsLiquidityAnalysisPrompt, loaded.SavingsLiquidityAnalysisPrompt);
+        Assert.Equal(updated.InvestmentPortfolioAnalysisPrompt, loaded.InvestmentPortfolioAnalysisPrompt);
+        Assert.Equal(updated.FinancialCommitmentsAnalysisPrompt, loaded.FinancialCommitmentsAnalysisPrompt);
         Assert.Equal(updated.ConnectionTestPrompt, loaded.ConnectionTestPrompt);
         Assert.Equal(updated.CorrespondenceMetadataPrompt, loaded.CorrespondenceMetadataPrompt);
         Assert.Equal(updated.InsuranceClipboardPrompt, loaded.InsuranceClipboardPrompt);
