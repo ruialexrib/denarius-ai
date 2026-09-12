@@ -12,6 +12,7 @@ namespace DenariusAI.Web.Controllers;
 /// </summary>
 /// <param name="globalFinancialViewService">Service that calculates the deterministic global financial view.</param>
 /// <param name="incomeExpenseFlowAnalysisService">Service that calculates income, expense and account-flow analysis.</param>
+/// <param name="budgetExecutionAnalysisService">Service that calculates monthly budget execution analysis.</param>
 /// <param name="llmService">Provider-neutral language model service.</param>
 /// <param name="settingsService">Application settings service used to obtain the effective financial-analysis prompt.</param>
 /// <param name="logger">Logger used for safe AI failure diagnostics.</param>
@@ -19,6 +20,7 @@ namespace DenariusAI.Web.Controllers;
 public sealed class AnalyticsController(
     IGlobalFinancialViewService globalFinancialViewService,
     IIncomeExpenseFlowAnalysisService incomeExpenseFlowAnalysisService,
+    IBudgetExecutionAnalysisService budgetExecutionAnalysisService,
     ILLMService llmService,
     IApplicationSettingsService settingsService,
     ILogger<AnalyticsController> logger) : Controller
@@ -166,6 +168,76 @@ public sealed class AnalyticsController(
     }
 
     /// <summary>
+    /// Displays deterministic monthly budget execution analysis.
+    /// </summary>
+    /// <param name="year">Optional selected budget year.</param>
+    /// <param name="month">Optional selected budget month.</param>
+    /// <param name="cancellationToken">Token used to cancel the request.</param>
+    /// <returns>The populated budget execution analysis view.</returns>
+    [HttpGet]
+    public async Task<IActionResult> Budget(
+        int? year,
+        int? month,
+        CancellationToken cancellationToken = default)
+    {
+        var today = DateOnly.FromDateTime(DateTime.Today);
+        var selectedYear = year ?? today.Year;
+        var selectedMonth = month ?? today.Month;
+        var analysis = await budgetExecutionAnalysisService.GetAsync(selectedYear, selectedMonth, cancellationToken);
+        return View(new BudgetExecutionAnalysisViewModel(analysis, llmService.IsConfigured));
+    }
+
+    /// <summary>
+    /// Generates an optional AI interpretation from already calculated budget execution facts.
+    /// </summary>
+    /// <param name="year">Selected budget year.</param>
+    /// <param name="month">Selected budget month.</param>
+    /// <param name="cancellationToken">Token used to cancel the request.</param>
+    /// <returns>The budget analysis view with an AI interpretation or safe error feedback.</returns>
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> BudgetAi(
+        int year,
+        int month,
+        CancellationToken cancellationToken = default)
+    {
+        var analysis = await budgetExecutionAnalysisService.GetAsync(year, month, cancellationToken);
+        if (!llmService.IsConfigured)
+        {
+            return View("Budget", new BudgetExecutionAnalysisViewModel(
+                analysis,
+                false,
+                AiError: "A interpretação por IA não está disponível porque o fornecedor selecionado não está configurado."));
+        }
+
+        try
+        {
+            var settings = await settingsService.GetAsync(cancellationToken);
+            var context = JsonSerializer.Serialize(BuildBudgetAiContext(analysis));
+            var completion = await llmService.CompleteAsync(
+                [
+                    new LlmMessageDto("system", settings.BudgetExecutionAnalysisPrompt),
+                    new LlmMessageDto("user", context)
+                ],
+                Math.Min(settings.AiMaxTokens, 1600),
+                cancellationToken);
+
+            return View("Budget", new BudgetExecutionAnalysisViewModel(
+                analysis,
+                true,
+                completion.Content.Trim()));
+        }
+        catch (Exception exception) when (exception is HttpRequestException or InvalidOperationException or TaskCanceledException)
+        {
+            logger.LogWarning(exception, "Budget execution AI interpretation failed.");
+            return View("Budget", new BudgetExecutionAnalysisViewModel(
+                analysis,
+                true,
+                AiError: "Não foi possível gerar a interpretação por IA. A análise calculada continua disponível."));
+        }
+    }
+
+    /// <summary>
     /// Resolves the requested interval and applies the current-month default.
     /// </summary>
     /// <param name="from">Optional selected-period start.</param>
@@ -261,5 +333,41 @@ public sealed class AnalyticsController(
         trend = analysis.Data.Trend,
         largestMovements = analysis.Data.LargestMovements,
         findings = analysis.Findings
+    };
+
+    /// <summary>
+    /// Builds bounded, pre-calculated context for budget execution interpretation.
+    /// </summary>
+    /// <param name="analysis">Calculated budget execution analysis.</param>
+    /// <returns>Provider-neutral budget facts with no unrestricted movement history.</returns>
+    private static object BuildBudgetAiContext(BudgetExecutionAnalysisDto analysis) => new
+    {
+        purpose = "Interpretar Orçamento e Execução Orçamental sem recalcular valores.",
+        period = new { analysis.Year, analysis.Month },
+        summary = new
+        {
+            analysis.HasBudget,
+            analysis.TotalBudgeted,
+            analysis.TotalActual,
+            analysis.TotalVariance,
+            analysis.ExecutionPercentage,
+            analysis.OverBudgetAmount,
+            analysis.OverBudgetCategoryCount,
+            analysis.NearLimitCategoryCount,
+            analysis.UnbudgetedCategoryCount
+        },
+        categories = analysis.Categories.Take(12).Select(item => new
+        {
+            item.CategoryName,
+            item.FinancialGroupName,
+            item.Budgeted,
+            item.Actual,
+            item.Variance,
+            item.RelativeVariancePercentage,
+            item.ExecutionPercentage,
+            status = item.StatusLabel
+        }),
+        trend = analysis.Trend,
+        findings = analysis.Findings.Select(item => new { item.Tone, item.Title, item.Detail })
     };
 }
