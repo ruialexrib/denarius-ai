@@ -186,7 +186,7 @@ public sealed class FinancialCommitmentsAnalysisServiceTests
         Assert.Equal(50m, result.OutstandingAmount);
         Assert.Equal(1, result.OutstandingPremiums);
         Assert.Equal(1, result.RenewalsWithin90Days);
-        Assert.Equal(1, result.Calendar.Count);
+        Assert.Single(result.Calendar);
         Assert.Contains(result.Findings, item => item.Title == "Prémios vencidos por regularizar");
         Assert.DoesNotContain(result.Calendar, item => item.PremiumCount > 1);
     }
