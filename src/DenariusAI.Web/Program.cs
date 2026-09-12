@@ -1,11 +1,10 @@
+using DenariusAI.Web.Api;
+using DenariusAI.Web.Startup;
 using DenariusAI.Application;
 using DenariusAI.Infrastructure;
-using DenariusAI.Infrastructure.Identity;
 using DenariusAI.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.DataProtection;
-using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,6 +17,8 @@ builder.Services.AddMemoryCache();
 builder.Services.AddSession(options => { options.IdleTimeout = TimeSpan.FromMinutes(30); options.Cookie.HttpOnly = true; options.Cookie.IsEssential = true; });
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
+builder.Services.AddApiFoundation();
+builder.Services.AddSingleton<IApplicationInitializer, ApplicationInitializer>();
 var dataProtectionKeyPath = builder.Configuration["DataProtection:KeyPath"];
 if (!string.IsNullOrWhiteSpace(dataProtectionKeyPath))
 {
@@ -43,13 +44,15 @@ builder.Services.AddHealthChecks().AddDbContextCheck<DenariusDbContext>("sqlserv
 
 var app = builder.Build();
 
-await ApplyDatabaseMigrationsAsync(app);
-await SeedAdministratorAsync(app);
-await EnsureInitialDemonstrationDataAsync(app);
+await app.Services.GetRequiredService<IApplicationInitializer>().InitializeAsync(app);
+
+app.UseWhen(context => context.Request.Path.StartsWithSegments("/api"),
+    api => api.UseMiddleware<ApiBoundaryMiddleware>());
 
 if (!app.Environment.IsDevelopment())
 {
-    app.UseExceptionHandler("/Home/Error");
+    app.UseWhen(context => !context.Request.Path.StartsWithSegments("/api"),
+        mvc => mvc.UseExceptionHandler("/Home/Error"));
     app.UseHsts();
 }
 
@@ -61,84 +64,12 @@ app.UseStaticFiles();
 app.UseRouting();
 app.UseSession();
 app.UseAuthentication();
+app.UseRateLimiter();
 app.UseAuthorization();
+app.MapDenariusApi();
 app.MapHealthChecks("/health", new HealthCheckOptions()).AllowAnonymous();
 app.MapControllerRoute(name: "default", pattern: "{controller=Home}/{action=Index}/{id?}");
 app.Run();
 
-static async Task ApplyDatabaseMigrationsAsync(WebApplication application)
-{
-    await using var scope = application.Services.CreateAsyncScope();
-    var logger = scope.ServiceProvider.GetRequiredService<ILoggerFactory>()
-        .CreateLogger("DatabaseMigration");
-
-    try
-    {
-        var dbContext = scope.ServiceProvider.GetRequiredService<DenariusDbContext>();
-        await dbContext.Database.MigrateAsync();
-        logger.LogInformation("Database migrations applied successfully.");
-    }
-    catch (Exception exception)
-    {
-        logger.LogCritical(exception, "Database migration failed during application startup.");
-        throw;
-    }
-}
-
-static async Task SeedAdministratorAsync(WebApplication application)
-{
-    await using var scope = application.Services.CreateAsyncScope();
-    var configuration = scope.ServiceProvider.GetRequiredService<IConfiguration>();
-    var logger = scope.ServiceProvider.GetRequiredService<ILoggerFactory>()
-        .CreateLogger("IdentitySeed");
-    var email = configuration["InitialAdmin:Email"];
-    var password = configuration["InitialAdmin:Password"];
-    var displayName = configuration["InitialAdmin:DisplayName"] ?? "Administrador";
-    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
-    foreach (var role in ApplicationRoles.All)
-        if (!await roleManager.RoleExistsAsync(role))
-            await roleManager.CreateAsync(new IdentityRole(role));
-
-    if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
-    {
-        logger.LogWarning("Initial administrator was not configured; no user was seeded.");
-        return;
-    }
-
-    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
-    var existingUser = await userManager.FindByEmailAsync(email);
-    if (existingUser is not null) { if (!await userManager.IsInRoleAsync(existingUser, ApplicationRoles.Administrator)) await userManager.AddToRoleAsync(existingUser, ApplicationRoles.Administrator); return; }
-
-    var user = new ApplicationUser
-    {
-        UserName = email,
-        Email = email,
-        EmailConfirmed = true,
-        DisplayName = displayName
-    };
-    var result = await userManager.CreateAsync(user, password);
-    if (!result.Succeeded)
-    {
-        var errors = string.Join("; ", result.Errors.Select(error => error.Code));
-        throw new InvalidOperationException($"Initial administrator could not be created: {errors}");
-    }
-    await userManager.AddToRoleAsync(user, ApplicationRoles.Administrator);
-
-    logger.LogInformation("Initial administrator created for {Email}.", email);
-}
-
-static async Task EnsureInitialDemonstrationDataAsync(WebApplication application)
-{
-    await using var scope = application.Services.CreateAsyncScope();
-    var logger = scope.ServiceProvider.GetRequiredService<ILoggerFactory>()
-        .CreateLogger("DemonstrationDataSeed");
-    var service = scope.ServiceProvider.GetRequiredService<DenariusAI.Application.Abstractions.Services.IDemonstrationDataService>();
-
-    var result = await service.EnsureInitialDemonstrationDataAsync();
-    if (result.Loaded)
-        logger.LogInformation("Demonstration data automatically loaded on first initialization: {Accounts} accounts, {JournalEntries} journal entries, {Budgets} budgets.", result.Accounts, result.JournalEntries, result.Budgets);
-
-    await service.EnsureUsersAsync();
-}
-
+/// <summary>Provides the web application entry point for HTTP integration tests.</summary>
 public partial class Program;
