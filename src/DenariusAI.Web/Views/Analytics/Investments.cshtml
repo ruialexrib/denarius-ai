@@ -12,6 +12,7 @@
 }
 <link rel="stylesheet" href="~/css/summary-cards.css" asp-append-version="true" />
 <link rel="stylesheet" href="~/css/analytics.css" asp-append-version="true" />
+<link rel="stylesheet" href="~/css/financial-analysis-ai.css" asp-append-version="true" />
 <link rel="stylesheet" href="~/css/specialized-financial-analysis.css" asp-append-version="true" />
 
 <div class="page-header">
@@ -188,26 +189,39 @@
 
 <p class="specialized-note">Esta área apresenta património financeiro registado no DenariusAI. Não estima valor de mercado para ativos sem cotação, não converte moedas e não incorpora a watchlist nos totais. As previsões estatísticas existentes no módulo de ações permanecem indicativas e não são tratadas como rentabilidade realizada.</p>
 
-<section class="specialized-ai">
-    <div class="specialized-ai-heading"><span aria-hidden="true">✦</span><div><p class="eyebrow">Interpretação opcional</p><h2>Leitura por IA</h2><p>A IA recebe apenas valores, rentabilidades, concentração, moedas e limitações já calculadas pela aplicação.</p></div></div>
+<section class="financial-analysis-ai">
+    <div class="financial-analysis-ai-heading">
+        <span class="financial-analysis-ai-icon" aria-hidden="true">✦</span>
+        <div>
+            <p class="eyebrow">Interpretação opcional</p>
+            <h2>Leitura por IA</h2>
+            <p>A IA interpreta apenas factos financeiros já calculados pela aplicação. Não recalcula valores nem altera registos. Nesta análise recebe valores, rentabilidades, concentração, moedas e limitações já calculadas.</p>
+        </div>
+    </div>
     @if (!Model.AiAvailable)
     {
-        <div class="specialized-ai-unavailable">Configure um fornecedor de IA nas Definições para gerar esta interpretação.</div>
+        <div class="financial-analysis-ai-unavailable">Configure um fornecedor de IA nas Definições para gerar esta interpretação. A análise determinística acima permanece disponível.</div>
     }
     else
     {
-        <form asp-action="InvestmentsAi" method="post" class="specialized-ai-action">
+        <form asp-action="InvestmentsAi" method="post" class="financial-analysis-ai-action">
             <input type="hidden" name="asOf" value="@analysis.AsOf.ToString("yyyy-MM-dd")" />
             <button class="button" type="submit" data-progress-message="A interpretar o património financeiro…">@(string.IsNullOrWhiteSpace(Model.AiAnalysis) ? "Gerar análise com IA" : "Atualizar análise")</button>
-            <small>O prompt desta área pode ser alterado nas Definições da aplicação.</small>
+            <small>A geração ocorre apenas quando solicitar. O prompt desta área pode ser alterado nas Definições da aplicação.</small>
         </form>
     }
     @if (!string.IsNullOrWhiteSpace(Model.AiError))
     {
-        <div class="validation-summary specialized-ai-error" role="alert">@Model.AiError</div>
+        <div class="validation-summary financial-analysis-ai-error" role="alert">@Model.AiError</div>
     }
     @if (!string.IsNullOrWhiteSpace(Model.AiAnalysis))
     {
-        <div class="specialized-ai-result markdown-preview">@Html.Raw(MarkdownPreview.Render(Model.AiAnalysis))</div>
+        <div class="financial-analysis-ai-result">
+            <div class="financial-analysis-ai-result-heading">
+                <strong>Relatório gerado</strong>
+                <small>Interpretação por IA com base nos dados determinísticos desta análise.</small>
+            </div>
+            <div class="financial-analysis-ai-report markdown-preview">@Html.Raw(MarkdownPreview.Render(Model.AiAnalysis))</div>
+        </div>
     }
 </section>

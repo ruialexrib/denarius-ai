@@ -14,6 +14,7 @@
 }
 <link rel="stylesheet" href="~/css/summary-cards.css" asp-append-version="true" />
 <link rel="stylesheet" href="~/css/analytics.css" asp-append-version="true" />
+<link rel="stylesheet" href="~/css/financial-analysis-ai.css" asp-append-version="true" />
 <link rel="stylesheet" href="~/css/specialized-financial-analysis.css" asp-append-version="true" />
 
 <div class="page-header">
@@ -152,27 +153,40 @@
 
 <p class="specialized-note">A liquidez imediata considera apenas contas do tipo conta bancária, numerário e poupança. Depósitos a prazo, contas de investimento, outros ativos e Certificados de Aforro são apresentados separadamente e não são tratados como disponibilidade imediata.</p>
 
-<section class="specialized-ai">
-    <div class="specialized-ai-heading"><span aria-hidden="true">✦</span><div><p class="eyebrow">Interpretação opcional</p><h2>Leitura por IA</h2><p>A IA recebe apenas poupança, taxas, saldos, concentração e tendência já calculados pela aplicação.</p></div></div>
+<section class="financial-analysis-ai">
+    <div class="financial-analysis-ai-heading">
+        <span class="financial-analysis-ai-icon" aria-hidden="true">✦</span>
+        <div>
+            <p class="eyebrow">Interpretação opcional</p>
+            <h2>Leitura por IA</h2>
+            <p>A IA interpreta apenas factos financeiros já calculados pela aplicação. Não recalcula valores nem altera registos. Nesta análise recebe poupança, taxas, saldos, concentração e tendência já calculados.</p>
+        </div>
+    </div>
     @if (!Model.AiAvailable)
     {
-        <div class="specialized-ai-unavailable">Configure um fornecedor de IA nas Definições para gerar esta interpretação.</div>
+        <div class="financial-analysis-ai-unavailable">Configure um fornecedor de IA nas Definições para gerar esta interpretação. A análise determinística acima permanece disponível.</div>
     }
     else
     {
-        <form asp-action="SavingsAi" method="post" class="specialized-ai-action">
+        <form asp-action="SavingsAi" method="post" class="financial-analysis-ai-action">
             <input type="hidden" name="from" value="@analysis.From.ToString("yyyy-MM-dd")" />
             <input type="hidden" name="to" value="@analysis.To.ToString("yyyy-MM-dd")" />
             <button class="button" type="submit" data-progress-message="A interpretar a poupança e liquidez…">@(string.IsNullOrWhiteSpace(Model.AiAnalysis) ? "Gerar análise com IA" : "Atualizar análise")</button>
-            <small>O prompt desta área pode ser alterado nas Definições da aplicação.</small>
+            <small>A geração ocorre apenas quando solicitar. O prompt desta área pode ser alterado nas Definições da aplicação.</small>
         </form>
     }
     @if (!string.IsNullOrWhiteSpace(Model.AiError))
     {
-        <div class="validation-summary specialized-ai-error" role="alert">@Model.AiError</div>
+        <div class="validation-summary financial-analysis-ai-error" role="alert">@Model.AiError</div>
     }
     @if (!string.IsNullOrWhiteSpace(Model.AiAnalysis))
     {
-        <div class="specialized-ai-result markdown-preview">@Html.Raw(MarkdownPreview.Render(Model.AiAnalysis))</div>
+        <div class="financial-analysis-ai-result">
+            <div class="financial-analysis-ai-result-heading">
+                <strong>Relatório gerado</strong>
+                <small>Interpretação por IA com base nos dados determinísticos desta análise.</small>
+            </div>
+            <div class="financial-analysis-ai-report markdown-preview">@Html.Raw(MarkdownPreview.Render(Model.AiAnalysis))</div>
+        </div>
     }
 </section>

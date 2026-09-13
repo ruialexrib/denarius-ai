@@ -45,6 +45,31 @@ public sealed class ApplicationSettingsServiceTests
         Assert.False(loaded.AiVerboseModelLogging);
     }
 
+    /// <summary>Verifies previous financial-analysis defaults upgrade while administrator customizations remain untouched.</summary>
+    [Fact]
+    public async Task PreviousFinancialAnalysisDefaultsAreUpgradedWithoutChangingCustomPrompts()
+    {
+        var options = new DbContextOptionsBuilder<DenariusDbContext>().UseInMemoryDatabase(Guid.NewGuid().ToString()).Options;
+        await using var context = new DenariusDbContext(options);
+        context.ApplicationSettings.AddRange(
+            new() { Key = "Prompts.FinancialAnalysis", Value = DenariusAI.Application.Configuration.ApplicationSettingsDefaults.PreviousFinancialAnalysisPrompt },
+            new() { Key = "Prompts.IncomeExpenseFlowAnalysis", Value = DenariusAI.Application.Configuration.ApplicationSettingsDefaults.PreviousIncomeExpenseFlowAnalysisPrompt },
+            new() { Key = "Prompts.BudgetExecutionAnalysis", Value = DenariusAI.Application.Configuration.ApplicationSettingsDefaults.PreviousBudgetExecutionAnalysisPrompt },
+            new() { Key = "Prompts.SavingsLiquidityAnalysis", Value = DenariusAI.Application.Configuration.ApplicationSettingsDefaults.PreviousSavingsLiquidityAnalysisPrompt },
+            new() { Key = "Prompts.InvestmentPortfolioAnalysis", Value = DenariusAI.Application.Configuration.ApplicationSettingsDefaults.PreviousInvestmentPortfolioAnalysisPrompt },
+            new() { Key = "Prompts.FinancialCommitmentsAnalysis", Value = "Prompt personalizado de compromissos" });
+        await context.SaveChangesAsync();
+
+        var loaded = await new ApplicationSettingsService(context, Options.Create(new MistralOptions())).GetAsync();
+
+        Assert.Equal(DenariusAI.Application.Configuration.ApplicationSettingsDefaults.FinancialAnalysisPrompt, loaded.FinancialAnalysisPrompt);
+        Assert.Equal(DenariusAI.Application.Configuration.ApplicationSettingsDefaults.IncomeExpenseFlowAnalysisPrompt, loaded.IncomeExpenseFlowAnalysisPrompt);
+        Assert.Equal(DenariusAI.Application.Configuration.ApplicationSettingsDefaults.BudgetExecutionAnalysisPrompt, loaded.BudgetExecutionAnalysisPrompt);
+        Assert.Equal(DenariusAI.Application.Configuration.ApplicationSettingsDefaults.SavingsLiquidityAnalysisPrompt, loaded.SavingsLiquidityAnalysisPrompt);
+        Assert.Equal(DenariusAI.Application.Configuration.ApplicationSettingsDefaults.InvestmentPortfolioAnalysisPrompt, loaded.InvestmentPortfolioAnalysisPrompt);
+        Assert.Equal("Prompt personalizado de compromissos", loaded.FinancialCommitmentsAnalysisPrompt);
+    }
+
     /// <summary>Verifies settings persist and are immediately effective.</summary>
     [Fact]
     public async Task UpdatedSettingsArePersistedAndReadImmediately()

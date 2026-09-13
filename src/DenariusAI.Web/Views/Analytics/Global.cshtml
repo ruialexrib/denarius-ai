@@ -56,6 +56,7 @@
 }
 <link rel="stylesheet" href="~/css/summary-cards.css" asp-append-version="true" />
 <link rel="stylesheet" href="~/css/analytics.css" asp-append-version="true" />
+<link rel="stylesheet" href="~/css/financial-analysis-ai.css" asp-append-version="true" />
 <link rel="stylesheet" href="~/css/global-financial-view.css" asp-append-version="true" />
 <script id="global-financial-chart-data" type="application/json">@Html.Raw(chartData)</script>
 <script src="~/js/global-financial-view.js" asp-append-version="true" defer></script>
@@ -189,30 +190,40 @@
     </article>
 </section>
 
-<section class="global-ai-panel">
-    <div class="global-ai-heading">
-        <span class="global-ai-icon" aria-hidden="true">✦</span>
-        <div><p class="eyebrow">Interpretação opcional</p><h2>Leitura por IA</h2><p>A IA recebe apenas os indicadores, variações, tendências e destaques já calculados. Não efetua a aritmética financeira nem altera registos.</p></div>
+<section class="financial-analysis-ai">
+    <div class="financial-analysis-ai-heading">
+        <span class="financial-analysis-ai-icon" aria-hidden="true">✦</span>
+        <div>
+            <p class="eyebrow">Interpretação opcional</p>
+            <h2>Leitura por IA</h2>
+            <p>A IA interpreta apenas factos financeiros já calculados pela aplicação. Não recalcula valores nem altera registos. Nesta análise recebe indicadores, variações, tendências e destaques determinísticos.</p>
+        </div>
     </div>
     @if (!Model.AiAvailable)
     {
-        <div class="global-ai-unavailable">Configure um fornecedor de IA nas Definições para gerar uma interpretação. A análise determinística acima permanece completa.</div>
+        <div class="financial-analysis-ai-unavailable">Configure um fornecedor de IA nas Definições para gerar esta interpretação. A análise determinística acima permanece disponível.</div>
     }
     else
     {
-        <form asp-action="GlobalAi" method="post" class="global-ai-action">
+        <form asp-action="GlobalAi" method="post" class="financial-analysis-ai-action">
             <input type="hidden" name="from" value="@analysis.From.ToString("yyyy-MM-dd")" />
             <input type="hidden" name="to" value="@analysis.To.ToString("yyyy-MM-dd")" />
             <button class="button" type="submit" data-progress-message="A interpretar a visão financeira…">@(string.IsNullOrWhiteSpace(Model.AiAnalysis) ? "Gerar análise com IA" : "Atualizar análise")</button>
-            <small>A geração é feita apenas quando solicitar.</small>
+            <small>A geração ocorre apenas quando solicitar. O prompt desta área pode ser alterado nas Definições da aplicação.</small>
         </form>
     }
     @if (!string.IsNullOrWhiteSpace(Model.AiError))
     {
-        <div class="validation-summary global-ai-error" role="alert">@Model.AiError</div>
+        <div class="validation-summary financial-analysis-ai-error" role="alert">@Model.AiError</div>
     }
     @if (!string.IsNullOrWhiteSpace(Model.AiAnalysis))
     {
-        <div class="global-ai-result markdown-preview">@Html.Raw(MarkdownPreview.Render(Model.AiAnalysis))</div>
+        <div class="financial-analysis-ai-result">
+            <div class="financial-analysis-ai-result-heading">
+                <strong>Relatório gerado</strong>
+                <small>Interpretação por IA com base nos dados determinísticos desta análise.</small>
+            </div>
+            <div class="financial-analysis-ai-report markdown-preview">@Html.Raw(MarkdownPreview.Render(Model.AiAnalysis))</div>
+        </div>
     }
 </section>
